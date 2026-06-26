@@ -232,7 +232,103 @@ function ClientsPage({clients,setClients,loans=[],notify}){const[query,setQuery]
 
 function LoanModal({open,onClose,onSave,loan,clients}){const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:''}; const[f,setF]=useState(empty); useEffect(()=>{if(open)setF(loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7)}:empty)},[open,loan]); if(!open)return null; const sched=schedule({capital:f.somme,rate:f.taux,n:f.nb,start:f.date1}); function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,nom:c?.nom||'',prenom:c?.prenom||'',telegram:c?.telegram||''});} async function save(){if(!f.nom||!f.prenom) return alert('Client requis'); await onSave({...loan,...f,loan_id:loan?.loan_id||genId(),somme:Number(f.somme),taux:Number(f.taux),total_a_rembourser:sched.total,echeances:sched.echeances,date_creation:loan?.date_creation||today()}); onClose();} const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:620,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn onClick={save}>Enregistrer</Btn></div></div></div>}
 
-function LoanDetail({loan,onBack,onUpdate,onDelete,notify}){const paid=loan.echeances.filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant),0);async function mark(i,val){const es=[...loan.echeances];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}return <div><button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}><h1>{loan.prenom} {loan.nom}</h1><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username}</p><p>Garanties : {loan.garanties||'—'}</p></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(loan.total_a_rembourser-paid)}</b></p></div></div><div style={{display:'flex',gap:10,marginBottom:14}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,overflow:'hidden'}}>{loan.echeances.map((e,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'70px 1fr 130px 140px 180px',gap:12,alignItems:'center',padding:12,borderTop:i?'1px solid '+C.bord:'none'}}><span>#{i+1}</span><b>{fCur(e.montant)}</b><span>{fDate(e.date)}</span><Badge s={st(e)}/>{e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn>}</div>)}</div></div>}
+function LoanDetail({loan,onBack,onUpdate,onDelete,notify}){
+  const [editingDates,setEditingDates]=useState(false);
+  const [draftEcheances,setDraftEcheances]=useState(()=>((loan.echeances||[]).map(e=>({...e}))));
+  const [savingDates,setSavingDates]=useState(false);
+  const echeances=loan.echeances||[];
+  const paid=echeances.filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant||0),0);
+
+  useEffect(()=>{
+    setEditingDates(false);
+    setDraftEcheances((loan.echeances||[]).map(e=>({...e})));
+  },[loan.id]);
+
+  async function mark(i,val){
+    const es=[...echeances];
+    es[i]={...es[i],statut:val?'paye':'attente'};
+    try{
+      const u=await api.updateLoan({id:loan.id,echeances:es});
+      onUpdate(u);
+      notify(val?'Paiement validé':'Paiement annulé');
+    }catch(e){notify('⚠ '+e.message)}
+  }
+
+  function changeDate(i,date){
+    setDraftEcheances(current=>current.map((e,index)=>index===i?{...e,date}:e));
+  }
+
+  function cancelDateEdit(){
+    setDraftEcheances(echeances.map(e=>({...e})));
+    setEditingDates(false);
+  }
+
+  async function saveDates(){
+    if(draftEcheances.some(e=>!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||'')))){
+      notify('⚠ Chaque échéance doit avoir une date valide.');
+      return;
+    }
+    try{
+      setSavingDates(true);
+      const u=await api.updateLoan({id:loan.id,echeances:draftEcheances});
+      onUpdate(u);
+      setEditingDates(false);
+      notify('Dates des échéances enregistrées');
+    }catch(e){notify('⚠ '+e.message)}
+    finally{setSavingDates(false)}
+  }
+
+  return <div>
+    <button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:16,flexWrap:'wrap'}}>
+      <h1>{loan.prenom} {loan.nom}</h1>
+      <code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code>
+    </div>
+
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
+      <div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}>
+        <p>📱 {loan.telegram||'—'}</p>
+        <p>🏦 {loan.banquier_username||'—'}</p>
+        <p>Garanties : {loan.garanties||'—'}</p>
+      </div>
+      <div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}>
+        <p>Somme : <b>{fCur(loan.somme)}</b></p>
+        <p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p>
+        <p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p>
+        <p>Restant : <b style={{color:C.gold}}>{fCur(Number(loan.total_a_rembourser||0)-paid)}</b></p>
+      </div>
+    </div>
+
+    <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap'}}>
+      <Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn>
+      {!editingDates ? <Btn color="#8b642c" onClick={()=>setEditingDates(true)}>Modifier les dates</Btn> : <>
+        <Btn color="#8b642c" disabled={savingDates} onClick={saveDates}>{savingDates?'Enregistrement…':'Enregistrer les dates'}</Btn>
+        <Btn color="#555" disabled={savingDates} onClick={cancelDateEdit}>Annuler</Btn>
+      </>}
+      <Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn>
+    </div>
+
+    {editingDates&&<div style={{background:'#f0b42915',border:'1px solid #f0b42955',color:'#f6d27b',borderRadius:10,padding:'10px 12px',marginBottom:12}}>
+      Modifie chaque échéance individuellement. Les montants, les paiements déjà validés et le statut du prêt ne sont pas modifiés.
+    </div>}
+
+    <div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,overflow:'hidden'}}>
+      {echeances.length===0?<p style={{padding:20,color:C.muted}}>Aucune échéance enregistrée.</p>:echeances.map((e,i)=>{
+        const draft=draftEcheances[i]||e;
+        return <div key={i} style={{display:'grid',gridTemplateColumns:'70px 1fr 160px 140px 180px',gap:12,alignItems:'center',padding:12,borderTop:i?'1px solid '+C.bord:'none'}}>
+          <span>#{i+1}</span>
+          <b>{fCur(e.montant)}</b>
+          {editingDates?
+            <input type="date" value={draft.date||''} onChange={ev=>changeDate(i,ev.target.value)} style={{background:'#13151f',border:'1px solid '+C.gold,borderRadius:8,padding:'9px 10px',color:C.txt,width:'100%'}}/>
+            :<span>{fDate(e.date)}</span>
+          }
+          <Badge s={st(e)}/>
+          {e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn>}
+        </div>
+      })}
+    </div>
+  </div>}
+
 
 function LoansPage({loans,clients,setLoans,notify}){const[modal,setModal]=useState(false),[sel,setSel]=useState(null),[edit,setEdit]=useState(null); async function save(l){try{const u=l.id?await api.updateLoan(l):await api.addLoan(l);setLoans(l.id?loans.map(x=>x.id===u.id?u:x):[u,...loans]);notify(l.id?'Prêt modifié':'Prêt créé')}catch(e){notify('⚠ '+e.message)}} async function del(l){if(!confirm('Supprimer définitivement ce prêt ?'))return;try{await api.deleteLoan(l.id);setLoans(loans.filter(x=>x.id!==l.id));setSel(null);notify('Prêt supprimé')}catch(e){notify('⚠ '+e.message)}} if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={()=>setSel(loans.find(x=>x.id===sel.id))} onSave={save}/></>} return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?setSel(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify}/>}return <div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}><h1>Prêts</h1><Btn onClick={()=>setModal(true)}>+ Nouveau prêt</Btn></div><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>{loans.map(l=>{const next=l.echeances.find(e=>e.statut!=='paye');return <div key={l.id} onClick={()=>setSel(l)} style={{background:C.card,border:'1px solid '+C.bord,borderLeft:'4px solid '+(l.echeances.some(e=>st(e)==='retard')?C.red:C.blue),borderRadius:12,padding:16,cursor:'pointer'}}><b>{l.prenom} {l.nom}</b><p style={{color:C.muted,marginTop:6}}>{l.loan_id}</p><p>{fCur(l.somme)} → {fCur(l.total_a_rembourser)}</p>{next&&<Badge s={st(next)}/>}</div>})}</div><LoanModal open={modal} onClose={()=>setModal(false)} onSave={save} clients={clients}/></div>}
 
