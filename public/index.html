@@ -34,14 +34,7 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 }
 .bvh-sidebar:after{content:"";position:absolute;right:0;top:0;bottom:0;width:1px;background:#d09c4a55}
 .bvh-brand{text-align:center;padding:8px 0 18px;margin-bottom:18px;border-bottom:1px solid #6d4b2266}
-.bvh-brand img{
-  width:185px;
-  max-width:100%;
-  height:auto;
-  display:block;
-  margin:0 auto 10px;
-  filter:drop-shadow(0 8px 16px #000);
-}
+.bvh-brand img{width:128px;max-width:90%;height:auto;display:block;margin:0 auto 12px;filter:drop-shadow(0 8px 16px #000)}
 .bvh-brand-title{font-size:27px;line-height:1.02;font-weight:900;color:#f6d27b;text-transform:uppercase;letter-spacing:.045em}
 .bvh-brand-date{margin-top:8px;color:#d9b66c;font-size:13px;letter-spacing:.22em;text-transform:uppercase}
 .bvh-main{flex:1;padding:26px 34px;overflow:auto;background:linear-gradient(180deg,#130d08aa,#090603aa)}
@@ -109,6 +102,81 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .bvh-note-input{width:100%;background:#120b06;border:1px solid #62451f;border-radius:8px;color:#f8e7b7;padding:12px;font-family:Georgia,serif;font-size:15px;outline:none}
 .bvh-note-card{background:linear-gradient(180deg,#f3dfad,#d8b66f);color:#1b1008;border:1px solid #8b642c;border-radius:8px;padding:12px;box-shadow:inset 0 0 18px #5b351033}
 .bvh-note-card small{color:#5b3510;font-weight:800}
+
+
+/* ===== Adaptation téléphone et tablette ===== */
+.bvh-mobile-top,.bvh-menu-backdrop{display:none}
+.bvh-shell{display:flex;min-height:100vh}
+
+@media (max-width:1100px) and (min-width:761px){
+  .bvh-sidebar{width:214px;padding-left:14px;padding-right:14px}
+  .bvh-main{padding:22px}
+  .bvh-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bvh-grid-2,.bvh-dossier-grid-wide{grid-template-columns:1fr}
+}
+
+@media (max-width:760px){
+  html,body,#root{min-height:100%;overflow-x:hidden}
+  body{font-size:16px}
+  .bvh-shell{display:block;min-height:100dvh}
+  .bvh-mobile-top{
+    display:flex;position:fixed;z-index:250;left:0;right:0;top:0;height:60px;
+    align-items:center;gap:11px;padding:8px 12px;
+    background:linear-gradient(90deg,#1d120a,#0d0905);border-bottom:1px solid #6d4b22;
+    box-shadow:0 6px 18px #0009;
+  }
+  .bvh-mobile-menu-button{
+    width:42px;height:42px;border-radius:9px;border:1px solid #8b642c;
+    background:linear-gradient(180deg,#5c3d1c,#2e1b0d);color:#ffe0a0;font-size:21px;cursor:pointer;
+  }
+  .bvh-mobile-title{min-width:0;line-height:1.05}
+  .bvh-mobile-title b{display:block;color:#f6d27b;font-size:16px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bvh-mobile-title span{display:block;color:#c5a261;font-size:10px;text-transform:uppercase;letter-spacing:.16em;margin-top:3px}
+  .bvh-menu-backdrop{position:fixed;z-index:240;inset:0;background:#000a;opacity:0;pointer-events:none;transition:opacity .2s ease}
+  .bvh-menu-backdrop.open{display:block;opacity:1;pointer-events:auto}
+  .bvh-sidebar{
+    position:fixed;z-index:260;top:0;left:0;bottom:0;height:100dvh;width:min(84vw,310px);
+    transform:translateX(-105%);transition:transform .22s ease;overflow-y:auto;
+    padding-top:13px;box-shadow:14px 0 35px #000c;
+  }
+  .bvh-sidebar.open{transform:translateX(0)}
+  .bvh-brand{padding-top:8px;margin-bottom:12px}
+  .bvh-brand img{width:155px;max-width:74%;margin-bottom:8px}
+  .bvh-brand-title{font-size:24px}
+  .bvh-nav{flex:none}
+  .bvh-nav button{min-height:48px;font-size:16px}
+  .bvh-user{margin-top:16px}
+  .bvh-main{width:100%;min-height:100dvh;padding:76px 12px 20px;overflow:visible}
+  .bvh-topbar{flex-direction:column;align-items:flex-start;padding:14px;margin-bottom:14px;gap:9px}
+  .bvh-topbar h1{font-size:29px;line-height:1.05}
+  .bvh-topbar>div:last-child{text-align:left!important}
+  .bvh-grid-4,.bvh-grid-2,.bvh-dossier-grid,.bvh-dossier-grid-wide{grid-template-columns:1fr;gap:12px}
+  .bvh-card{padding:15px}
+  .bvh-card h2{font-size:29px}
+  .bvh-client-row{grid-template-columns:1fr 1fr;gap:7px;padding:13px}
+  .bvh-client-row>:first-child{grid-column:1/-1}
+  .bvh-client-row>:last-child{grid-column:1/-1}
+  .bvh-dossier-head{flex-direction:column;padding:15px;gap:12px}
+  .bvh-dossier-head h1{font-size:30px;line-height:1.03}
+  .bvh-dossier-head>div:last-child{width:100%;display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+  .bvh-dossier-head>div:last-child button{width:100%}
+  .bvh-field{grid-template-columns:1fr;gap:4px;padding:11px 0}
+  .bvh-upload-line{grid-template-columns:1fr;gap:10px;padding:14px}
+  .bvh-doc-grid{grid-template-columns:1fr;padding:12px}
+  .bvh-doc-card{min-height:82px}
+  .bvh-row{display:flex;flex-wrap:wrap;gap:7px;padding:13px 14px}
+  .bvh-row>*{min-width:0}
+  .bvh-row>b{flex:1 1 52%;font-size:16px}
+  .bvh-row>span{flex:1 1 38%}
+  .bvh-row>button,.bvh-row>a{flex:1 1 100%;justify-content:center;text-align:center}
+  .bvh-ledger-title{padding:13px 14px}
+  .bvh-note-box{min-height:110px}
+  .bvh-login-card{width:100%;max-width:420px;padding:26px 20px}
+  .bvh-login-logo{width:155px}
+  input,select,textarea{font-size:16px!important}
+  button{min-height:40px}
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -371,7 +439,33 @@ function Card({title,value,icon,color}){return <InfoCard icon={icon} title={titl
 function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{items.length===0?<p className="bvh-empty">Aucune échéance.</p>:items.map((e,i)=><div key={i} className="bvh-row"><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div>}
 function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
 
-function App(){const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]); const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)}; async function loadAll(user){const req=[api.loans(),api.clients()]; if(roleRank[user.role]>=2) req.push(api.users()); if(roleRank[user.role]>=2) req.push(api.logs()); const r=await Promise.allSettled(req);setLoans(r[0].status==='fulfilled'?r[0].value:[]);setClients(r[1].status==='fulfilled'?r[1].value:[]); if(r[2]?.status==='fulfilled')setUsers(r[2].value); if(r[3]?.status==='fulfilled')setLogs(r[3].value);} useEffect(()=>{(async()=>{try{const r=await api.me();setMe(r.user);await loadAll(r.user);}catch{}finally{setLoading(false)}})()},[]); async function onLogin(user){setMe(user);await loadAll(user)} async function logout(){await api.logout();setMe(null)} async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});setLoans(loans.map(x=>x.id===u.id?u:x));notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}} if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>Chargement…</div>; if(!me)return <Login onLogin={onLogin}/>; const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['clients','👤','Clients'],['hippique','🏇','Crédit hippique']]; if(roleRank[me.role]>=2) menu.push(['users','🔐','Comptes'],['logs','📖','Journal']); return <div style={{display:'flex',minHeight:'100vh'}}><Toast msg={toast}/><aside className="bvh-sidebar"><div className="bvh-brand"><img src="/logo-vh.png" alt="Banque Van Horn"/><div className="bvh-brand-title">Banque Van Horn</div><div className="bvh-brand-date">Établie en 1904</div></div><nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>setPage(m[0])}>{m[1]} {m[2]}</button>)}</nav><div className="bvh-user"><small style={{color:'#9f8550',textTransform:'uppercase',letterSpacing:'.12em'}}>Connecté</small><br/><b>{me.username}</b><p style={{color:'#d0b272',fontSize:13}}>{roles[me.role]}</p><Btn full color="#5f4725" onClick={logout} style={{marginTop:12}}>Déconnexion</Btn></div></aside><main className="bvh-main">{page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} notify={notify}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}</main></div>}
+function App(){
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false);
+  const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
+  async function loadAll(user){const req=[api.loans(),api.clients()]; if(roleRank[user.role]>=2) req.push(api.users()); if(roleRank[user.role]>=2) req.push(api.logs()); const r=await Promise.allSettled(req);setLoans(r[0].status==='fulfilled'?r[0].value:[]);setClients(r[1].status==='fulfilled'?r[1].value:[]); if(r[2]?.status==='fulfilled')setUsers(r[2].value); if(r[3]?.status==='fulfilled')setLogs(r[3].value);}
+  useEffect(()=>{(async()=>{try{const r=await api.me();setMe(r.user);await loadAll(r.user);}catch{}finally{setLoading(false)}})()},[]);
+  async function onLogin(user){setMe(user);await loadAll(user)}
+  async function logout(){await api.logout();setMe(null)}
+  async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});setLoans(loans.map(x=>x.id===u.id?u:x));notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}
+  if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>Chargement…</div>;
+  if(!me)return <Login onLogin={onLogin}/>;
+  const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['clients','👤','Clients'],['hippique','🏇','Crédit hippique']];
+  if(roleRank[me.role]>=2) menu.push(['users','🔐','Comptes'],['logs','📖','Journal']);
+  const choosePage=(target)=>{setPage(target);setMenuOpen(false)};
+  return <div className="bvh-shell"><Toast msg={toast}/>
+    <div className="bvh-mobile-top">
+      <button className="bvh-mobile-menu-button" aria-label="Ouvrir le menu" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?'✕':'☰'}</button>
+      <div className="bvh-mobile-title"><b>Banque Van Horn</b><span>Établie en 1904 · {roles[me.role]}</span></div>
+    </div>
+    <div className={'bvh-menu-backdrop '+(menuOpen?'open':'')} onClick={()=>setMenuOpen(false)}></div>
+    <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
+      <div className="bvh-brand"><img src="/logo-vh.png" alt="Banque Van Horn"/><div className="bvh-brand-title">Banque Van Horn</div><div className="bvh-brand-date">Établie en 1904</div></div>
+      <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
+      <div className="bvh-user"><small style={{color:'#9f8550',textTransform:'uppercase',letterSpacing:'.12em'}}>Connecté</small><br/><b>{me.username}</b><p style={{color:'#d0b272',fontSize:13}}>{roles[me.role]}</p><Btn full color="#5f4725" onClick={logout} style={{marginTop:12}}>Déconnexion</Btn></div>
+    </aside>
+    <main className="bvh-main">{page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} notify={notify}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}</main>
+  </div>
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script></body></html>
