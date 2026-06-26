@@ -187,11 +187,11 @@ const roles={admin:'Administrateur',directeur:'Directeur',co_directeur:'Co-direc
 const roleRank={employe:1,co_directeur:2,directeur:3,admin:4};
 const fCur=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0);
 const fDate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('fr-FR'):'—';
-const today=()=>new Date().toISOString().split('T')[0];
-const plusDays=(days)=>{const d=new Date();d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];};
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().split('T')[0];};
+const plusDays=(days)=>{const d=new Date();d.setDate(d.getDate()+days);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().split('T')[0];};
 const daysDiff=d=>{const a=new Date(d+'T00:00:00'),b=new Date();a.setHours(0,0,0,0);b.setHours(0,0,0,0);return Math.floor((a-b)/86400000);};
-const genId=()=>{const d=new Date().toISOString().slice(0,10).replace(/-/g,'');return `VH-${d}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;};
-const dateDuJour=()=>new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+const genId=()=>`VH-${today().replaceAll('-','')}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
+const date1904=()=>new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
 
 async function call(url,opts={}){const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(opts.headers||{})},...opts}); const txt=await r.text(); let data; try{data=txt?JSON.parse(txt):{};}catch{data={error:txt||'Réponse invalide'}}; if(!r.ok) throw new Error(data.error||'Erreur serveur'); return data;}
 const api={
@@ -221,7 +221,7 @@ function UserPanel({me,users,setUsers,notify}){const[f,setF]=useState({username:
 function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=reject;reader.readAsDataURL(file);});}
 function DocumentPanel({client}){const[docs,setDocs]=useState([]),[busy,setBusy]=useState(false),[docType,setDocType]=useState('document'),[file,setFile]=useState(null),[link,setLink]=useState(''),[name,setName]=useState(''),[mode,setMode]=useState('file'),[err,setErr]=useState('');async function load(){try{setErr('');const r=await api.documents(client.id);setDocs(r||[])}catch(e){setErr(e.message)}}useEffect(()=>{load()},[client.id]);async function add(){try{setBusy(true);setErr('');let d;if(mode==='link'){if(!link.trim())throw new Error('Colle un lien avant d’ajouter.');d=await api.uploadDocument({client_id:client.id,doc_type:docType,filename:name||'lien-document',external_url:link.trim()});setLink('');setName('');}else{if(!file)throw new Error('Choisis d’abord un fichier.');const content=await fileToBase64(file);d=await api.uploadDocument({client_id:client.id,doc_type:docType,filename:file.name,mime_type:file.type||'application/octet-stream',content});setFile(null);const inp=document.getElementById('client-doc-file');if(inp)inp.value='';}setDocs([d,...docs]);}catch(e){setErr(e.message)}finally{setBusy(false)}}async function del(d){if(!confirm('Retirer cette pièce du dossier ?'))return;try{await api.deleteDocument(d.id);setDocs(docs.filter(x=>x.id!==d.id));}catch(e){setErr(e.message)}}function label(t){return {portrait:'Portrait',identite:"Carte d’identité",contrat:'Contrat signé',document:'Autre pièce'}[t]||t}function isImg(d){return (d.view_url||d.signed_url||d.external_url)&&String(d.mime_type||'').startsWith('image/')}return <div className="bvh-ledger"><div className="bvh-ledger-title">Archives du dossier</div><div style={{padding:'12px 16px 0',display:'flex',gap:8,flexWrap:'wrap'}}><Btn color={mode==='file'?'#8b642c':'#555'} onClick={()=>setMode('file')}>Importer une pièce</Btn><Btn color={mode==='link'?'#8b642c':'#555'} onClick={()=>setMode('link')}>Ajouter par lien</Btn></div><div className="bvh-upload-line"><Select label="Type" value={docType} onChange={e=>setDocType(e.target.value)}><option value="portrait">Portrait</option><option value="identite">Carte d'identité</option><option value="contrat">Contrat signé</option><option value="document">Autre pièce</option></Select>{mode==='file'?<div><label style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'#b69b68'}}>Fichier</label><input id="client-doc-file" type="file" accept="image/*,.pdf" onChange={e=>setFile(e.target.files?.[0]||null)} style={{display:'block',width:'100%',marginTop:5,color:'#d8bf82',background:'#120b06',border:'1px solid #62451f',borderRadius:8,padding:8}}/></div>:<div style={{display:'grid',gridTemplateColumns:'1fr 1.5fr',gap:8}}><Inp label="Nom de la pièce" value={name} onChange={e=>setName(e.target.value)} placeholder="Carte d’identité"/><Inp label="Lien" value={link} onChange={e=>setLink(e.target.value)} placeholder="https://..."/></div>}<Btn color="#8b642c" disabled={busy} onClick={add}>{busy?'Ajout…':'Ajouter'}</Btn></div>{err&&<div style={{padding:'0 16px 12px',color:'#ffb0a6'}}>⚠ {err}</div>}{docs.length===0?<p className="bvh-empty">Aucune archive attachée à ce dossier.</p>:<div className="bvh-doc-grid">{docs.map(d=><div className="bvh-doc-card" key={d.id}>{isImg(d)?<img className="bvh-doc-thumb" src={d.view_url||d.signed_url||d.external_url} alt={d.filename}/>:<div className="bvh-doc-thumb">{d.external_url?'🔗':'📄'}</div>}<div className="bvh-doc-meta"><b>{label(d.doc_type)}</b><span title={d.filename}>{d.filename}</span><br/><small>Ajouté par {d.uploaded_by_username||'—'}</small><div className="bvh-doc-actions">{(d.view_url||d.signed_url||d.external_url)&&<a href={d.view_url||d.signed_url||d.external_url} target="_blank" rel="noreferrer" style={{color:'#f3d58a',fontWeight:800}}>Consulter</a>}<button onClick={()=>del(d)} style={{background:'none',border:'none',color:'#ffb0a6',cursor:'pointer',fontWeight:800}}>Retirer</button></div></div></div>)}</div>}</div>}
 
-function clientCode(c){return `BVH-${String(c.id||'').slice(0,4).toUpperCase().padEnd(4,'0')}`;}
+function clientCode(c){return `BVH-${String(c.id||'').padStart(4,'0')}`;}
 function clientFullName(c){return `${c.prenom||''} ${c.nom||''}`.trim();}
 function clientLoans(c,loans){const cid=String(c.id||'');const name=clientFullName(c).toLowerCase();return (loans||[]).filter(l=>String(l.client_id||'')===cid || `${l.prenom||''} ${l.nom||''}`.trim().toLowerCase()===name);}
 function calcClientStats(c,loans){const ls=clientLoans(c,loans);const total=ls.reduce((s,l)=>s+Number(l.somme||0),0);const expected=ls.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const paid=ls.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const active=ls.filter(l=>(l.echeances||[]).some(e=>e.statut!=='paye')).length;const late=ls.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut!=='paye'&&daysDiff(e.date)<0).length,0);return{loans:ls,total,expected,paid,active,late};}
@@ -230,107 +230,24 @@ function ClientDossier({client,loans,onBack,onEdit,onDelete}){const stt=calcClie
 function ClientModal({open,onClose,onSave,client}){const empty={nom:'',prenom:'',telegram:'',adresse:''};const[f,setF]=useState(empty);useEffect(()=>{if(open)setF(client?{...empty,...client}:empty)},[open,client]);if(!open)return null;async function save(){if(!f.nom||!f.prenom)return alert('Nom et prénom requis');await onSave(f);onClose();}return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:210,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:24,width:620,maxWidth:'96vw'}}><h2 style={{color:'#f6d27b',marginBottom:12}}>{client?'Modifier le dossier client':'Ouvrir un dossier client'}</h2><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Prénom" value={f.prenom||''} onChange={e=>setF({...f,prenom:e.target.value})}/><Inp label="Nom" value={f.nom||''} onChange={e=>setF({...f,nom:e.target.value})}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram||''} onChange={e=>setF({...f,telegram:e.target.value})}/><Inp label="Adresse / État" value={f.adresse||''} onChange={e=>setF({...f,adresse:e.target.value})}/></div><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" onClick={save}>Enregistrer</Btn></div></div></div>}
 function ClientsPage({clients,setClients,loans=[],notify}){const[query,setQuery]=useState(''),[selected,setSelected]=useState(null),[modal,setModal]=useState(false),[editing,setEditing]=useState(null);async function saveClient(f){try{const payload=editing?{...f,id:editing.id}:f;const c=editing?await api.updateClient(payload):await api.addClient(payload);setClients(editing?clients.map(x=>x.id===c.id?c:x):[c,...clients]);setSelected(c);setEditing(null);notify(editing?'Client modifié':'Client ajouté')}catch(e){notify('⚠ '+e.message)}}function add(){setEditing(null);setModal(true)}function edit(c){setEditing(c);setModal(true)}async function del(c){if(!confirm('Supprimer '+clientFullName(c)+' ?'))return;try{await api.deleteClient(c.id);setClients(clients.filter(x=>x.id!==c.id));setSelected(null);notify('Client supprimé')}catch(e){notify('⚠ '+e.message)}} const list=clients.filter(c=>(clientFullName(c)+' '+(c.telegram||'')+' '+(c.adresse||'')).toLowerCase().includes(query.toLowerCase()));if(selected)return <><ClientDossier client={selected} loans={loans} onBack={()=>setSelected(null)} onEdit={edit} onDelete={del}/><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/></>;return <div><div className="bvh-topbar"><div><small>Registre clientèle</small><h1>Clients</h1></div><Btn onClick={add}>+ Ouvrir un dossier</Btn></div><Inp placeholder="Recherche par nom, télégramme ou état…" value={query} onChange={e=>setQuery(e.target.value)} style={{marginBottom:16}}/><div className="bvh-client-list">{list.map(c=>{const stt=calcClientStats(c,loans);return <div key={c.id} className="bvh-client-row" onClick={()=>setSelected(c)}><div className="bvh-dossier-code">{clientCode(c)}</div><b>{clientFullName(c)}</b><span>{c.telegram||'—'}</span><span>{c.adresse||'—'}</span><span>{stt.late>0?'🔴 En retard':'🟢 À jour'}</span></div>})}</div><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/></div>}
 
-function LoanModal({open,onClose,onSave,loan,clients}){const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:''}; const[f,setF]=useState(empty); useEffect(()=>{if(open)setF(loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7)}:empty)},[open,loan]); if(!open)return null; const sched=schedule({capital:f.somme,rate:f.taux,n:f.nb,start:f.date1}); function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,nom:c?.nom||'',prenom:c?.prenom||'',telegram:c?.telegram||''});} async function save(){if(!f.nom||!f.prenom) return alert('Client requis'); await onSave({...loan,...f,loan_id:loan?.loan_id||genId(),somme:Number(f.somme),taux:Number(f.taux),total_a_rembourser:sched.total,echeances:sched.echeances,date_creation:loan?.date_creation||today()}); onClose();} const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:620,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn onClick={save}>Enregistrer</Btn></div></div></div>}
+function LoanModal({open,onClose,onSave,loan,clients}){const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:''}; const[f,setF]=useState(empty); useEffect(()=>{if(open)setF(loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7)}:empty)},[open,loan]); if(!open)return null; const sched=schedule({capital:f.somme,rate:f.taux,n:f.nb,start:f.date1}); function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,nom:c?.nom||'',prenom:c?.prenom||'',telegram:c?.telegram||''});} async function save(){if(!f.nom||!f.prenom) return alert('Client requis'); await onSave({...loan,...f,loan_id:loan?.loan_id||genId(),somme:Number(f.somme),taux:Number(f.taux),total_a_rembourser:sched.total,echeances:sched.echeances,date_creation:loan?.date_creation||today()}); onClose();} const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:620,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn onClick={save}>Enregistrer</Btn></div></div></div>}
 
-function LoanDetail({loan,onBack,onUpdate,onDelete,notify}){
-  const [editingDates,setEditingDates]=useState(false);
-  const [draftEcheances,setDraftEcheances]=useState(()=>((loan.echeances||[]).map(e=>({...e}))));
-  const [savingDates,setSavingDates]=useState(false);
-  const echeances=loan.echeances||[];
-  const paid=echeances.filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant||0),0);
+function LoanDetail({loan,onBack,onUpdate,onDelete,notify}){const paid=loan.echeances.filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant),0);async function mark(i,val){const es=[...loan.echeances];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}return <div><button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}><h1>{loan.prenom} {loan.nom}</h1><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username}</p><p>Garanties : {loan.garanties||'—'}</p></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(loan.total_a_rembourser-paid)}</b></p></div></div><div style={{display:'flex',gap:10,marginBottom:14}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,overflow:'hidden'}}>{loan.echeances.map((e,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'70px 1fr 130px 140px 180px',gap:12,alignItems:'center',padding:12,borderTop:i?'1px solid '+C.bord:'none'}}><span>#{i+1}</span><b>{fCur(e.montant)}</b><span>{fDate(e.date)}</span><Badge s={st(e)}/>{e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn>}</div>)}</div></div>}
 
-  useEffect(()=>{
-    setEditingDates(false);
-    setDraftEcheances((loan.echeances||[]).map(e=>({...e})));
-  },[loan.id]);
-
-  async function mark(i,val){
-    const es=[...echeances];
-    es[i]={...es[i],statut:val?'paye':'attente'};
-    try{
-      const u=await api.updateLoan({id:loan.id,echeances:es});
-      onUpdate(u);
-      notify(val?'Paiement validé':'Paiement annulé');
-    }catch(e){notify('⚠ '+e.message)}
+function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange}){const[modal,setModal]=useState(false),[sel,setSel]=useState(null);
+  useEffect(()=>{if(sel && !sel._edit){const live=loans.find(x=>String(x.id)===String(sel.id));if(live && live!==sel)setSel(live);}},[loans,sel]);
+  useEffect(()=>()=>onLoanDraftChange?.(false),[]);
+  async function save(l){try{const u=l.id?await api.updateLoan(l):await api.addLoan(l);setLoans(l.id?loans.map(x=>x.id===u.id?u:x):[u,...loans]);notify(l.id?'Prêt modifié':'Prêt créé')}catch(e){notify('⚠ '+e.message)}}
+  async function del(l){if(!confirm('Supprimer définitivement ce prêt ?'))return;try{await api.deleteLoan(l.id);setLoans(loans.filter(x=>x.id!==l.id));setSel(null);notify('Prêt supprimé')}catch(e){notify('⚠ '+e.message)}}
+  function openNew(){onLoanDraftChange?.(true);setModal(true)}
+  function closeNew(){setModal(false);onLoanDraftChange?.(false)}
+  function openEdit(l){onLoanDraftChange?.(true);setSel({...l,_edit:true})}
+  function closeEdit(){setSel(loans.find(x=>x.id===sel.id));onLoanDraftChange?.(false)}
+  if(sel){
+    if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={closeEdit} onSave={save}/></>}
+    return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?openEdit(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify}/>
   }
-
-  function changeDate(i,date){
-    setDraftEcheances(current=>current.map((e,index)=>index===i?{...e,date}:e));
-  }
-
-  function cancelDateEdit(){
-    setDraftEcheances(echeances.map(e=>({...e})));
-    setEditingDates(false);
-  }
-
-  async function saveDates(){
-    if(draftEcheances.some(e=>!/^\d{4}-\d{2}-\d{2}$/.test(String(e.date||'')))){
-      notify('⚠ Chaque échéance doit avoir une date valide.');
-      return;
-    }
-    try{
-      setSavingDates(true);
-      const u=await api.updateLoan({id:loan.id,echeances:draftEcheances});
-      onUpdate(u);
-      setEditingDates(false);
-      notify('Dates des échéances enregistrées');
-    }catch(e){notify('⚠ '+e.message)}
-    finally{setSavingDates(false)}
-  }
-
-  return <div>
-    <button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button>
-    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,marginBottom:16,flexWrap:'wrap'}}>
-      <h1>{loan.prenom} {loan.nom}</h1>
-      <code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code>
-    </div>
-
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}>
-      <div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}>
-        <p>📱 {loan.telegram||'—'}</p>
-        <p>🏦 {loan.banquier_username||'—'}</p>
-        <p>Garanties : {loan.garanties||'—'}</p>
-      </div>
-      <div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}>
-        <p>Somme : <b>{fCur(loan.somme)}</b></p>
-        <p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p>
-        <p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p>
-        <p>Restant : <b style={{color:C.gold}}>{fCur(Number(loan.total_a_rembourser||0)-paid)}</b></p>
-      </div>
-    </div>
-
-    <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap'}}>
-      <Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn>
-      {!editingDates ? <Btn color="#8b642c" onClick={()=>setEditingDates(true)}>Modifier les dates</Btn> : <>
-        <Btn color="#8b642c" disabled={savingDates} onClick={saveDates}>{savingDates?'Enregistrement…':'Enregistrer les dates'}</Btn>
-        <Btn color="#555" disabled={savingDates} onClick={cancelDateEdit}>Annuler</Btn>
-      </>}
-      <Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn>
-    </div>
-
-    {editingDates&&<div style={{background:'#f0b42915',border:'1px solid #f0b42955',color:'#f6d27b',borderRadius:10,padding:'10px 12px',marginBottom:12}}>
-      Modifie chaque échéance individuellement. Les montants, les paiements déjà validés et le statut du prêt ne sont pas modifiés.
-    </div>}
-
-    <div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,overflow:'hidden'}}>
-      {echeances.length===0?<p style={{padding:20,color:C.muted}}>Aucune échéance enregistrée.</p>:echeances.map((e,i)=>{
-        const draft=draftEcheances[i]||e;
-        return <div key={i} style={{display:'grid',gridTemplateColumns:'70px 1fr 160px 140px 180px',gap:12,alignItems:'center',padding:12,borderTop:i?'1px solid '+C.bord:'none'}}>
-          <span>#{i+1}</span>
-          <b>{fCur(e.montant)}</b>
-          {editingDates?
-            <input type="date" value={draft.date||''} onChange={ev=>changeDate(i,ev.target.value)} style={{background:'#13151f',border:'1px solid '+C.gold,borderRadius:8,padding:'9px 10px',color:C.txt,width:'100%'}}/>
-            :<span>{fDate(e.date)}</span>
-          }
-          <Badge s={st(e)}/>
-          {e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn>}
-        </div>
-      })}
-    </div>
-  </div>}
-
-
-function LoansPage({loans,clients,setLoans,notify}){const[modal,setModal]=useState(false),[sel,setSel]=useState(null),[edit,setEdit]=useState(null); async function save(l){try{const u=l.id?await api.updateLoan(l):await api.addLoan(l);setLoans(l.id?loans.map(x=>x.id===u.id?u:x):[u,...loans]);notify(l.id?'Prêt modifié':'Prêt créé')}catch(e){notify('⚠ '+e.message)}} async function del(l){if(!confirm('Supprimer définitivement ce prêt ?'))return;try{await api.deleteLoan(l.id);setLoans(loans.filter(x=>x.id!==l.id));setSel(null);notify('Prêt supprimé')}catch(e){notify('⚠ '+e.message)}} if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={()=>setSel(loans.find(x=>x.id===sel.id))} onSave={save}/></>} return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?setSel(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify}/>}return <div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}><h1>Prêts</h1><Btn onClick={()=>setModal(true)}>+ Nouveau prêt</Btn></div><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>{loans.map(l=>{const next=l.echeances.find(e=>e.statut!=='paye');return <div key={l.id} onClick={()=>setSel(l)} style={{background:C.card,border:'1px solid '+C.bord,borderLeft:'4px solid '+(l.echeances.some(e=>st(e)==='retard')?C.red:C.blue),borderRadius:12,padding:16,cursor:'pointer'}}><b>{l.prenom} {l.nom}</b><p style={{color:C.muted,marginTop:6}}>{l.loan_id}</p><p>{fCur(l.somme)} → {fCur(l.total_a_rembourser)}</p>{next&&<Badge s={st(next)}/>}</div>})}</div><LoanModal open={modal} onClose={()=>setModal(false)} onSave={save} clients={clients}/></div>}
+  return <div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}><h1>Prêts</h1><Btn onClick={openNew}>+ Nouveau prêt</Btn></div><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>{loans.map(l=>{const next=l.echeances.find(e=>e.statut!=='paye');return <div key={l.id} onClick={()=>setSel(l)} style={{background:C.card,border:'1px solid '+C.bord,borderLeft:'4px solid '+(l.echeances.some(e=>st(e)==='retard')?C.red:C.blue),borderRadius:12,padding:16,cursor:'pointer'}}><b>{l.prenom} {l.nom}</b><p style={{color:C.muted,marginTop:6}}>{l.loan_id}</p><p>{fCur(l.somme)} → {fCur(l.total_a_rembourser)}</p>{next&&<Badge s={st(next)}/>}</div>})}</div><LoanModal open={modal} onClose={closeNew} onSave={save} clients={clients}/></div>}
 
 function Check({label,checked,onChange}){return <label style={{display:'flex',gap:8,alignItems:'center',color:'#d8bf82',fontWeight:700}}><input type="checkbox" checked={!!checked} onChange={e=>onChange(e.target.checked)}/>{label}</label>}
 function horseDiscord(f){const coupons=(f.numeros_coupons||'').split('\n').map(x=>x.trim()).filter(Boolean);const check=v=>v?'[x]':'[]';return `## DOSSIER DE CRÉDIT DE MISE HIPPIQUE ##\n\n**INFORMATIONS PERSONNELLES**\n        **Date du jour :** ${f.date_du_jour||'JJ/MM/AAAA'}\n        **Télégramme :** ${f.telegram||''}\n        **Adresse résidentielle actuelle :** ${f.adresse||''}\n        **Profession actuelle :** ${f.profession||''}\n\n**VÉRIFICATION D’IDENTITÉ**\n        ${check(f.identite_presentee)} Pièce d’identité valide présentée\n        ${check(f.photographie_ajoutee)} Photographie du client réalisée et ajoutée au dossier\n        **Lien pièce d’identité :** ${f.piece_identite_url||''}\n        **Lien photographie :** ${f.photographie_url||''}\n\n**DEMANDE DE CRÉDIT DE MISE**\n        **Montant total emprunté :** 25$ x ${f.coupons_count||1} = ${25*(Number(f.coupons_count)||1)}$\n        **Taux d’intérêt FIXE appliqué :** ${f.taux||0} %\n\n**INFORMATIONS SUR LE PARI HIPPIQUE**\n        **Date de la course :** ${f.date_course||'JJ/MM/AAAA'}\n        **Nom de l’écurie ou du cheval sélectionné :** ${f.cheval_ecurie||''}\n        **Type de pari envisagé :**\n        ${check(f.type_pari==='gagnant')} Gagnant\n        ${check(f.type_pari==='place')} Placé\n        ${check(f.type_pari==='couple')} Couplé\n        ${check(f.type_pari==='autre')} Autres : ${f.type_pari_autre||''}\n\n        **Bookmaker partenaire chargé de la prise de pari :** ${f.bookmaker||''}\n\n**COUPONS DE MISE**\n        **Numéros de série des coupons remis :**\n${coupons.length?coupons.map(x=>'        N°'+x).join('\n'):'        N°____'}\n\n        ${check(f.coupons_enregistres)} Coupons enregistrés dans le registre officiel\n        ${check(f.numeros_verifies)} Vérification des numéros de série effectuée\n\n**SITUATION FINANCIÈRE**\n        **Revenus mensuels estimés :** ${f.revenus_mensuels||''}\n        **Patrimoine déclaré :** ${f.patrimoine||''}\n        **Biens susceptibles de garantir le remboursement :** ${f.garanties||''}\n\n**RÉFÉRENCES**\n        **Êtes-vous recommandé par un employé, client ou partenaire de l’Hippodrome Howley & Co. ou de l'institution ?**\n        ${check(f.recommande)} Oui\n        ${check(!f.recommande)} Non\n\n        **Si oui, précisez le nom du référent :** ${f.referent||''}\n        **Autres recommandations :** ${f.recommandations||''}\n\n**DÉCLARATIONS ET ACCEPTATION**\n        ${check(f.a1)} Je reconnais que les coupons demeurent la propriété de la banque jusqu’à leur utilisation.\n        ${check(f.a2)} Je m’engage à rembourser immédiatement le financement accordé après la course hippique.\n        ${check(f.a3)} En cas de gains, j’accepte de rembourser le montant emprunté ainsi que les intérêts convenus.\n        ${check(f.a4)} J’accepte que mes biens personnels puisse être saisi en cas de défaut de paiement.\n        ${check(f.a5)} Je certifie l’exactitude des informations fournies.\n        ${check(f.a6)} J’accepte les conditions générales du service de crédit de mise hippique.\n\n*Le demandeur reconnaît qu’un crédit de mise hippique constitue un engagement financier immédiat et que tout défaut de remboursement pourra entraîner des mesures de recouvrement, des saisies patrimoniales, une procédure judiciaire fédérale ainsi que l’inscription dans les registres officiels des débiteurs insolvables.*\n\n*Par sa signature, le demandeur atteste avoir pris connaissance de l’ensemble des présentes conditions et les accepter sans réserve.*`}
@@ -529,17 +446,35 @@ function HorseCreditPage({clients,notify}){
   </div>
 }
 
-function Dashboard({loans,clients,logs,me,onMark}){const upcoming=[];loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date); if(d<=7) upcoming.push({...e,loan:l,i,d});}}));upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));const total7=upcoming.reduce((s,e)=>s+Number(e.montant),0);const capitalPrete=loans.reduce((s,l)=>s+Number(l.somme||0),0);const totalAttendu=loans.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const encaisse=loans.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const restant=Math.max(totalAttendu-encaisse,0);const retards=upcoming.filter(e=>e.d<0).length;const derniers=(logs||[]).slice(0,5);return <div><div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{dateDuJour()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div><div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div><div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🕰️" title="Exercice" value="1904" note="Banque Van Horn"/></div><div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div></div>}
+function Dashboard({loans,clients,logs,me,onMark}){const upcoming=[];loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date); if(d<=7) upcoming.push({...e,loan:l,i,d});}}));upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));const total7=upcoming.reduce((s,e)=>s+Number(e.montant),0);const capitalPrete=loans.reduce((s,l)=>s+Number(l.somme||0),0);const totalAttendu=loans.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const encaisse=loans.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const restant=Math.max(totalAttendu-encaisse,0);const retards=upcoming.filter(e=>e.d<0).length;const derniers=(logs||[]).slice(0,5);return <div><div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div><div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div><div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🕰️" title="Exercice" value="1904" note="Banque Van Horn"/></div><div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div></div>}
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
 function Card({title,value,icon,color}){return <InfoCard icon={icon} title={title} value={value} note=""/>}
 function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{items.length===0?<p className="bvh-empty">Aucune échéance.</p>:items.map((e,i)=><div key={i} className="bvh-row"><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div>}
 function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
 
 function App(){
-  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false);
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false);
   const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
   async function loadAll(user){const req=[api.loans(),api.clients()]; if(roleRank[user.role]>=2) req.push(api.users()); if(roleRank[user.role]>=2) req.push(api.logs()); const r=await Promise.allSettled(req);setLoans(r[0].status==='fulfilled'?r[0].value:[]);setClients(r[1].status==='fulfilled'?r[1].value:[]); if(r[2]?.status==='fulfilled')setUsers(r[2].value); if(r[3]?.status==='fulfilled')setLogs(r[3].value);}
   useEffect(()=>{(async()=>{try{const r=await api.me();setMe(r.user);await loadAll(r.user);}catch{}finally{setLoading(false)}})()},[]);
+
+  useEffect(()=>{
+    if(!me || !['dashboard','prets'].includes(page) || loanDraftActive) return;
+    let active=true;
+    const syncLoans=async()=>{
+      if(document.visibilityState!=='visible') return;
+      try{
+        const latest=await api.loans();
+        if(active) setLoans(latest||[]);
+      }catch{}
+    };
+    syncLoans();
+    const timer=window.setInterval(syncLoans,8000);
+    const onVisibility=()=>{if(document.visibilityState==='visible')syncLoans();};
+    document.addEventListener('visibilitychange',onVisibility);
+    return ()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+  },[me,page,loanDraftActive]);
+
   async function onLogin(user){setMe(user);await loadAll(user)}
   async function logout(){await api.logout();setMe(null)}
   async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});setLoans(loans.map(x=>x.id===u.id?u:x));notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}
@@ -547,7 +482,20 @@ function App(){
   if(!me)return <Login onLogin={onLogin}/>;
   const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['clients','👤','Clients'],['hippique','🏇','Crédit hippique']];
   if(roleRank[me.role]>=2) menu.push(['users','🔐','Comptes'],['logs','📖','Journal']);
-  const choosePage=(target)=>{setPage(target);setMenuOpen(false)};
+  async function refreshSharedData(){
+    if(!me) return;
+    setRefreshing(true);
+    try{
+      await loadAll(me);
+    }finally{
+      setRefreshing(false);
+    }
+  }
+  function choosePage(target){
+    setPage(target);
+    setMenuOpen(false);
+    refreshSharedData();
+  }
   return <div className="bvh-shell"><Toast msg={toast}/>
     <div className="bvh-mobile-top">
       <button className="bvh-mobile-menu-button" aria-label="Ouvrir le menu" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?'✕':'☰'}</button>
@@ -559,7 +507,10 @@ function App(){
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
       <div className="bvh-user"><small style={{color:'#9f8550',textTransform:'uppercase',letterSpacing:'.12em'}}>Connecté</small><br/><b>{me.username}</b><p style={{color:'#d0b272',fontSize:13}}>{roles[me.role]}</p><Btn full color="#5f4725" onClick={logout} style={{marginTop:12}}>Déconnexion</Btn></div>
     </aside>
-    <main className="bvh-main">{page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} notify={notify}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}</main>
+    <main className="bvh-main">
+      {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
+      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} notify={notify}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+    </main>
   </div>
 }
 
