@@ -217,7 +217,7 @@ const api={
  users:()=>call('/api/users'), addUser:u=>call('/api/users',{method:'POST',body:JSON.stringify(u)}), updateUser:u=>call('/api/users',{method:'PUT',body:JSON.stringify(u)}), deleteUser:id=>call('/api/users',{method:'DELETE',body:JSON.stringify({id})}),
  clients:()=>call('/api/clients'), addClient:c=>call('/api/clients',{method:'POST',body:JSON.stringify(c)}), updateClient:c=>call('/api/clients',{method:'PUT',body:JSON.stringify(c)}), deleteClient:id=>call('/api/clients',{method:'DELETE',body:JSON.stringify({id})}),
  loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'),
- documents:client_id=>call('/api/client_documents?client_id='+encodeURIComponent(client_id)), uploadDocument:d=>call('/api/client_documents',{method:'POST',body:JSON.stringify(d)}), deleteDocument:id=>call('/api/client_documents',{method:'DELETE',body:JSON.stringify({id})}), notes:client_id=>call('/api/client_notes?client_id='+encodeURIComponent(client_id)), addNote:d=>call('/api/client_notes',{method:'POST',body:JSON.stringify(d)}), deleteNote:id=>call('/api/client_notes',{method:'DELETE',body:JSON.stringify({id})}), horseCredits:()=>call('/api/horse_credits'), addHorseCredit:h=>call('/api/horse_credits',{method:'POST',body:JSON.stringify(h)}), updateHorseCredit:h=>call('/api/horse_credits',{method:'PUT',body:JSON.stringify(h)}), deleteHorseCredit:id=>call('/api/horse_credits',{method:'DELETE',body:JSON.stringify({id})})
+ documents:client_id=>call('/api/client_documents?client_id='+encodeURIComponent(client_id)), uploadDocument:d=>call('/api/client_documents',{method:'POST',body:JSON.stringify(d)}), deleteDocument:id=>call('/api/client_documents',{method:'DELETE',body:JSON.stringify({id})}), notes:client_id=>call('/api/client_notes?client_id='+encodeURIComponent(client_id)), addNote:d=>call('/api/client_notes',{method:'POST',body:JSON.stringify(d)}), deleteNote:id=>call('/api/client_notes',{method:'DELETE',body:JSON.stringify({id})}), applications:()=>call('/api/credit_applications?actualisation='+Date.now()), addApplication:a=>call('/api/credit_applications',{method:'POST',body:JSON.stringify(a)}), updateApplication:a=>call('/api/credit_applications',{method:'PUT',body:JSON.stringify(a)}), deleteApplication:id=>call('/api/credit_applications',{method:'DELETE',body:JSON.stringify({id})}), horseCredits:()=>call('/api/horse_credits'), addHorseCredit:h=>call('/api/horse_credits',{method:'POST',body:JSON.stringify(h)}), updateHorseCredit:h=>call('/api/horse_credits',{method:'PUT',body:JSON.stringify(h)}), deleteHorseCredit:id=>call('/api/horse_credits',{method:'DELETE',body:JSON.stringify({id})})
 };
 function payment(capital,rate,n){capital=Number(capital);rate=Number(rate)/100;n=parseInt(n);if(!capital||!n)return 0;if(!rate)return capital/n;return capital*rate/(1-Math.pow(1+rate,-n));}
 function schedule({capital,rate,n,start}){const p=payment(capital,rate,n); const e=[]; for(let i=0;i<n;i++){const d=new Date(start+'T12:00:00');d.setDate(d.getDate()+i*7);e.push({montant:Number(p.toFixed(2)),date:d.toISOString().split('T')[0],statut:'attente'});} return {echeances:e,total:Number((p*n).toFixed(2)),montant:Number(p.toFixed(2))};}
@@ -244,9 +244,155 @@ function clientFullName(c){return `${c.prenom||''} ${c.nom||''}`.trim();}
 function clientLoans(c,loans){const cid=String(c.id||'');const name=clientFullName(c).toLowerCase();return (loans||[]).filter(l=>String(l.client_id||'')===cid || `${l.prenom||''} ${l.nom||''}`.trim().toLowerCase()===name);}
 function calcClientStats(c,loans){const ls=clientLoans(c,loans);const total=ls.reduce((s,l)=>s+Number(l.somme||0),0);const expected=ls.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const paid=ls.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const active=ls.filter(l=>(l.echeances||[]).some(e=>e.statut!=='paye')).length;const late=ls.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut!=='paye'&&daysDiff(e.date)<0).length,0);return{loans:ls,total,expected,paid,active,late};}
 function NotesPanel({client}){const[notes,setNotes]=useState([]),[text,setText]=useState(''),[busy,setBusy]=useState(false),[err,setErr]=useState('');async function load(){try{setErr('');const r=await api.notes(client.id);setNotes(r||[])}catch(e){setErr(e.message)}}useEffect(()=>{load()},[client.id]);async function add(){const note=text.trim();if(!note)return setErr('Écris une note avant d’ajouter.');try{setBusy(true);setErr('');const n=await api.addNote({client_id:client.id,note});setNotes([n,...notes]);setText('')}catch(e){setErr(e.message)}finally{setBusy(false)}}async function del(n){if(!confirm('Supprimer cette note ?'))return;try{await api.deleteNote(n.id);setNotes(notes.filter(x=>x.id!==n.id))}catch(e){setErr(e.message)}}return <div className="bvh-ledger"><div className="bvh-ledger-title" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><span>Notes internes</span><Btn color="#8b642c" disabled={busy} onClick={add}>{busy?'Ajout…':'Ajouter la note'}</Btn></div><div style={{padding:16}}><textarea value={text} onChange={e=>setText(e.target.value)} placeholder="Rédiger une note interne datée automatiquement…" rows={4} className="bvh-note-input" />{err&&<div style={{color:'#ffb0a6',marginTop:8}}>⚠ {err}</div>}<div style={{display:'grid',gap:10,marginTop:14}}>{notes.length===0?<div className="bvh-note-box">Aucune note interne pour ce dossier.</div>:notes.map(n=><div className="bvh-note-card" key={n.id}><div style={{display:'flex',justifyContent:'space-between',gap:10}}><b>{new Date(n.created_at).toLocaleString('fr-FR')}</b><button onClick={()=>del(n)} style={{background:'none',border:'none',color:'#ffb0a6',cursor:'pointer',fontWeight:900}}>Supprimer</button></div><p style={{whiteSpace:'pre-wrap',marginTop:8}}>{n.note}</p><small>Par {n.created_by_username||'—'}</small></div>)}</div></div></div>}
-function ClientDossier({client,loans,onBack,onEdit,onDelete}){const stt=calcClientStats(client,loans);return <div><button onClick={onBack} style={{background:'none',border:'none',color:'#f3d58a',cursor:'pointer',marginBottom:14,fontWeight:900}}>← Retour au registre des clients</button><div className="bvh-dossier-head"><div><div className="bvh-dossier-code">Dossier {clientCode(client)}</div><h1>{clientFullName(client)}</h1><p style={{color:'#b69b68'}}>Fiche client officielle — Banque Van Horn</p></div><div style={{display:'flex',gap:8,alignItems:'center'}}><Btn color="#5f4725" onClick={()=>onEdit(client)}>Modifier</Btn><Btn color={C.red} onClick={()=>onDelete(client)}>Supprimer</Btn></div></div><div className="bvh-grid-4"><InfoCard icon="📜" title="Prêts enregistrés" value={stt.loans.length} note="Historique bancaire"/><InfoCard icon="⏳" title="Prêts en cours" value={stt.active} note="Non soldés"/><InfoCard icon="💰" title="Total emprunté" value={fCur(stt.total)} note="Capital nominal"/><InfoCard icon="✅" title="Total remboursé" value={fCur(stt.paid)} note="Paiements validés"/></div><div className="bvh-dossier-grid-wide"><div className="bvh-ledger"><div className="bvh-ledger-title">Informations générales</div><div style={{padding:'8px 16px 16px'}}><div className="bvh-field"><b>Nom complet</b><span>{clientFullName(client)}</span></div><div className="bvh-field"><b>Télégramme</b><span>{client.telegram||'—'}</span></div><div className="bvh-field"><b>Adresse / État</b><span>{client.adresse||'—'}</span></div><div className="bvh-field"><b>Statut</b><span>{stt.late>0?'🔴 Paiement en retard':'🟢 Dossier à jour'}</span></div></div></div><DocumentPanel client={client}/></div><div className="bvh-dossier-grid-wide"><NotesPanel client={client}/><div className="bvh-ledger"><div className="bvh-ledger-title">Résumé du dossier</div><div style={{padding:'8px 16px 16px'}}><div className="bvh-field"><b>Paiements en retard</b><span>{stt.late}</span></div><div className="bvh-field"><b>Prêts en cours</b><span>{stt.active}</span></div><div className="bvh-field"><b>Total récupéré</b><span>{fCur(stt.paid)}</span></div></div></div></div><div className="bvh-ledger"><div className="bvh-ledger-title">Prêts du client</div>{stt.loans.length===0?<p className="bvh-empty">Aucun prêt enregistré pour ce client.</p>:stt.loans.map(l=><div className="bvh-row" key={l.id}><b>{l.loan_id}</b><span>{fCur(l.somme)}</span><span>{fCur(l.total_a_rembourser)}</span><Badge s={(l.echeances||[]).some(e=>e.statut!=='paye'&&daysDiff(e.date)<0)?'retard':'avenir'}/><span style={{color:'#d8bf82'}}>{l.banquier_username||'—'}</span></div>)}</div></div>}
-function ClientModal({open,onClose,onSave,client}){const empty={nom:'',prenom:'',telegram:'',adresse:''};const[f,setF]=useState(empty);useEffect(()=>{if(open)setF(client?{...empty,...client}:empty)},[open,client]);if(!open)return null;async function save(){if(!f.nom||!f.prenom)return alert('Nom et prénom requis');await onSave(f);onClose();}return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:210,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:24,width:620,maxWidth:'96vw'}}><h2 style={{color:'#f6d27b',marginBottom:12}}>{client?'Modifier le dossier client':'Ouvrir un dossier client'}</h2><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Prénom" value={f.prenom||''} onChange={e=>setF({...f,prenom:e.target.value})}/><Inp label="Nom" value={f.nom||''} onChange={e=>setF({...f,nom:e.target.value})}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram||''} onChange={e=>setF({...f,telegram:e.target.value})}/><Inp label="Adresse / État" value={f.adresse||''} onChange={e=>setF({...f,adresse:e.target.value})}/></div><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" onClick={save}>Enregistrer</Btn></div></div></div>}
-function ClientsPage({clients,setClients,loans=[],notify}){const[query,setQuery]=useState(''),[selected,setSelected]=useState(null),[modal,setModal]=useState(false),[editing,setEditing]=useState(null);async function saveClient(f){try{const payload=editing?{...f,id:editing.id}:f;const c=editing?await api.updateClient(payload):await api.addClient(payload);setClients(editing?clients.map(x=>x.id===c.id?c:x):[c,...clients]);setSelected(c);setEditing(null);notify(editing?'Client modifié':'Client ajouté')}catch(e){notify('⚠ '+e.message)}}function add(){setEditing(null);setModal(true)}function edit(c){setEditing(c);setModal(true)}async function del(c){if(!confirm('Supprimer '+clientFullName(c)+' ?'))return;try{await api.deleteClient(c.id);setClients(clients.filter(x=>x.id!==c.id));setSelected(null);notify('Client supprimé')}catch(e){notify('⚠ '+e.message)}} const list=clients.filter(c=>(clientFullName(c)+' '+(c.telegram||'')+' '+(c.adresse||'')).toLowerCase().includes(query.toLowerCase()));if(selected)return <><ClientDossier client={selected} loans={loans} onBack={()=>setSelected(null)} onEdit={edit} onDelete={del}/><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/></>;return <div><div className="bvh-topbar"><div><small>Registre clientèle</small><h1>Clients</h1></div><Btn onClick={add}>+ Ouvrir un dossier</Btn></div><Inp placeholder="Recherche par nom, télégramme ou état…" value={query} onChange={e=>setQuery(e.target.value)} style={{marginBottom:16}}/><div className="bvh-client-list">{list.map(c=>{const stt=calcClientStats(c,loans);return <div key={c.id} className="bvh-client-row" onClick={()=>setSelected(c)}><div className="bvh-dossier-code">{clientCode(c)}</div><b>{clientFullName(c)}</b><span>{c.telegram||'—'}</span><span>{c.adresse||'—'}</span><span>{stt.late>0?'🔴 En retard':'🟢 À jour'}</span></div>})}</div><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/></div>}
+
+function DossierLine({label,value}){return <div className="bvh-field"><b>{label}</b><span>{value===undefined||value===null||value===''?'—':value}</span></div>}
+function ClientDossier({client,loans,onBack,onEdit,onDelete}){
+  const stt=calcClientStats(client,loans);
+  const residential={
+    autonome:'Autonome, entièrement payé',
+    hypotheque:'Propriétaire, avec hypothèque en cours',
+    loue:'Loué',
+    heberge:'Hébergé'
+  }[client.statut_residentiel]||'—';
+  const employment={employe:'Employé',independant:'Indépendant',autre:'Autre'}[client.statut_emploi]||'—';
+  return <div>
+    <button onClick={onBack} style={{background:'none',border:'none',color:'#f3d58a',cursor:'pointer',marginBottom:14,fontWeight:900}}>← Retour au registre des clients</button>
+    <div className="bvh-dossier-head">
+      <div><div className="bvh-dossier-code">Dossier {clientCode(client)}</div><h1>{clientFullName(client)}</h1><p style={{color:'#b69b68'}}>Fiche client officielle — Banque Van Horn</p></div>
+      <div style={{display:'flex',gap:8,alignItems:'center'}}><Btn color="#5f4725" onClick={()=>onEdit(client)}>Modifier la fiche</Btn><Btn color={C.red} onClick={()=>onDelete(client)}>Supprimer</Btn></div>
+    </div>
+
+    <div className="bvh-grid-4">
+      <InfoCard icon="📜" title="Prêts enregistrés" value={stt.loans.length} note="Historique bancaire"/>
+      <InfoCard icon="⏳" title="Prêts en cours" value={stt.active} note="Non soldés"/>
+      <InfoCard icon="💰" title="Total emprunté" value={fCur(stt.total)} note="Capital nominal"/>
+      <InfoCard icon="✅" title="Total remboursé" value={fCur(stt.paid)} note="Paiements validés"/>
+    </div>
+
+    <div className="bvh-dossier-grid-wide">
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">Identité et coordonnées</div>
+        <div style={{padding:'8px 16px 16px'}}>
+          <DossierLine label="Nom complet" value={`${client.civilite||''} ${clientFullName(client)}`.trim()}/>
+          <DossierLine label="Date de naissance" value={client.date_naissance}/>
+          <DossierLine label="Nationalité" value={client.nationalite}/>
+          <DossierLine label="Télégramme" value={client.telegram}/>
+          <DossierLine label="Adresse résidentielle" value={client.adresse}/>
+          <DossierLine label="Pièce d'identité" value={client.carte_identite_url?<a href={client.carte_identite_url} target="_blank" rel="noreferrer" style={{color:'#f3d58a'}}>Consulter</a>:'—'}/>
+        </div>
+      </div>
+
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">Situation résidentielle et financière</div>
+        <div style={{padding:'8px 16px 16px'}}>
+          <DossierLine label="Statut résidentiel" value={residential}/>
+          <DossierLine label="Autres crédits / dettes" value={client.a_autres_dettes?'Oui':'Non'}/>
+          <DossierLine label="Précisions sur les dettes" value={client.details_dettes}/>
+          <DossierLine label="Paiements en retard" value={stt.late}/>
+          <DossierLine label="Dossier bancaire" value={stt.late>0?'🔴 À régulariser':'🟢 À jour'}/>
+        </div>
+      </div>
+    </div>
+
+    <div className="bvh-dossier-grid-wide">
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">Emploi et revenus</div>
+        <div style={{padding:'8px 16px 16px'}}>
+          <DossierLine label="Statut d'emploi" value={employment}/>
+          {client.statut_emploi==='autre'&&<DossierLine label="Précision" value={client.statut_emploi_autre}/>}
+          <DossierLine label="Date d'embauche" value={client.date_embauche}/>
+          <DossierLine label="Entreprise" value={client.entreprise}/>
+          <DossierLine label="Chef d'entreprise" value={client.chef_entreprise}/>
+          <DossierLine label="Télégramme du chef" value={client.telegram_chef}/>
+          <DossierLine label="Profession / poste" value={client.profession}/>
+          <DossierLine label="Salaire hebdomadaire" value={client.salaire_hebdomadaire}/>
+        </div>
+      </div>
+      <DocumentPanel client={client}/>
+    </div>
+
+    <div className="bvh-dossier-grid-wide">
+      <NotesPanel client={client}/>
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">Prêts du client</div>
+        {stt.loans.length===0?<p className="bvh-empty">Aucun prêt enregistré pour ce client.</p>:stt.loans.map(l=><div className="bvh-row" key={l.id}><b>{l.loan_id}</b><span>{fCur(l.somme)}</span><span>{fCur(l.total_a_rembourser)}</span><Badge s={(l.echeances||[]).some(e=>e.statut!=='paye'&&daysDiff(e.date)<0)?'retard':'avenir'}/><span style={{color:'#d8bf82'}}>{l.banquier_username||'—'}</span></div>)}
+      </div>
+    </div>
+  </div>
+}
+
+function ClientModal({open,onClose,onSave,client}){
+  const empty={
+    nom:'',prenom:'',civilite:'Monsieur',date_naissance:'',nationalite:'',telegram:'',adresse:'',
+    statut_residentiel:'',a_autres_dettes:false,details_dettes:'',
+    statut_emploi:'',statut_emploi_autre:'',date_embauche:'',entreprise:'',
+    chef_entreprise:'',telegram_chef:'',profession:'',salaire_hebdomadaire:'',
+    carte_identite_url:'',notes:''
+  };
+  const[f,setF]=useState(empty);
+  useEffect(()=>{if(open)setF(client?{...empty,...client,a_autres_dettes:!!client.a_autres_dettes}:empty)},[open,client]);
+  if(!open)return null;
+  async function save(){if(!f.nom||!f.prenom)return alert('Nom et prénom requis');await onSave(f);onClose();}
+  const grid=(...items)=><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12}}>{items}</div>;
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:210,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+    <div style={{background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:24,width:900,maxWidth:'96vw',maxHeight:'92vh',overflow:'auto'}}>
+      <h2 style={{color:'#f6d27b',marginBottom:4}}>{client?'Modifier le dossier client':'Ouvrir un dossier client'}</h2>
+      <p style={{color:'#b69b68',marginBottom:16}}>Conserve les informations personnelles, professionnelles et financières utiles aux demandes de crédit.</p>
+
+      <Sec>Informations personnelles</Sec>
+      {grid(
+        <Select label="Civilité" value={f.civilite} onChange={e=>setF({...f,civilite:e.target.value})}><option>Monsieur</option><option>Madame</option></Select>,
+        <Inp label="Prénom" value={f.prenom||''} onChange={e=>setF({...f,prenom:e.target.value})}/>,
+        <Inp label="Nom" value={f.nom||''} onChange={e=>setF({...f,nom:e.target.value})}/>,
+        <Inp label="Date de naissance" type="date" value={f.date_naissance||''} onChange={e=>setF({...f,date_naissance:e.target.value})}/>,
+        <Inp label="Nationalité" value={f.nationalite||''} onChange={e=>setF({...f,nationalite:e.target.value})}/>,
+        <Inp label="Télégramme" value={f.telegram||''} onChange={e=>setF({...f,telegram:e.target.value})}/>
+      )}
+      <div style={{marginTop:12}}><Inp label="Adresse résidentielle actuelle" value={f.adresse||''} onChange={e=>setF({...f,adresse:e.target.value})}/></div>
+      <div style={{marginTop:12}}><Inp label="Lien pièce d'identité (facultatif)" value={f.carte_identite_url||''} onChange={e=>setF({...f,carte_identite_url:e.target.value})} placeholder="https://..."/></div>
+
+      <Sec>Situation résidentielle et dettes</Sec>
+      {grid(
+        <Select label="Statut résidentiel" value={f.statut_residentiel||''} onChange={e=>setF({...f,statut_residentiel:e.target.value})}>
+          <option value="">— À préciser —</option><option value="autonome">Autonome, entièrement payé</option><option value="hypotheque">Propriétaire, avec hypothèque en cours</option><option value="loue">Loué</option><option value="heberge">Hébergé</option>
+        </Select>,
+        <div style={{paddingTop:24}}><Check label="Possède d'autres crédits ou dettes" checked={!!f.a_autres_dettes} onChange={v=>setF({...f,a_autres_dettes:v})}/></div>
+      )}
+      {f.a_autres_dettes&&<div style={{marginTop:12}}><Txt label="Précisions sur les crédits ou dettes existants" value={f.details_dettes||''} onChange={e=>setF({...f,details_dettes:e.target.value})}/></div>}
+
+      <Sec>Emploi et revenus</Sec>
+      {grid(
+        <Select label="Statut d'emploi" value={f.statut_emploi||''} onChange={e=>setF({...f,statut_emploi:e.target.value})}><option value="">— À préciser —</option><option value="employe">Employé</option><option value="independant">Indépendant</option><option value="autre">Autre</option></Select>,
+        f.statut_emploi==='autre'?<Inp label="Autre statut" value={f.statut_emploi_autre||''} onChange={e=>setF({...f,statut_emploi_autre:e.target.value})}/>:<div/>,
+        <Inp label="Date d'embauche" type="date" value={f.date_embauche||''} onChange={e=>setF({...f,date_embauche:e.target.value})}/>,
+        <Inp label="Nom de l'entreprise" value={f.entreprise||''} onChange={e=>setF({...f,entreprise:e.target.value})}/>,
+        <Inp label="Chef de l'entreprise" value={f.chef_entreprise||''} onChange={e=>setF({...f,chef_entreprise:e.target.value})}/>,
+        <Inp label="Télégramme du chef" value={f.telegram_chef||''} onChange={e=>setF({...f,telegram_chef:e.target.value})}/>,
+        <Inp label="Profession / poste exact" value={f.profession||''} onChange={e=>setF({...f,profession:e.target.value})}/>,
+        <Inp label="Salaire hebdomadaire approximatif" value={f.salaire_hebdomadaire||''} onChange={e=>setF({...f,salaire_hebdomadaire:e.target.value})}/>
+      )}
+
+      <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:22}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" onClick={save}>Enregistrer le dossier</Btn></div>
+    </div>
+  </div>
+}
+
+function ClientsPage({clients,setClients,loans=[],notify}){
+  const[query,setQuery]=useState(''),[selected,setSelected]=useState(null),[modal,setModal]=useState(false),[editing,setEditing]=useState(null);
+  async function saveClient(f){try{const payload=editing?{...f,id:editing.id}:f;const c=editing?await api.updateClient(payload):await api.addClient(payload);setClients(editing?clients.map(x=>x.id===c.id?c:x):[c,...clients]);setSelected(c);setEditing(null);notify(editing?'Client modifié':'Client ajouté')}catch(e){notify('⚠ '+e.message)}}
+  function add(){setEditing(null);setModal(true)}
+  function edit(c){setEditing(c);setModal(true)}
+  async function del(c){if(!confirm('Supprimer '+clientFullName(c)+' ?'))return;try{await api.deleteClient(c.id);setClients(clients.filter(x=>x.id!==c.id));setSelected(null);notify('Client supprimé')}catch(e){notify('⚠ '+e.message)}}
+  const list=clients.filter(c=>(clientFullName(c)+' '+(c.telegram||'')+' '+(c.adresse||'')+' '+(c.profession||'')+' '+(c.entreprise||'')).toLowerCase().includes(query.toLowerCase()));
+  if(selected)return <><ClientDossier client={selected} loans={loans} onBack={()=>setSelected(null)} onEdit={edit} onDelete={del}/><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/></>;
+  return <div>
+    <div className="bvh-topbar"><div><small>Registre clientèle</small><h1>Clients</h1></div><Btn onClick={add}>+ Ouvrir un dossier</Btn></div>
+    <Inp placeholder="Recherche par nom, télégramme, adresse, profession ou entreprise…" value={query} onChange={e=>setQuery(e.target.value)} style={{marginBottom:16}}/>
+    <div className="bvh-client-list">{list.map(c=>{const stt=calcClientStats(c,loans);return <div key={c.id} className="bvh-client-row" onClick={()=>setSelected(c)}><div className="bvh-dossier-code">{clientCode(c)}</div><b>{clientFullName(c)}</b><span>{c.telegram||'—'}</span><span>{c.profession||c.adresse||'—'}</span><span>{stt.late>0?'🔴 En retard':'🟢 À jour'}</span></div>})}</div>
+    <ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/>
+  </div>
+}
+
 
 function LoanModal({open,onClose,onSave,loan,clients}){const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:''}; const[f,setF]=useState(empty); useEffect(()=>{if(open)setF(loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7)}:empty)},[open,loan]); if(!open)return null; const sched=schedule({capital:f.somme,rate:f.taux,n:f.nb,start:f.date1}); function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,nom:c?.nom||'',prenom:c?.prenom||'',telegram:c?.telegram||''});} async function save(){if(!f.nom||!f.prenom) return alert('Client requis'); await onSave({...loan,...f,loan_id:loan?.loan_id||genId(),somme:Number(f.somme),taux:Number(f.taux),total_a_rembourser:sched.total,echeances:sched.echeances,date_creation:loan?.date_creation||today()}); onClose();} const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:620,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn onClick={save}>Enregistrer</Btn></div></div></div>}
 
@@ -464,7 +610,319 @@ function HorseCreditPage({clients,notify}){
   </div>
 }
 
-function Dashboard({loans,clients,logs,me,onMark}){const upcoming=[];loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date); if(d<=7) upcoming.push({...e,loan:l,i,d});}}));upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));const total7=upcoming.reduce((s,e)=>s+Number(e.montant),0);const capitalPrete=loans.reduce((s,l)=>s+Number(l.somme||0),0);const totalAttendu=loans.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const encaisse=loans.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const restant=Math.max(totalAttendu-encaisse,0);const retards=upcoming.filter(e=>e.d<0).length;const derniers=(logs||[]).slice(0,5);return <div><div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div><div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div><div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🕰️" title="Exercice" value="1904" note="Banque Van Horn"/></div><div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div></div>}
+
+function appChecks(v){return v?'[x]':'[]';}
+function appDurationLabel(f){
+  const labels={j7:'7 jours',j14:'14 jours',j21:'21 jours',j28:'28 jours',m1:'1 mois',autre:f.duree_autre||'Autre'};
+  return labels[f.duree_souhaitee]||'—';
+}
+function appTypeLabel(t){return t==='hypothecaire'?'Prêt hypothécaire / immobilier':'Crédit à la consommation';}
+function applicationDiscord(f){
+  const c=appChecks;
+  const identity=`${f.civilite||''} ${f.client_prenom||''} ${f.client_nom||''}`.trim();
+  const common=`## DÉTAILS PERSONNELS - ${identity||'Prénom NOM'} ##
+
+**INFORMATIONS PERSONNELLES**
+        **Date du jour :** ${f.date_du_jour||'JJ/MM/AAAA'}
+        **Votre identité :** ${identity||'Prénom, NOM'}
+        **Date de naissance :** ${f.date_naissance||'JJ/MM/AAAA'}
+        **Nationalité :** ${f.nationalite||''}
+        **État civil :** ${f.civilite||''}
+        **Télégramme :** ${f.telegram||''}
+
+**INFORMATIONS COMPLÉMENTAIRES**
+        **Adresse résidentielle actuelle :** ${f.adresse||''}
+        **Statut résidentiel :**
+        ${c(f.statut_residentiel==='autonome')} Autonome, entièrement payé
+        ${c(f.statut_residentiel==='hypotheque')} Propriétaire, avec hypothèque en cours
+        ${c(f.statut_residentiel==='loue')} Loué
+        ${c(f.statut_residentiel==='heberge')} Hébergé
+
+        **Possédez-vous actuellement d’autres crédits ou dettes ?**
+        ${c(!!f.a_autres_dettes)} Oui
+        ${c(!f.a_autres_dettes)} Non
+        **Si oui, précisez :** ${f.details_dettes||''}
+
+**EMPLOI**
+        **Statut d’emploi :**
+        ${c(f.statut_emploi==='employe')} Employé
+        ${c(f.statut_emploi==='independant')} Indépendant
+        ${c(f.statut_emploi==='autre')} Autres : ${f.statut_emploi_autre||''}
+
+        **Date d'embauche :** ${f.date_embauche||'JJ/MM/AAAA'}
+        **Nom de l’entreprise :** ${f.entreprise||''}
+        **Nom du chef de l'entreprise :** ${f.chef_entreprise||''}
+        **Télégramme du chef de l'entreprise :** ${f.telegram_chef||''}
+        **Profession et poste exact :** ${f.profession||''}
+        **Salaire hebdomadaire approximatif :** ${f.salaire_hebdomadaire||''}
+`;
+  if(f.application_type==='hypothecaire'){
+    return common+`
+**INFORMATIONS SUR LA PROPRIÉTÉ À FINANCER**
+        **Adresse du bien immobilier :** ${f.adresse_bien||''}
+        **Utilisation du bien :**
+        ${c(f.utilisation_bien==='occupation')} Occupation du propriétaire
+        ${c(f.utilisation_bien==='investissement')} Investissement
+
+        **Type de propriété résidentielle :**
+        ${c(f.type_residentiel==='maison')} Maison / Appartement
+        ${c(f.type_residentiel==='contenant')} Contenant
+        ${c(f.type_residentiel==='bungalow')} Bungalow
+        ${c(f.type_residentiel==='autre')} Autres : ${f.type_residentiel_autre||''}
+
+        **Type de propriété commerciale :**
+        ${c(f.type_commercial==='bureau')} Bureau
+        ${c(f.type_commercial==='magasin')} Magasin
+        ${c(f.type_commercial==='autre')} Autres : ${f.type_commercial_autre||''}
+
+**DÉTAILS FINANCIERS DU PRÊT**
+        **Montant total du bien :** ${f.montant_bien||''}
+        **Montant du prêt demandé :** ${f.montant_demande||''}
+        **Apport personnel :** ${f.apport_personnel||''}
+        **Durée souhaitée du prêt :** ${appDurationLabel(f)} — ${f.nb_echeances||''} échéance(s)
+        **Taux d’intérêt FIXE souhaité :** ${f.taux||0} %
+        **Conditions d’échéance et pénalités de retard :** ${f.penalites||'3 jours / +5%'}
+        **Possibilité de remboursement anticipé :**
+        ${c(!!f.remboursement_anticipe)} Oui
+        ${c(!f.remboursement_anticipe)} Non
+`+applicationGuarantees(f);
+  }
+  return common+`
+**INFORMATIONS SUR LE CRÉDIT**
+        **Motif du crédit :**
+        ${c(f.motif_credit==='achat_personnel')} Achat personnel
+        ${c(f.motif_credit==='vehicule')} Véhicule
+        ${c(f.motif_credit==='projet_professionnel')} Projet professionnel
+        ${c(f.motif_credit==='depenses_exceptionnelles')} Dépenses exceptionnelles
+        ${c(f.motif_credit==='investissement')} Investissement
+        ${c(f.motif_credit==='autre')} Autres : ${f.motif_autre||''}
+
+        **Description détaillée du projet ou de la dépense :** ${f.description_projet||''}
+        **Montant du crédit demandé :** ${f.montant_demande||''}
+        **Apport personnel :** ${f.apport_personnel||''}
+
+**DÉTAILS FINANCIERS DU CRÉDIT**
+        **Durée souhaitée du remboursement :** ${appDurationLabel(f)} — ${f.nb_echeances||''} échéance(s)
+        **Taux d’intérêt FIXE :** ${f.taux||0} %
+        **Conditions d’échéance et pénalités de retard :** ${f.penalites||'3 jours / +5%'}
+        **Possibilité de remboursement anticipé :**
+        ${c(!!f.remboursement_anticipe)} Oui
+        ${c(!f.remboursement_anticipe)} Non
+`+applicationGuarantees(f);
+}
+function applicationGuarantees(f){const c=appChecks;return `
+**GARANTIES ET COLLATÉRAUX**
+        **Le ${f.application_type==='hypothecaire'?'prêt':'crédit'} sera-t-il garanti par un bien ou un actif ?**
+        ${c(!!f.garantie)} Oui
+        ${c(!f.garantie)} Non
+
+        **Type de garantie proposée :**
+        ${c(f.type_garantie==='vehicule')} Véhicule
+        ${c(f.type_garantie==='immobilier')} Bien immobilier
+        ${c(f.type_garantie==='entreprise')} Entreprise / parts & actions
+        ${c(f.type_garantie==='objet')} Objet de valeur
+        ${c(f.type_garantie==='compte')} Compte bancaire / liquidités
+        ${c(f.type_garantie==='autre')} Autres : ${f.type_garantie_autre||''}
+
+        **Description détaillée des biens mis en garantie :** ${f.description_garantie||''}
+        **Valeur estimée des biens :** ${f.valeur_garantie||''}
+
+*Le demandeur accepte que les biens mentionnés ci-dessus puissent être saisis, placés sous gage ou transférés à la banque en cas de défaut de paiement.*`;}
+function appEmpty(type='consommation'){
+  return {
+    id:null,dossier_id:'',application_type:type,statut:'brouillon',loan_id:'',
+    client_id:'',client_nom:'',client_prenom:'',civilite:'Monsieur',date_du_jour:today(),
+    date_naissance:'',nationalite:'',telegram:'',adresse:'',statut_residentiel:'',
+    a_autres_dettes:false,details_dettes:'',statut_emploi:'',statut_emploi_autre:'',
+    date_embauche:'',entreprise:'',chef_entreprise:'',telegram_chef:'',profession:'',salaire_hebdomadaire:'',
+    motif_credit:'achat_personnel',motif_autre:'',description_projet:'',
+    adresse_bien:'',utilisation_bien:'occupation',type_residentiel:'',type_residentiel_autre:'',
+    type_commercial:'',type_commercial_autre:'',montant_bien:'',
+    montant_demande:'',apport_personnel:'',duree_souhaitee:'j28',duree_autre:'',nb_echeances:'4',
+    taux:'10',date_premiere_echeance:plusDays(7),penalites:'3 jours / +5%',remboursement_anticipe:true,
+    garantie:false,type_garantie:'',type_garantie_autre:'',description_garantie:'',valeur_garantie:''
+  };
+}
+function durationToPayments(choice,other){
+  if(choice==='j7')return '1'; if(choice==='j14')return '2'; if(choice==='j21')return '3'; if(choice==='j28'||choice==='m1')return '4';
+  const n=Number(other); return Number.isFinite(n)&&n>0?String(Math.ceil(n/7)):'';
+}
+function CreditApplicationsPage({clients,setLoans,notify}){
+  const[f,setF]=useState(appEmpty());
+  const[apps,setApps]=useState([]);
+  const[busy,setBusy]=useState(false);
+  const[query,setQuery]=useState('');
+  const[showList,setShowList]=useState(true);
+
+  async function load(){try{setApps(await api.applications())}catch(e){notify('⚠ '+e.message)}}
+  useEffect(()=>{load()},[]);
+  function pickClient(id){
+    const c=clients.find(x=>String(x.id)===String(id));
+    if(!c)return;
+    setF({...f,client_id:id,client_nom:c.nom||'',client_prenom:c.prenom||'',civilite:c.civilite||'Monsieur',date_naissance:c.date_naissance||'',nationalite:c.nationalite||'',telegram:c.telegram||'',adresse:c.adresse||'',statut_residentiel:c.statut_residentiel||'',a_autres_dettes:!!c.a_autres_dettes,details_dettes:c.details_dettes||'',statut_emploi:c.statut_emploi||'',statut_emploi_autre:c.statut_emploi_autre||'',date_embauche:c.date_embauche||'',entreprise:c.entreprise||'',chef_entreprise:c.chef_entreprise||'',telegram_chef:c.telegram_chef||'',profession:c.profession||'',salaire_hebdomadaire:c.salaire_hebdomadaire||''});
+  }
+  function fromApp(a){return {...appEmpty(a.application_type||'consommation'),...(a.details||{}),...a,client_id:a.client_id||'',a_autres_dettes:!!(a.details||{}).a_autres_dettes,remboursement_anticipe:(a.details||{}).remboursement_anticipe!==false,garantie:!!(a.details||{}).garantie};}
+  function toPayload(){
+    const discord_text=applicationDiscord(f);
+    return {...f,client_id:f.client_id||null,client_nom:f.client_nom,client_prenom:f.client_prenom,telegram:f.telegram,montant_demande:Number(f.montant_demande||0),taux:Number(f.taux||0),nb_echeances:Number(f.nb_echeances||0),discord_text,details:{...f}};
+  }
+  async function copy(){try{await navigator.clipboard.writeText(applicationDiscord(f));notify('Dossier Discord copié')}catch{notify('⚠ Copie impossible dans ce navigateur')}}
+  async function save(){
+    if(!f.client_nom||!f.client_prenom)return notify('⚠ Prénom et nom du demandeur requis');
+    if(!Number(f.montant_demande)||!Number(f.nb_echeances))return notify('⚠ Montant demandé et nombre d’échéances requis');
+    try{
+      setBusy(true);
+      const payload=toPayload();
+      const saved=payload.id?await api.updateApplication(payload):await api.addApplication(payload);
+      setApps(payload.id?apps.map(a=>a.id===saved.id?saved:a):[saved,...apps]);
+      setF(fromApp(saved));
+      notify(payload.id?'Demande modifiée':'Demande enregistrée');
+    }catch(e){notify('⚠ '+e.message)}finally{setBusy(false)}
+  }
+  async function remove(a){
+    if(!confirm('Supprimer la demande '+a.dossier_id+' ?'))return;
+    try{await api.deleteApplication(a.id);setApps(apps.filter(x=>x.id!==a.id));if(String(f.id)===String(a.id))setF(appEmpty());notify('Demande supprimée')}catch(e){notify('⚠ '+e.message)}
+  }
+  async function createLoan(){
+    if(!f.id)return notify('⚠ Enregistre d’abord la demande.');
+    if(f.statut!=='validee')return notify('⚠ Place d’abord la demande au statut « Validée ».');
+    const sched=schedule({capital:f.montant_demande,rate:f.taux,n:f.nb_echeances,start:f.date_premiere_echeance||plusDays(7)});
+    try{
+      setBusy(true);
+      const loan=await api.addLoan({loan_id:genId(),client_id:f.client_id||null,nom:f.client_nom,prenom:f.client_prenom,telegram:f.telegram,somme:Number(f.montant_demande),taux:Number(f.taux),total_a_rembourser:sched.total,echeances:sched.echeances,garanties:f.description_garantie||f.valeur_garantie||'',application_id:f.id,date_creation:today()});
+      setLoans(prev=>[loan,...prev]);
+      const updated=await api.updateApplication({...toPayload(),id:f.id,statut:'transformee',loan_id:loan.loan_id});
+      setApps(apps.map(a=>a.id===updated.id?updated:a));setF(fromApp(updated));notify('Prêt créé dans le registre');
+    }catch(e){notify('⚠ '+e.message)}finally{setBusy(false)}
+  }
+  function changeType(type){setF({...appEmpty(type),application_type:type})}
+  const grid=(...items)=><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:12}}>{items}</div>;
+  const filtered=apps.filter(a=>`${a.dossier_id||''} ${a.client_prenom||''} ${a.client_nom||''} ${a.application_type||''}`.toLowerCase().includes(query.toLowerCase()));
+  return <div>
+    <div className="bvh-topbar">
+      <div><small>Dossiers de financement</small><h1>Demandes de crédit</h1></div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
+        {f.id&&<Btn color="#555" onClick={()=>setF(appEmpty())}>Nouvelle demande</Btn>}
+        <Btn color="#5f4725" onClick={copy}>📋 Copier Discord</Btn>
+        <Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':f.id?'Enregistrer les modifications':'Enregistrer la demande'}</Btn>
+      </div>
+    </div>
+
+    <div className="bvh-ledger" style={{marginBottom:14}}>
+      <div className="bvh-ledger-title">Type de financement</div>
+      <div style={{padding:16,display:'flex',gap:10,flexWrap:'wrap'}}>
+        <Btn color={f.application_type==='consommation'?'#8b642c':'#555'} onClick={()=>changeType('consommation')}>Crédit à la consommation</Btn>
+        <Btn color={f.application_type==='hypothecaire'?'#8b642c':'#555'} onClick={()=>changeType('hypothecaire')}>Prêt hypothécaire / immobilier</Btn>
+        <span style={{color:'#d8bf82',padding:'9px 2px'}}>Le formulaire complet s’adapte automatiquement au type sélectionné.</span>
+      </div>
+    </div>
+
+    <div className="bvh-dossier-grid-wide">
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">{f.id?`Modification — ${f.dossier_id}`:`Nouvelle demande — ${appTypeLabel(f.application_type)}`}</div>
+        <div style={{padding:16,display:'grid',gap:12}}>
+          <Sec>Informations personnelles</Sec>
+          <Select label="Client existant" value={f.client_id||''} onChange={e=>pickClient(e.target.value)}><option value="">— Nouveau client ou saisie manuelle —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>
+          {grid(
+            <Select label="Civilité" value={f.civilite} onChange={e=>setF({...f,civilite:e.target.value})}><option>Monsieur</option><option>Madame</option></Select>,
+            <Inp label="Prénom" value={f.client_prenom} onChange={e=>setF({...f,client_prenom:e.target.value})}/>,
+            <Inp label="Nom" value={f.client_nom} onChange={e=>setF({...f,client_nom:e.target.value})}/>,
+            <Inp label="Date du jour" type="date" value={f.date_du_jour} onChange={e=>setF({...f,date_du_jour:e.target.value})}/>,
+            <Inp label="Date de naissance" type="date" value={f.date_naissance} onChange={e=>setF({...f,date_naissance:e.target.value})}/>,
+            <Inp label="Nationalité" value={f.nationalite} onChange={e=>setF({...f,nationalite:e.target.value})}/>,
+            <Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/>
+          )}
+          <Inp label="Adresse résidentielle actuelle" value={f.adresse} onChange={e=>setF({...f,adresse:e.target.value})}/>
+
+          <Sec>Informations complémentaires</Sec>
+          {grid(
+            <Select label="Statut résidentiel" value={f.statut_residentiel} onChange={e=>setF({...f,statut_residentiel:e.target.value})}><option value="">— À préciser —</option><option value="autonome">Autonome, entièrement payé</option><option value="hypotheque">Propriétaire, avec hypothèque en cours</option><option value="loue">Loué</option><option value="heberge">Hébergé</option></Select>,
+            <div style={{paddingTop:24}}><Check label="Possède d’autres crédits ou dettes" checked={!!f.a_autres_dettes} onChange={v=>setF({...f,a_autres_dettes:v})}/></div>
+          )}
+          {f.a_autres_dettes&&<Txt label="Détails des crédits ou dettes existants" value={f.details_dettes} onChange={e=>setF({...f,details_dettes:e.target.value})}/>}
+
+          <Sec>Emploi</Sec>
+          {grid(
+            <Select label="Statut d'emploi" value={f.statut_emploi} onChange={e=>setF({...f,statut_emploi:e.target.value})}><option value="">— À préciser —</option><option value="employe">Employé</option><option value="independant">Indépendant</option><option value="autre">Autre</option></Select>,
+            f.statut_emploi==='autre'?<Inp label="Autre statut" value={f.statut_emploi_autre} onChange={e=>setF({...f,statut_emploi_autre:e.target.value})}/>:<div/>,
+            <Inp label="Date d'embauche" type="date" value={f.date_embauche} onChange={e=>setF({...f,date_embauche:e.target.value})}/>,
+            <Inp label="Nom de l'entreprise" value={f.entreprise} onChange={e=>setF({...f,entreprise:e.target.value})}/>,
+            <Inp label="Chef de l'entreprise" value={f.chef_entreprise} onChange={e=>setF({...f,chef_entreprise:e.target.value})}/>,
+            <Inp label="Télégramme du chef" value={f.telegram_chef} onChange={e=>setF({...f,telegram_chef:e.target.value})}/>,
+            <Inp label="Profession / poste exact" value={f.profession} onChange={e=>setF({...f,profession:e.target.value})}/>,
+            <Inp label="Salaire hebdomadaire approximatif" value={f.salaire_hebdomadaire} onChange={e=>setF({...f,salaire_hebdomadaire:e.target.value})}/>
+          )}
+
+          {f.application_type==='hypothecaire'?<>
+            <Sec>Propriété à financer</Sec>
+            <Inp label="Adresse du bien immobilier" value={f.adresse_bien} onChange={e=>setF({...f,adresse_bien:e.target.value})}/>
+            {grid(
+              <Select label="Utilisation du bien" value={f.utilisation_bien} onChange={e=>setF({...f,utilisation_bien:e.target.value})}><option value="occupation">Occupation du propriétaire</option><option value="investissement">Investissement</option></Select>,
+              <Select label="Type de propriété résidentielle" value={f.type_residentiel} onChange={e=>setF({...f,type_residentiel:e.target.value})}><option value="">— Sans objet —</option><option value="maison">Maison / Appartement</option><option value="contenant">Contenant</option><option value="bungalow">Bungalow</option><option value="autre">Autre</option></Select>,
+              f.type_residentiel==='autre'?<Inp label="Autre propriété résidentielle" value={f.type_residentiel_autre} onChange={e=>setF({...f,type_residentiel_autre:e.target.value})}/>:<div/>,
+              <Select label="Type de propriété commerciale" value={f.type_commercial} onChange={e=>setF({...f,type_commercial:e.target.value})}><option value="">— Sans objet —</option><option value="bureau">Bureau</option><option value="magasin">Magasin</option><option value="autre">Autre</option></Select>,
+              f.type_commercial==='autre'?<Inp label="Autre propriété commerciale" value={f.type_commercial_autre} onChange={e=>setF({...f,type_commercial_autre:e.target.value})}/>:<div/>,
+              <Inp label="Montant total du bien" type="number" value={f.montant_bien} onChange={e=>setF({...f,montant_bien:e.target.value})}/>
+            )}
+          </>:<>
+            <Sec>Objet du crédit</Sec>
+            {grid(
+              <Select label="Motif du crédit" value={f.motif_credit} onChange={e=>setF({...f,motif_credit:e.target.value})}><option value="achat_personnel">Achat personnel</option><option value="vehicule">Véhicule</option><option value="projet_professionnel">Projet professionnel</option><option value="depenses_exceptionnelles">Dépenses exceptionnelles</option><option value="investissement">Investissement</option><option value="autre">Autre</option></Select>,
+              f.motif_credit==='autre'?<Inp label="Autre motif" value={f.motif_autre} onChange={e=>setF({...f,motif_autre:e.target.value})}/>:<div/>
+            )}
+            <Txt label="Description détaillée du projet ou de la dépense" value={f.description_projet} onChange={e=>setF({...f,description_projet:e.target.value})}/>
+          </>}
+
+          <Sec>Détails financiers</Sec>
+          {grid(
+            <Inp label={f.application_type==='hypothecaire'?'Montant du prêt demandé':'Montant du crédit demandé'} type="number" value={f.montant_demande} onChange={e=>setF({...f,montant_demande:e.target.value})}/>,
+            <Inp label="Apport personnel" type="number" value={f.apport_personnel} onChange={e=>setF({...f,apport_personnel:e.target.value})}/>,
+            <Select label="Durée souhaitée" value={f.duree_souhaitee} onChange={e=>{const v=e.target.value;setF({...f,duree_souhaitee:v,nb_echeances:durationToPayments(v,f.duree_autre)||f.nb_echeances})}}><option value="j7">7 jours</option><option value="j14">14 jours</option><option value="j21">21 jours</option><option value="j28">28 jours</option><option value="m1">1 mois</option><option value="autre">Autre</option></Select>,
+            f.duree_souhaitee==='autre'?<Inp label="Durée autre (jours)" type="number" value={f.duree_autre} onChange={e=>setF({...f,duree_autre:e.target.value,nb_echeances:durationToPayments('autre',e.target.value)||f.nb_echeances})}/>:<div/>,
+            <Inp label="Nombre d'échéances" type="number" value={f.nb_echeances} onChange={e=>setF({...f,nb_echeances:e.target.value})}/>,
+            <Inp label="Taux d'intérêt fixe (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>,
+            <Inp label="Première échéance" type="date" value={f.date_premiere_echeance} onChange={e=>setF({...f,date_premiere_echeance:e.target.value})}/>,
+            <Inp label="Conditions et pénalités" value={f.penalites} onChange={e=>setF({...f,penalites:e.target.value})}/>
+          )}
+          <Check label="Possibilité de remboursement anticipé" checked={!!f.remboursement_anticipe} onChange={v=>setF({...f,remboursement_anticipe:v})}/>
+
+          <Sec>Garanties et collatéraux</Sec>
+          <Check label="Le financement est garanti par un bien ou actif" checked={!!f.garantie} onChange={v=>setF({...f,garantie:v})}/>
+          {grid(
+            <Select label="Type de garantie" value={f.type_garantie} onChange={e=>setF({...f,type_garantie:e.target.value})}><option value="">— Sans garantie —</option><option value="vehicule">Véhicule</option><option value="immobilier">Bien immobilier</option><option value="entreprise">Entreprise / parts & actions</option><option value="objet">Objet de valeur</option><option value="compte">Compte bancaire / liquidités</option><option value="autre">Autre</option></Select>,
+            f.type_garantie==='autre'?<Inp label="Autre garantie" value={f.type_garantie_autre} onChange={e=>setF({...f,type_garantie_autre:e.target.value})}/>:<div/>,
+            <Inp label="Valeur estimée des biens" value={f.valeur_garantie} onChange={e=>setF({...f,valeur_garantie:e.target.value})}/>
+          )}
+          <Txt label="Description détaillée des biens mis en garantie" value={f.description_garantie} onChange={e=>setF({...f,description_garantie:e.target.value})}/>
+
+          <Sec>Décision bancaire</Sec>
+          <Select label="Statut de la demande" value={f.statut} onChange={e=>setF({...f,statut:e.target.value})}><option value="brouillon">Brouillon</option><option value="en_attente">En attente</option><option value="validee">Validée</option><option value="refusee">Refusée</option><option value="transformee">Prêt créé</option></Select>
+          {f.id&&<Btn color={f.statut==='validee'?'#3f9b67':'#555'} disabled={busy||f.statut!=='validee'} onClick={createLoan}>🏦 Créer le prêt dans le registre</Btn>}
+          {f.loan_id&&<p style={{color:'#62d492',fontWeight:800}}>Prêt créé : {f.loan_id}</p>}
+        </div>
+      </div>
+
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">Aperçu Discord</div>
+        <pre style={{whiteSpace:'pre-wrap',padding:16,color:'#f0d899',fontSize:13,lineHeight:1.45,maxHeight:800,overflow:'auto'}}>{applicationDiscord(f)}</pre>
+      </div>
+    </div>
+
+    <div className="bvh-ledger" style={{marginTop:14}}>
+      <div className="bvh-ledger-title" style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center',flexWrap:'wrap'}}>
+        <span>Demandes enregistrées</span>
+        <div style={{display:'flex',gap:8}}><input placeholder="Rechercher une demande…" value={query} onChange={e=>setQuery(e.target.value)} style={{background:'#120b06',border:'1px solid #62451f',borderRadius:8,padding:'8px 10px',color:'#f8e7b7',minWidth:240}}/><Btn color="#555" onClick={load}>Actualiser</Btn></div>
+      </div>
+      {filtered.length===0?<p className="bvh-empty">Aucune demande enregistrée.</p>:filtered.map(a=><div className="bvh-row" key={a.id} style={{gridTemplateColumns:'1.1fr 1.4fr 1fr 120px 230px'}}>
+        <b>{a.dossier_id}</b><span>{a.client_prenom} {a.client_nom}</span><span>{appTypeLabel(a.application_type)}</span><span>{a.statut||'brouillon'}</span>
+        <span style={{display:'flex',gap:6,flexWrap:'wrap'}}><Btn color="#8b642c" onClick={()=>{setF(fromApp(a));window.scrollTo({top:0,behavior:'smooth'});}}>Ouvrir</Btn><Btn color={C.red} onClick={()=>remove(a)}>Supprimer</Btn></span>
+      </div>)}
+    </div>
+  </div>
+}
+
+
+function Dashboard({loans,clients,logs,me,onMark}){const upcoming=[];loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date); if(d<=7) upcoming.push({...e,loan:l,i,d});}}));upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));const total7=upcoming.reduce((s,e)=>s+Number(e.montant),0);const capitalPrete=loans.reduce((s,l)=>s+Number(l.somme||0),0);const totalAttendu=loans.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const encaisse=loans.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const restant=Math.max(totalAttendu-encaisse,0);const retards=upcoming.filter(e=>e.d<0).length;const derniers=(logs||[]).slice(0,5);return <div><div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div><div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div><div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🕰️" title="Date bancaire" value={today().split('-').reverse().join('/')} note="Date réelle"/></div><div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div></div>}
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
 function Card({title,value,icon,color}){return <InfoCard icon={icon} title={title} value={value} note=""/>}
 function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{items.length===0?<p className="bvh-empty">Aucune échéance.</p>:items.map((e,i)=><div key={i} className="bvh-row"><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div>}
@@ -498,7 +956,7 @@ function App(){
   async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});setLoans(loans.map(x=>x.id===u.id?u:x));notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}
   if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>Chargement…</div>;
   if(!me)return <Login onLogin={onLogin}/>;
-  const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['clients','👤','Clients'],['hippique','🏇','Crédit hippique']];
+  const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['demandes','📝','Demandes'],['clients','👤','Clients'],['hippique','🏇','Crédit hippique']];
   if(roleRank[me.role]>=2) menu.push(['users','🔐','Comptes'],['logs','📖','Journal']);
   async function refreshSharedData(){
     if(!me) return;
@@ -527,7 +985,7 @@ function App(){
     </aside>
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
-      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} notify={notify}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive}/>} {page==='demandes'&&<CreditApplicationsPage clients={clients} setLoans={setLoans} notify={notify}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} notify={notify}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
     </main>
   </div>
 }

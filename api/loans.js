@@ -5,6 +5,11 @@ function safeClientId(v){
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+function safeApplicationId(v){
+  if(v === undefined || v === null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
 function safeEcheances(v){
   if(Array.isArray(v)) return v;
   if(typeof v === 'string') {
@@ -34,13 +39,14 @@ module.exports = (req,res)=>handler(req,res, async()=>{
 
   if(req.method==='POST'){
     const b=await readBody(req);
-    if(!b.nom || !b.prenom || !b.somme || !b.taux || !b.echeances) {
+    if(!b.nom || !b.prenom || !b.somme || b.taux===undefined || !b.echeances) {
       return json(res,400,{error:'Données prêt incomplètes'});
     }
 
     const payload={
-      loan_id:b.loan_id,
+      loan_id:String(b.loan_id||'').trim(),
       client_id:safeClientId(b.client_id),
+      application_id:safeApplicationId(b.application_id),
       nom:String(b.nom||'').trim(),
       prenom:String(b.prenom||'').trim(),
       telegram:String(b.telegram||'').trim(),
@@ -61,6 +67,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       loan_id:data.loan_id,
       client:`${data.prenom} ${data.nom}`,
       client_id:data.client_id,
+      application_id:data.application_id,
       montant:data.somme,
       total:data.total_a_rembourser
     });
@@ -78,14 +85,23 @@ module.exports = (req,res)=>handler(req,res, async()=>{
     const patch={};
     ['nom','prenom','telegram','garanties','total_a_rembourser','somme','taux']
       .forEach(k=>{ if(b[k]!==undefined) patch[k]=b[k]; });
+    if(b.client_id !== undefined) patch.client_id=safeClientId(b.client_id);
+    if(b.application_id !== undefined) patch.application_id=safeApplicationId(b.application_id);
+    if(b.echeances !== undefined) patch.echeances=safeEcheances(b.echeances);
 
-    if(b.client_id !== undefined) patch.client_id = safeClientId(b.client_id);
-    if(b.echeances !== undefined) patch.echeances = safeEcheances(b.echeances);
+    const { data, error } = await sb
+      .from('pret_loans')
+      .update(patch)
+      .eq('id',b.id)
+      .select()
+      .single();
 
-    const { data, error } = await sb.from('pret_loans').update(patch).eq('id',b.id).select().single();
     if(error) return json(res,500,{error:error.message});
 
-    await logAction(actor,'modification_pret',{loan_id:data.loan_id,fields:Object.keys(patch)});
+    await logAction(actor,'modification_pret',{
+      loan_id:data.loan_id,
+      fields:Object.keys(patch)
+    });
     return json(res,200,{...data,echeances:safeEcheances(data.echeances)});
   }
 
@@ -105,7 +121,6 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       montant:old.somme,
       total:old.total_a_rembourser
     });
-
     return json(res,200,{ok:true});
   }
 
