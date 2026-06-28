@@ -1,0 +1,136 @@
+name: Sauvegarde Banque Van Horn
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Tous les jours vers 04 h 17, heure de Bruxelles.
+    - cron: '17 4 * * *'
+      timezone: 'Europe/Brussels'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sauvegarde-banque-van-horn
+  cancel-in-progress: false
+
+jobs:
+  sauvegarde:
+    name: Base, documents et code
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+      TZ: Europe/Brussels
+
+    steps:
+      - name: Récupérer le code du site
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Installer les dépendances du projet
+        run: npm ci
+
+      - name: Installer Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Installer rclone et les outils d'archive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone zip
+
+      - name: Configurer l'accès privé à Google Drive
+        run: |
+          mkdir -p "$HOME/.config/rclone"
+          printf '%s' "$RCLONE_CONFIG" > "$HOME/.config/rclone/rclone.conf"
+          chmod 600 "$HOME/.config/rclone/rclone.conf"
+
+      - name: Préparer le dossier de sauvegarde
+        run: |
+          STAMP="$(date +'%Y-%m-%d_%H-%M-%S')"
+          echo "STAMP=$STAMP" >> "$GITHUB_ENV"
+          echo "WORK_DIR=$RUNNER_TEMP/banque-van-horn-$STAMP" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/banque-van-horn-$STAMP/database"
+          mkdir -p "$RUNNER_TEMP/banque-van-horn-$STAMP/documents"
+          mkdir -p "$RUNNER_TEMP/banque-van-horn-$STAMP/code"
+
+      - name: Sauvegarder les rôles, le schéma et les données
+        run: |
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "$WORK_DIR/database/roles.sql" --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "$WORK_DIR/database/schema.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f "$WORK_DIR/database/data.sql" --data-only --use-copy -x "storage.buckets_vectors" -x "storage.vector_indexes"
+
+      - name: Sauvegarder les documents clients
+        run: node scripts/backup-storage.mjs "$WORK_DIR/documents"
+
+      - name: Sauvegarder le code du site
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='backups' \
+            --exclude='*.zip' \
+            -czf "$WORK_DIR/code/site-code.tar.gz" \
+            .
+
+      - name: Ajouter les informations de restauration
+        run: |
+          cat > "$WORK_DIR/LIRE-MOI.txt" <<'TXT'
+          SAUVEGARDE BANQUE VAN HORN
+
+          Cette sauvegarde contient :
+          - database/roles.sql : rôles Postgres
+          - database/schema.sql : structure de la base
+          - database/data.sql : données de la base
+          - documents/ : copie du bucket Supabase « client-documents »
+          - code/site-code.tar.gz : code source du site
+
+          Pour restaurer, ne remplace pas le projet de production directement.
+          Crée d'abord un nouveau projet Supabase de test, puis utilise les fichiers
+          database/*.sql et les documents pour vérifier la restauration.
+          TXT
+          {
+            echo "# Sauvegarde Banque Van Horn"
+            echo
+            echo "- Date locale : $(date '+%d/%m/%Y %H:%M:%S %Z')"
+            echo "- Exécution GitHub : $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Fichiers :"
+            find "$WORK_DIR" -type f -printf '  - %P (%k Ko)\n' | sort
+          } > "$WORK_DIR/RESUME.md"
+
+      - name: Envoyer la sauvegarde vers Google Drive
+        run: |
+          rclone copy "$WORK_DIR" "gdrive-banque:Banque Van Horn - Sauvegardes/automatiques/$STAMP" \
+            --transfers 4 \
+            --checkers 8 \
+            --retries 3 \
+            --low-level-retries 10 \
+            --checksum
+
+      - name: Conserver 31 jours de sauvegardes
+        run: |
+          rclone delete "gdrive-banque:Banque Van Horn - Sauvegardes/automatiques" \
+            --min-age 31d \
+            --rmdirs \
+            --fast-list
+
+      - name: Résumé
+        if: always()
+        run: |
+          {
+            echo "## Sauvegarde Banque Van Horn"
+            echo
+            echo "- Dossier Google Drive : \`Banque Van Horn - Sauvegardes/automatiques/$STAMP\`"
+            echo "- Conservation : 31 jours glissants"
+            echo "- Statut : consulte les étapes ci-dessus."
+          } >> "$GITHUB_STEP_SUMMARY"
