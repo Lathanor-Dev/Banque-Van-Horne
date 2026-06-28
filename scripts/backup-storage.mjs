@@ -1,21 +1,40 @@
+import { createClient } from '@supabase/supabase-js';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 const bucket = 'client-documents';
 const outputRoot = process.argv[2];
-const projectUrl = process.env.SUPABASE_URL;
+const rawProjectUrl = process.env.SUPABASE_URL;
 const secretKey = process.env.SUPABASE_SECRET_KEY;
 
 if (!outputRoot) throw new Error('Dossier de destination manquant.');
-if (!projectUrl || !secretKey) {
+if (!rawProjectUrl || !secretKey) {
   throw new Error('SUPABASE_URL ou SUPABASE_SECRET_KEY manquant.');
 }
 
-const baseUrl = projectUrl.replace(/\/+$/, '');
+/*
+  Le secret SUPABASE_URL peut parfois avoir été enregistré avec /rest/v1.
+  supabase-js attend l'URL racine du projet ; on normalise donc l'URL ici.
+*/
+function normaliseProjectUrl(value) {
+  const cleaned = String(value).trim().replace(/^['"]|['"]$/g, '');
+  const parsed = new URL(cleaned);
+  parsed.pathname = parsed.pathname
+    .replace(/\/(?:rest|storage)\/v1\/?$/i, '/')
+    .replace(/\/+$/, '/');
+  parsed.search = '';
+  parsed.hash = '';
+  return parsed.toString().replace(/\/$/, '');
+}
+
+const projectUrl = normaliseProjectUrl(rawProjectUrl);
+const supabase = createClient(projectUrl, secretKey, {
+  auth: { persistSession: false, autoRefreshToken: false },
+});
+
 const root = path.resolve(outputRoot);
 let copiedFiles = 0;
 let copiedBytes = 0;
-const visitedPrefixes = new Set();
 
 function destinationFor(objectPath) {
   const normalized = path.posix.normalize(String(objectPath).replaceAll('\\', '/'));
@@ -30,115 +49,84 @@ function destinationFor(objectPath) {
   return destination;
 }
 
-function encodeStoragePath(objectPath) {
-  return String(objectPath)
-    .split('/')
-    .filter(Boolean)
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
-}
-
-async function readError(response) {
-  const text = await response.text();
-  try {
-    const parsed = JSON.parse(text);
-    return parsed.message || parsed.error || text || `HTTP ${response.status}`;
-  } catch {
-    return text || `HTTP ${response.status}`;
-  }
-}
-
-async function listAll(prefix = '') {
-  const entries = [];
-  const limit = 1000;
-  let offset = 0;
-
-  // Appel HTTP direct : il évite le chemin racine invalide produit par certaines
-  // versions de supabase-js lorsqu'on liste la racine du bucket.
-  const endpoint = `${baseUrl}/storage/v1/object/list/${encodeURIComponent(bucket)}`;
+async function readDocumentRows() {
+  const rows = [];
+  const pageSize = 1000;
+  let from = 0;
 
   while (true) {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        apikey: secretKey,
-        authorization: `Bearer ${secretKey}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        prefix,
-        limit,
-        offset,
-        sortBy: { column: 'name', order: 'asc' },
-      }),
-    });
+    const { data, error } = await supabase
+      .from('pret_client_documents')
+      .select('id, storage_path, filename, mime_type, created_at')
+      .not('storage_path', 'is', null)
+      .order('created_at', { ascending: true })
+      .range(from, from + pageSize - 1);
 
-    if (!response.ok) {
-      throw new Error(`Impossible de lister « ${prefix || '/'} » : ${await readError(response)}`);
+    if (error) {
+      throw new Error(`Impossible de lire le registre des documents clients : ${error.message}`);
     }
 
-    const payload = await response.json();
-    const data = Array.isArray(payload) ? payload : (payload?.data || []);
-    entries.push(...data);
-
-    if (data.length < limit) break;
-    offset += limit;
+    const page = data || [];
+    rows.push(...page);
+    if (page.length < pageSize) break;
+    from += pageSize;
   }
 
-  return entries;
+  return rows;
 }
 
 async function downloadObject(objectPath) {
-  const endpoint = `${baseUrl}/storage/v1/object/${encodeURIComponent(bucket)}/${encodeStoragePath(objectPath)}`;
-  const response = await fetch(endpoint, {
-    headers: {
-      apikey: secretKey,
-      authorization: `Bearer ${secretKey}`,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Téléchargement impossible « ${objectPath} » : ${await readError(response)}`);
+  const { data, error } = await supabase.storage.from(bucket).download(objectPath);
+  if (error) {
+    throw new Error(`Téléchargement impossible « ${objectPath} » : ${error.message}`);
   }
 
-  const file = destinationFor(objectPath);
-  await fs.mkdir(path.dirname(file), { recursive: true });
-  const buffer = Buffer.from(await response.arrayBuffer());
-  await fs.writeFile(file, buffer);
+  const destination = destinationFor(objectPath);
+  await fs.mkdir(path.dirname(destination), { recursive: true });
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+  await fs.writeFile(destination, buffer);
 
   copiedFiles += 1;
   copiedBytes += buffer.length;
   console.log(`Copié : ${objectPath}`);
 }
 
-async function walk(prefix = '') {
-  if (visitedPrefixes.has(prefix)) return;
-  visitedPrefixes.add(prefix);
+await fs.mkdir(root, { recursive: true });
 
-  const entries = await listAll(prefix);
-  for (const entry of entries) {
-    const name = String(entry?.name || '');
-    if (!name) continue;
+const host = new URL(projectUrl).host;
+console.log(`Connexion Supabase : ${host}`);
+console.log('Lecture du registre des documents clients…');
 
-    const objectPath = prefix ? `${prefix}/${name}` : name;
-    // Supabase renvoie les dossiers sans identifiant d'objet ; seuls les fichiers ont un id.
-    if (entry.id === null || entry.id === undefined) {
-      await walk(objectPath);
-    } else {
-      await downloadObject(objectPath);
-    }
-  }
+/*
+  On ne liste plus la racine du bucket. La sauvegarde se base sur les chemins
+  réellement enregistrés dans pret_client_documents, puis télécharge chaque
+  fichier avec l'API Storage officielle.
+*/
+const documentRows = await readDocumentRows();
+const byStoragePath = new Map();
+
+for (const row of documentRows) {
+  const storagePath = String(row.storage_path || '').trim();
+  if (storagePath) byStoragePath.set(storagePath, row);
 }
 
-await fs.mkdir(root, { recursive: true });
-await walk();
+for (const storagePath of byStoragePath.keys()) {
+  await downloadObject(storagePath);
+}
 
 const manifest = {
   bucket,
+  source: 'public.pret_client_documents.storage_path',
   created_at_utc: new Date().toISOString(),
+  document_rows: documentRows.length,
   files: copiedFiles,
   bytes: copiedBytes,
 };
 
-await fs.writeFile(path.join(root, 'manifest.json'), JSON.stringify(manifest, null, 2));
+await fs.writeFile(
+  path.join(root, 'manifest.json'),
+  JSON.stringify(manifest, null, 2),
+);
+
 console.log(`Documents sauvegardés : ${copiedFiles} fichier(s), ${copiedBytes} octet(s).`);
