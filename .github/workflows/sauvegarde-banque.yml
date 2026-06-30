@@ -23,7 +23,10 @@ jobs:
       SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-      RCLONE_CONFIG: ${{ secrets.RCLONE_CONFIG }}
+
+      # Ne pas appeler cette variable RCLONE_CONFIG :
+      # rclone interprète ce nom comme le chemin de son fichier de configuration.
+      RCLONE_CONFIG_CONTENT: ${{ secrets.RCLONE_CONFIG }}
       TZ: Europe/Brussels
 
     steps:
@@ -51,9 +54,13 @@ jobs:
 
       - name: Configurer l'accès privé à Google Drive
         run: |
-          mkdir -p "$HOME/.config/rclone"
-          printf '%s' "$RCLONE_CONFIG" > "$HOME/.config/rclone/rclone.conf"
-          chmod 600 "$HOME/.config/rclone/rclone.conf"
+          RCLONE_CONF="$RUNNER_TEMP/rclone.conf"
+          printf '%s' "$RCLONE_CONFIG_CONTENT" > "$RCLONE_CONF"
+          chmod 600 "$RCLONE_CONF"
+          echo "RCLONE_CONF=$RCLONE_CONF" >> "$GITHUB_ENV"
+
+          # Vérifie que le fichier contient bien le remote attendu, sans afficher son contenu.
+          rclone --config "$RCLONE_CONF" listremotes | grep -qx 'gdrive-banque:'
 
       - name: Préparer le dossier de sauvegarde
         run: |
@@ -75,13 +82,7 @@ jobs:
 
       - name: Sauvegarder le code du site
         run: |
-          tar \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='backups' \
-            --exclude='*.zip' \
-            -czf "$WORK_DIR/code/site-code.tar.gz" \
-            .
+          tar             --exclude='.git'             --exclude='node_modules'             --exclude='backups'             --exclude='*.zip'             -czf "$WORK_DIR/code/site-code.tar.gz"             .
 
       - name: Ajouter les informations de restauration
         run: |
@@ -110,19 +111,11 @@ jobs:
 
       - name: Envoyer la sauvegarde vers Google Drive
         run: |
-          rclone copy "$WORK_DIR" "gdrive-banque:Banque Van Horn - Sauvegardes/automatiques/$STAMP" \
-            --transfers 4 \
-            --checkers 8 \
-            --retries 3 \
-            --low-level-retries 10 \
-            --checksum
+          rclone --config "$RCLONE_CONF" copy             "$WORK_DIR"             "gdrive-banque:Banque Van Horn - Sauvegardes/automatiques/$STAMP"             --transfers 4             --checkers 8             --retries 3             --low-level-retries 10             --checksum
 
       - name: Conserver 31 jours de sauvegardes
         run: |
-          rclone delete "gdrive-banque:Banque Van Horn - Sauvegardes/automatiques" \
-            --min-age 31d \
-            --rmdirs \
-            --fast-list
+          rclone --config "$RCLONE_CONF" delete             "gdrive-banque:Banque Van Horn - Sauvegardes/automatiques"             --min-age 31d             --rmdirs             --fast-list
 
       - name: Résumé
         if: always()
