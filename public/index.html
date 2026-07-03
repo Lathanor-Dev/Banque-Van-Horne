@@ -281,6 +281,11 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
   .bvh-due-loan-link{flex:1 1 52%;font-size:16px}
 }
 
+
+/* Tableau de bord : les échéances utilisent toute la largeur disponible */
+.bvh-due-row{grid-template-columns:minmax(190px,1.35fr) 130px 145px 130px 170px}
+@media(max-width:760px){.bvh-due-row{display:flex}}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -1083,8 +1088,9 @@ function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,on
     <div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div>
     <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div>
     <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🗓️" title="Agenda" value={(appointments||[]).filter(e=>appointmentTouchesDate(e,today())&&e.status!=='annule').length} note="Rendez-vous aujourd’hui"/></div>
+    <div className="bvh-ledger" style={{marginBottom:14}}><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div>
     <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
-    <div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row bvh-due-row" key={i}><button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt</small></button><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)} style={{padding:'8px 10px',whiteSpace:'nowrap'}}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div>
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row bvh-due-row" key={i}><button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt</small></button><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)} style={{padding:'8px 10px',whiteSpace:'nowrap'}}>Valider paiement</Btn></div>)}</div>
   </div>
 }
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
