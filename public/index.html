@@ -435,9 +435,14 @@ function LoanModal({open,onClose,onSave,loan,clients,prefill}){
 
 function LoanDetail({loan,onBack,onUpdate,onDelete,notify}){const paid=loan.echeances.filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant),0);async function mark(i,val){const es=[...loan.echeances];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}return <div><button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}><h1>{loan.prenom} {loan.nom}</h1><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username}</p><p>Garanties : {loan.garanties||'—'}</p></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(loan.total_a_rembourser-paid)}</b></p></div></div><div style={{display:'flex',gap:10,marginBottom:14}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,overflow:'hidden'}}>{loan.echeances.map((e,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'70px 1fr 130px 140px 180px',gap:12,alignItems:'center',padding:12,borderTop:i?'1px solid '+C.bord:'none'}}><span>#{i+1}</span><b>{fCur(e.montant)}</b><span>{fDate(e.date)}</span><Badge s={st(e)}/>{e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn>}</div>)}</div></div>}
 
-function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled}){
+function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled,openLoanId,onOpenLoanHandled}){
   const[modal,setModal]=useState(false),[sel,setSel]=useState(null);
   useEffect(()=>{if(sel && !sel._edit){const live=loans.find(x=>String(x.id)===String(sel.id));if(live && live!==sel)setSel(live);}},[loans,sel]);
+  useEffect(()=>{
+    if(!openLoanId)return;
+    const target=loans.find(x=>String(x.id)===String(openLoanId));
+    if(target){setSel(target);onOpenLoanHandled?.();}
+  },[openLoanId,loans]);
   useEffect(()=>()=>onLoanDraftChange?.(false),[]);
   useEffect(()=>{if(openForClient){onLoanDraftChange?.(true);setModal(true)}},[openForClient]);
   async function save(l){try{const u=l.id?await api.updateLoan(l):await api.addLoan(l);setLoans(l.id?loans.map(x=>x.id===u.id?u:x):[u,...loans]);notify(l.id?'Prêt modifié':'Prêt créé')}catch(e){notify('⚠ '+e.message)}}
@@ -1043,7 +1048,7 @@ function TodayAppointments({appointments=[],onOpenAgenda,onOpenClient}){
     })}
   </div>
 }
-function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,onOpenClient}){
+function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan}){
   const upcoming=[];
   loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date);if(d<=7)upcoming.push({...e,loan:l,i,d});}}));
   upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -1059,7 +1064,7 @@ function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,on
     <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div>
     <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🗓️" title="Agenda" value={(appointments||[]).filter(e=>appointmentTouchesDate(e,today())&&e.status!=='annule').length} note="Rendez-vous aujourd’hui"/></div>
     <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
-    <div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div>
+    <div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i} style={{gridTemplateColumns:'1.4fr 110px 110px 110px 235px'}}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><span style={{display:'flex',gap:7,flexWrap:'wrap'}}><Btn color="#5f4725" onClick={()=>onOpenLoan?.(e.loan.id)} style={{padding:'7px 10px'}}>Voir le prêt</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)} style={{padding:'7px 10px'}}>Valider paiement</Btn></span></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div>
   </div>
 }
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
@@ -1068,7 +1073,7 @@ function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{item
 function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
 
 function App(){
-  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null);
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null);
   const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
   async function loadAll(user){
     const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications()];
@@ -1146,6 +1151,11 @@ function App(){
     setLoanPrefill(client);
     choosePage('prets');
   }
+  function openLoanDetails(loanId){
+    if(!loanId)return;
+    setLoanFocus(loanId);
+    choosePage('prets');
+  }
   function openQuickAppointment(client){
     setAgendaPrefill(client);
     choosePage('agenda');
@@ -1163,7 +1173,7 @@ function App(){
     </aside>
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
-      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
     </main>
   </div>
 }
