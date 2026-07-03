@@ -38,7 +38,8 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .bvh-brand-title{font-size:27px;line-height:1.02;font-weight:900;color:#f6d27b;text-transform:uppercase;letter-spacing:.045em}
 .bvh-brand-date{margin-top:8px;color:#d9b66c;font-size:13px;letter-spacing:.22em;text-transform:uppercase}
 .bvh-main{flex:1;padding:26px 34px;overflow:auto;background:linear-gradient(180deg,#130d08aa,#090603aa)}
-.bvh-nav{display:grid;gap:9px;flex:1}
+.bvh-nav{display:grid;gap:9px;flex:1;align-content:start}
+.bvh-user{margin-top:auto}
 .bvh-nav button{
   border:1px solid #4a321966;border-radius:9px;padding:13px 14px;text-align:left;
   font-weight:800;cursor:pointer;color:#cfb57b;background:#120b06;
@@ -260,6 +261,25 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .bvh-credit-row{display:grid;grid-template-columns:1.25fr 1fr 120px 120px;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #3b281366}
 .bvh-credit-row:first-of-type{border-top:none}
 @media(max-width:760px){.bvh-client-actions{display:grid;grid-template-columns:1fr 1fr}.bvh-client-actions-title,.bvh-client-actions small{grid-column:1/-1}.bvh-client-actions button{width:100%}.bvh-credit-row{display:flex;flex-wrap:wrap;gap:7px;padding:13px 14px}.bvh-credit-row>*{flex:1 1 45%}}
+
+
+/* ===== Tableau de bord : échéances à traiter ===== */
+.bvh-due-row{
+  grid-template-columns:minmax(150px,1fr) 92px 110px 110px 150px;
+}
+.bvh-due-loan-link{
+  border:0;background:transparent;color:#f4d58b;font:inherit;font-weight:900;
+  text-align:left;cursor:pointer;min-width:0;padding:0;line-height:1.12;
+}
+.bvh-due-loan-link:hover{color:#ffe19b;text-decoration:underline;transform:none;filter:none}
+.bvh-due-loan-link small{
+  display:block;margin-top:4px;color:#b69b68;font-size:11px;font-weight:800;
+  text-decoration:none;
+}
+@media(max-width:760px){
+  .bvh-due-row{display:flex}
+  .bvh-due-loan-link{flex:1 1 52%;font-size:16px}
+}
 
 </style>
 </head>
@@ -1064,7 +1084,7 @@ function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,on
     <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div>
     <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🗓️" title="Agenda" value={(appointments||[]).filter(e=>appointmentTouchesDate(e,today())&&e.status!=='annule').length} note="Rendez-vous aujourd’hui"/></div>
     <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
-    <div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row" key={i} style={{gridTemplateColumns:'1.4fr 110px 110px 110px 235px'}}><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><span style={{display:'flex',gap:7,flexWrap:'wrap'}}><Btn color="#5f4725" onClick={()=>onOpenLoan?.(e.loan.id)} style={{padding:'7px 10px'}}>Voir le prêt</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)} style={{padding:'7px 10px'}}>Valider paiement</Btn></span></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div>
+    <div className="bvh-grid-2"><div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row bvh-due-row" key={i}><button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt</small></button><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)} style={{padding:'8px 10px',whiteSpace:'nowrap'}}>Valider paiement</Btn></div>)}</div><div className="bvh-ledger"><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div></div>
   </div>
 }
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
