@@ -286,6 +286,108 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .bvh-due-row{grid-template-columns:minmax(190px,1.35fr) 130px 145px 130px 170px}
 @media(max-width:760px){.bvh-due-row{display:flex}}
 
+
+/* ===== Registre des prêts : catégories, recherche et tri ===== */
+.bvh-loans-head{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px;
+  padding:16px 20px;border:1px solid #6d4b22;border-radius:12px;
+  background:linear-gradient(90deg,#25170c,#191007);box-shadow:inset 0 0 0 1px #000,0 8px 24px #0005;
+}
+.bvh-loans-head small{display:block;color:#c9a567;letter-spacing:.13em;text-transform:uppercase}
+.bvh-loans-head h1{color:#f5e4b8;margin-top:2px}
+.bvh-loans-head p{color:#b69b68;margin-top:4px;font-size:13px}
+.bvh-loan-filter-panel{
+  display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid #6d4b22;border-radius:12px;background:linear-gradient(180deg,#1b1109,#100a06);
+  box-shadow:inset 0 0 0 1px #000;margin-bottom:10px;
+}
+.bvh-loan-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.bvh-loan-tab{
+  display:inline-flex;gap:8px;align-items:center;border:1px solid #5f421e;border-radius:9px;padding:8px 11px;
+  background:#120b06;color:#d8bf82;font-weight:900;cursor:pointer;
+}
+.bvh-loan-tab b{
+  min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:20px;
+  background:#30200f;color:#f5e4b8;font-size:12px;
+}
+.bvh-loan-tab:hover{border-color:#c9943c}
+.bvh-loan-tab.active{color:#fff0bc;border-color:#d2a04d;background:linear-gradient(90deg,#5a3a17,#2f1d0d);box-shadow:0 0 14px #c9943c22}
+.bvh-loan-tab.active.retard{border-color:#d76453;background:linear-gradient(90deg,#5b211b,#2f1510)}
+.bvh-loan-tab.active.aujourdhui{border-color:#db912e;background:linear-gradient(90deg,#5e3513,#2d1809)}
+.bvh-loan-tab.active.avenir{border-color:#569acd;background:linear-gradient(90deg,#153b58,#101d2d)}
+.bvh-loan-tab.active.rembourses{border-color:#55a978;background:linear-gradient(90deg,#17442c,#0f2519)}
+.bvh-loan-search{min-width:260px;flex:0 1 340px}
+.bvh-loan-filter-summary{display:flex;align-items:center;justify-content:space-between;color:#c7ab71;padding:0 4px 12px;font-size:13px}
+.bvh-loan-filter-summary b{color:#f3d58a}
+.bvh-loan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:13px}
+.bvh-loan-card{
+  display:block;width:100%;text-align:left;min-width:0;border:1px solid #5d4320;border-left:4px solid var(--loan-color);
+  border-radius:12px;padding:14px;background:linear-gradient(180deg,#1c2031,#121623);color:#e7e9f2;cursor:pointer;
+  box-shadow:inset 0 0 0 1px #0007,0 8px 20px #0004;
+}
+.bvh-loan-card:hover{border-color:var(--loan-color);box-shadow:0 0 20px color-mix(in srgb,var(--loan-color) 24%,transparent),inset 0 0 0 1px #0007}
+.bvh-loan-card-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px}
+.bvh-loan-reference{color:#8cbcf5;font-size:11px;font-weight:900;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bvh-loan-status{display:inline-flex;align-items:center;justify-content:center;color:#fff;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:900;white-space:nowrap}
+.bvh-loan-client{display:block;color:#f5e4b8;font-size:18px;line-height:1.08}
+.bvh-loan-telegram{display:block;color:#aeb5c6;font-size:12px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bvh-loan-amounts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px;padding:10px 0;border-top:1px solid #ffffff13;border-bottom:1px solid #ffffff13}
+.bvh-loan-amounts span{color:#f6d27b;font-weight:900}
+.bvh-loan-amounts i{display:block;font-style:normal;font-weight:700;color:#9399ab;font-size:11px;margin-top:2px}
+.bvh-loan-next{padding-top:10px;display:flex;flex-direction:column;gap:3px;color:#aeb5c6;font-size:11px}
+.bvh-loan-next b{color:#f4d58b;font-size:13px}
+.bvh-loan-next.complete b{color:#74d59d}
+.bvh-loan-empty{border:1px dashed #765326;border-radius:12px;background:#130c07}
+@media(max-width:760px){
+  .bvh-loans-head{flex-direction:column;align-items:flex-start;padding:14px}
+  .bvh-loans-head button{width:100%;justify-content:center}
+  .bvh-loan-filter-panel{align-items:stretch}
+  .bvh-loan-tabs{display:grid;grid-template-columns:1fr 1fr}
+  .bvh-loan-tab{justify-content:space-between}
+  .bvh-loan-tab:first-child{grid-column:1/-1}
+  .bvh-loan-search{min-width:100%;flex-basis:100%}
+  .bvh-loan-grid{grid-template-columns:1fr}
+}
+
+
+/* ===== Rappels d’échéance — registre partagé ===== */
+.bvh-loan-detail-summary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.bvh-loan-detail-summary>div{background:#1a1d2e;border:1px solid #2a2d3e;border-radius:12px;padding:16px}
+.bvh-loan-detail-summary p{margin:4px 0}
+.bvh-reminder-row{
+  display:grid;grid-template-columns:52px 100px 122px 118px minmax(220px,1fr) minmax(185px,auto);
+  gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #3b281366;
+}
+.bvh-reminder-row:first-of-type{border-top:0}
+.bvh-reminder-number{color:#e8ca82;font-weight:900}
+.bvh-reminder-latest{display:flex;flex-direction:column;min-width:0;color:#e9d7a3;font-size:12px;line-height:1.3}
+.bvh-reminder-latest b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3d58a}
+.bvh-reminder-latest small{color:#aa9163;margin-top:3px}
+.bvh-reminder-paid{color:#72d49a;font-weight:900}
+.bvh-reminder-actions{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.bvh-reminder-actions button{padding:8px 10px;white-space:nowrap}
+.bvh-reminder-history{display:grid;grid-template-columns:minmax(220px,1fr) 210px;gap:10px;padding:12px 16px;border-top:1px solid #3b281366;color:#d8bf82}
+.bvh-reminder-history>div{display:flex;flex-direction:column;gap:3px}
+.bvh-reminder-history b{color:#f3d58a}
+.bvh-reminder-history small{color:#aa9163}
+.bvh-reminder-history p{grid-column:1/-1;padding:9px 11px;border-left:3px solid #8b642c;background:#2a1b0e;border-radius:0 7px 7px 0;color:#e2c98d;white-space:pre-wrap}
+.bvh-due-row-reminder{grid-template-columns:minmax(260px,1.35fr) 110px 125px 115px minmax(220px,auto)}
+.bvh-due-actions{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.bvh-due-actions button{padding:8px 10px;white-space:nowrap}
+@media(max-width:900px){
+  .bvh-reminder-row{grid-template-columns:1fr 1fr;align-items:start}
+  .bvh-reminder-row .bvh-reminder-number{grid-column:1/-1}
+  .bvh-reminder-latest,.bvh-reminder-actions{grid-column:1/-1}
+  .bvh-reminder-actions{justify-content:flex-start}
+}
+@media(max-width:760px){
+  .bvh-loan-detail-summary{grid-template-columns:1fr}
+  .bvh-reminder-modal-grid{grid-template-columns:1fr!important}
+  .bvh-reminder-history{grid-template-columns:1fr}
+  .bvh-due-row-reminder{display:flex}
+  .bvh-due-actions{flex:1 1 100%;justify-content:flex-start}
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -325,7 +427,7 @@ const api={
  login:(username,password)=>call('/api/login',{method:'POST',body:JSON.stringify({username,password})}), logout:()=>call('/api/logout',{method:'POST'}), me:()=>call('/api/me'),
  users:()=>call('/api/users'), addUser:u=>call('/api/users',{method:'POST',body:JSON.stringify(u)}), updateUser:u=>call('/api/users',{method:'PUT',body:JSON.stringify(u)}), deleteUser:id=>call('/api/users',{method:'DELETE',body:JSON.stringify({id})}),
  clients:()=>call('/api/clients'), addClient:c=>call('/api/clients',{method:'POST',body:JSON.stringify(c)}), updateClient:c=>call('/api/clients',{method:'PUT',body:JSON.stringify(c)}), deleteClient:id=>call('/api/clients',{method:'DELETE',body:JSON.stringify({id})}),
- loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'),
+ loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'), loanReminders:loanId=>call('/api/loan_reminders?actualisation='+Date.now()+(loanId!==undefined&&loanId!==null&&loanId!==''?`&loan_id=${encodeURIComponent(loanId)}`:'')), addLoanReminder:r=>call('/api/loan_reminders',{method:'POST',body:JSON.stringify(r)}),
  documents:client_id=>call('/api/client_documents?client_id='+encodeURIComponent(client_id)), uploadDocument:d=>call('/api/client_documents',{method:'POST',body:JSON.stringify(d)}), deleteDocument:id=>call('/api/client_documents',{method:'DELETE',body:JSON.stringify({id})}), notes:client_id=>call('/api/client_notes?client_id='+encodeURIComponent(client_id)), addNote:d=>call('/api/client_notes',{method:'POST',body:JSON.stringify(d)}), deleteNote:id=>call('/api/client_notes',{method:'DELETE',body:JSON.stringify({id})}), agenda:(from,to)=>call('/api/agenda?actualisation='+Date.now()+(from&&to?`&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`:'')), addAgenda:a=>call('/api/agenda',{method:'POST',body:JSON.stringify(a)}), updateAgenda:a=>call('/api/agenda',{method:'PUT',body:JSON.stringify(a)}), deleteAgenda:id=>call('/api/agenda',{method:'DELETE',body:JSON.stringify({id})}), creditApplications:()=>call('/api/credit_applications?actualisation='+Date.now()), addCreditApplication:a=>call('/api/credit_applications',{method:'POST',body:JSON.stringify(a)}), updateCreditApplication:a=>call('/api/credit_applications',{method:'PUT',body:JSON.stringify(a)}), deleteCreditApplication:id=>call('/api/credit_applications',{method:'DELETE',body:JSON.stringify({id})}), horseCredits:()=>call('/api/horse_credits'), addHorseCredit:h=>call('/api/horse_credits',{method:'POST',body:JSON.stringify(h)}), updateHorseCredit:h=>call('/api/horse_credits',{method:'PUT',body:JSON.stringify(h)}), deleteHorseCredit:id=>call('/api/horse_credits',{method:'DELETE',body:JSON.stringify({id})})
 };
 function payment(capital,rate,n){capital=Number(capital);rate=Number(rate)/100;n=parseInt(n);if(!capital||!n)return 0;if(!rate)return capital/n;return capital*rate/(1-Math.pow(1+rate,-n));}
@@ -339,6 +441,86 @@ function Select({label,value,onChange,children}){return <div style={{display:'fl
 function Txt({label,error,...p}){return <div style={{display:'flex',flexDirection:'column',gap:5}}>{label&&<label style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:C.muted}}>{label}</label>}<textarea {...p} style={{background:'#13151f',border:'1px solid '+(error?C.red:C.bord),borderRadius:8,padding:'9px 12px',color:C.txt,outline:'none',width:'100%',minHeight:80,...(p.style||{})}}/>{error&&<span style={{color:C.red,fontSize:12}}>{error}</span>}</div>}
 function Sec({children}){return <p style={{fontSize:12,fontWeight:800,textTransform:'uppercase',letterSpacing:'.1em',color:C.blue,margin:'18px 0 12px'}}>{children}</p>}
 function Toast({msg}){return msg?<div style={{position:'fixed',top:20,right:20,zIndex:999,background:C.card,border:'1px solid '+C.gold,color:C.gold,borderRadius:10,padding:'12px 18px',boxShadow:'0 8px 24px #0008'}}>{msg}</div>:null}
+
+function localTimeNow(){
+  const d=new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function reminderDateTime(reminder){
+  return new Date(`${reminder.reminder_date||'1970-01-01'}T${String(reminder.reminder_time||'00:00').slice(0,5)}:00`);
+}
+function remindersForEcheance(reminders,loanId,echeanceIndex){
+  return (reminders||[])
+    .filter(r=>String(r.loan_id)===String(loanId) && Number(r.echeance_index)===Number(echeanceIndex))
+    .sort((a,b)=>reminderDateTime(b)-reminderDateTime(a) || new Date(b.created_at||0)-new Date(a.created_at||0));
+}
+function latestReminder(reminders,loanId,echeanceIndex){
+  return remindersForEcheance(reminders,loanId,echeanceIndex)[0]||null;
+}
+function reminderMethodLabel(value){
+  return {telegram:'Télégramme',courrier:'Courrier',en_personne:'En personne',autre:'Autre'}[value]||'Autre';
+}
+function reminderSummary(reminder){
+  if(!reminder)return 'Aucun rappel noté';
+  const time=reminder.reminder_time?` à ${String(reminder.reminder_time).slice(0,5)}`:'';
+  return `Dernier rappel : ${fDate(reminder.reminder_date)}${time} — ${reminder.recorded_by_username||'—'}`;
+}
+function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved}){
+  const blank={reminder_date:today(),reminder_time:localTimeNow(),reminder_method:'telegram',note:''};
+  const[f,setF]=useState(blank);
+  const[busy,setBusy]=useState(false);
+  useEffect(()=>{if(open)setF({...blank,reminder_date:today(),reminder_time:localTimeNow()});},[open,loan?.id,echeanceIndex]);
+  if(!open||!loan||echeanceIndex===null||echeanceIndex===undefined)return null;
+  async function save(){
+    if(!f.reminder_date)return alert('Indique la date réelle à laquelle le rappel a été envoyé.');
+    try{
+      setBusy(true);
+      const saved=await api.addLoanReminder({
+        loan_id:loan.id,
+        echeance_index:echeanceIndex,
+        echeance_date:echeance?.date||'',
+        reminder_date:f.reminder_date,
+        reminder_time:f.reminder_time,
+        reminder_method:f.reminder_method,
+        note:f.note
+      });
+      onSaved?.(saved);
+      onClose();
+    }catch(e){
+      alert(e.message||'Impossible d’enregistrer le rappel.');
+    }finally{
+      setBusy(false);
+    }
+  }
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:390,background:'#000b',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+    <div style={{width:620,maxWidth:'100%',background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:22,maxHeight:'92vh',overflow:'auto'}}>
+      <h2 style={{color:'#f6d27b'}}>Noter un rappel d’échéance</h2>
+      <p style={{color:'#d8bf82',marginTop:6,lineHeight:1.45}}>Prêt <b>{loan.loan_id}</b> · échéance n°{Number(echeanceIndex)+1} de <b>{fCur(echeance?.montant)}</b>, prévue le <b>{fDate(echeance?.date)}</b>.</p>
+      <div style={{marginTop:16,padding:11,border:'1px solid #765326',borderRadius:9,background:'#21150c',color:'#e7d3a0',fontSize:13}}>
+        Indique la date et l’heure où le client a réellement été relancé, même si tu notes le rappel dans le registre plus tard.
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginTop:16}} className="bvh-reminder-modal-grid">
+        <Inp label="Date réelle du rappel" type="date" value={f.reminder_date} onChange={e=>setF({...f,reminder_date:e.target.value})}/>
+        <Inp label="Heure réelle du rappel" type="time" value={f.reminder_time} onChange={e=>setF({...f,reminder_time:e.target.value})}/>
+      </div>
+      <div style={{marginTop:12}}>
+        <Select label="Moyen utilisé" value={f.reminder_method} onChange={e=>setF({...f,reminder_method:e.target.value})}>
+          <option value="telegram">Télégramme</option>
+          <option value="courrier">Courrier</option>
+          <option value="en_personne">En personne</option>
+          <option value="autre">Autre</option>
+        </Select>
+      </div>
+      <div style={{marginTop:12}}>
+        <Txt label="Note facultative" value={f.note} onChange={e=>setF({...f,note:e.target.value})} placeholder="Ex. Le client a confirmé qu’il passera demain."/>
+      </div>
+      <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:18}}>
+        <Btn color="#555" onClick={onClose}>Annuler</Btn>
+        <Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':'Enregistrer le rappel'}</Btn>
+      </div>
+    </div>
+  </div>
+}
 
 function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-logo" src="/logo-vh.png" alt="Banque Van Horn"/><h1 style={{color:'#f6d27b',fontSize:30}}>Banque Van Horn</h1><p style={{color:'#d3b574',fontSize:13,letterSpacing:'.12em',textTransform:'uppercase'}}>Système interne sécurisé • 1904</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
 
@@ -458,10 +640,59 @@ function LoanModal({open,onClose,onSave,loan,clients,prefill}){
   return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:620,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn onClick={save}>Enregistrer</Btn></div></div></div>
 }
 
-function LoanDetail({loan,onBack,onUpdate,onDelete,notify}){const paid=loan.echeances.filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant),0);async function mark(i,val){const es=[...loan.echeances];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}return <div><button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}><h1>{loan.prenom} {loan.nom}</h1><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:16}}><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username}</p><p>Garanties : {loan.garanties||'—'}</p></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16}}><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(loan.total_a_rembourser-paid)}</b></p></div></div><div style={{display:'flex',gap:10,marginBottom:14}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div><div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,overflow:'hidden'}}>{loan.echeances.map((e,i)=><div key={i} style={{display:'grid',gridTemplateColumns:'70px 1fr 130px 140px 180px',gap:12,alignItems:'center',padding:12,borderTop:i?'1px solid '+C.bord:'none'}}><span>#{i+1}</span><b>{fCur(e.montant)}</b><span>{fDate(e.date)}</span><Badge s={st(e)}/>{e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn>}</div>)}</div></div>}
+function LoanDetail({loan,onBack,onUpdate,onDelete,notify,reminders=[],setReminders}){
+  const[reminderTarget,setReminderTarget]=useState(null);
+  const paid=(loan.echeances||[]).filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant||0),0);
+  async function mark(i,val){
+    const es=[...(loan.echeances||[])];
+    es[i]={...es[i],statut:val?'paye':'attente'};
+    try{
+      const u=await api.updateLoan({id:loan.id,echeances:es});
+      onUpdate(u);
+      notify(val?'Paiement validé':'Paiement annulé');
+    }catch(e){notify('⚠ '+e.message)}
+  }
+  function savedReminder(reminder){
+    setReminders?.([reminder,...reminders]);
+    notify('Rappel enregistré dans le registre');
+  }
+  const history=(reminders||[]).filter(r=>String(r.loan_id)===String(loan.id)).sort((a,b)=>reminderDateTime(b)-reminderDateTime(a)||new Date(b.created_at||0)-new Date(a.created_at||0));
+  return <div>
+    <button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,gap:12,flexWrap:'wrap'}}><h1>{loan.prenom} {loan.nom}</h1><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div>
+    <div className="bvh-loan-detail-summary">
+      <div><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username||'—'}</p><p>Garanties : {loan.garanties||'—'}</p></div>
+      <div><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(Number(loan.total_a_rembourser||0)-paid)}</b></p></div>
+    </div>
+    <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap'}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div>
+    <div className="bvh-ledger">
+      <div className="bvh-ledger-title">Échéances et rappels</div>
+      {(loan.echeances||[]).map((e,i)=>{
+        const last=latestReminder(reminders,loan.id,i);
+        return <div className="bvh-reminder-row" key={i}>
+          <span className="bvh-reminder-number">#{i+1}</span>
+          <b>{fCur(e.montant)}</b>
+          <span>{fDate(e.date)}</span>
+          <Badge s={st(e)}/>
+          <div className="bvh-reminder-latest">{e.statut==='paye'?<span className="bvh-reminder-paid">Échéance remboursée</span>:<><b>{last?reminderSummary(last):'Aucun rappel envoyé'}</b>{last&&<small>Noté dans le registre le {new Date(last.created_at).toLocaleString('fr-FR')} · {reminderMethodLabel(last.reminder_method)}</small>}</>}</div>
+          {e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<div className="bvh-reminder-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(i)}>{last?'Ajouter un rappel':'Noter un rappel'}</Btn><Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn></div>}
+        </div>
+      })}
+    </div>
+    <div className="bvh-ledger" style={{marginTop:14}}>
+      <div className="bvh-ledger-title">Historique des rappels</div>
+      {history.length===0?<p className="bvh-empty">Aucun rappel d’échéance n’a encore été noté pour ce prêt.</p>:history.map(r=><div className="bvh-reminder-history" key={r.id}>
+        <div><b>Échéance n°{Number(r.echeance_index)+1}</b><span>{fDate(r.reminder_date)}{r.reminder_time?` à ${String(r.reminder_time).slice(0,5)}`:''} · {reminderMethodLabel(r.reminder_method)}</span></div>
+        <div><b>{r.recorded_by_username||'—'}</b><small>Noté le {new Date(r.created_at).toLocaleString('fr-FR')}</small></div>
+        {r.note&&<p>{r.note}</p>}
+      </div>)}
+    </div>
+    <ReminderModal open={reminderTarget!==null} loan={loan} echeanceIndex={reminderTarget} echeance={reminderTarget!==null?(loan.echeances||[])[reminderTarget]:null} onClose={()=>setReminderTarget(null)} onSaved={savedReminder}/>
+  </div>
+}
 
-function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled,openLoanId,onOpenLoanHandled}){
-  const[modal,setModal]=useState(false),[sel,setSel]=useState(null);
+function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled,openLoanId,onOpenLoanHandled,reminders=[],setReminders}){
+  const[modal,setModal]=useState(false),[sel,setSel]=useState(null),[category,setCategory]=useState('tous'),[query,setQuery]=useState('');
   useEffect(()=>{if(sel && !sel._edit){const live=loans.find(x=>String(x.id)===String(sel.id));if(live && live!==sel)setSel(live);}},[loans,sel]);
   useEffect(()=>{
     if(!openLoanId)return;
@@ -470,14 +701,85 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
   },[openLoanId,loans]);
   useEffect(()=>()=>onLoanDraftChange?.(false),[]);
   useEffect(()=>{if(openForClient){onLoanDraftChange?.(true);setModal(true)}},[openForClient]);
+
+  function unpaid(l){return [...(l.echeances||[])].filter(e=>e.statut!=='paye').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));}
+  function loanCategory(l){
+    const open=unpaid(l);
+    if(open.length===0)return 'rembourses';
+    if(open.some(e=>st(e)==='retard'))return 'retard';
+    return st(open[0])==='aujourdhui'?'aujourdhui':'avenir';
+  }
+  function nextDue(l){return unpaid(l)[0]||null;}
+  function paidAmount(l){return (l.echeances||[]).filter(e=>e.statut==='paye').reduce((sum,e)=>sum+Number(e.montant||0),0);}
+  function sortLoans(a,b){
+    const order={retard:0,aujourdhui:1,avenir:2,rembourses:3};
+    const aCat=loanCategory(a),bCat=loanCategory(b);
+    if(order[aCat]!==order[bCat])return order[aCat]-order[bCat];
+    if(aCat==='rembourses'){
+      const aLast=[...(a.echeances||[])].map(e=>e.date||'').sort().pop()||'';
+      const bLast=[...(b.echeances||[])].map(e=>e.date||'').sort().pop()||'';
+      return bLast.localeCompare(aLast);
+    }
+    return String(nextDue(a)?.date||'').localeCompare(String(nextDue(b)?.date||''));
+  }
+
+  const allLoans=[...(loans||[])].sort(sortLoans);
+  const counts={
+    tous:allLoans.length,
+    retard:allLoans.filter(l=>loanCategory(l)==='retard').length,
+    aujourdhui:allLoans.filter(l=>loanCategory(l)==='aujourdhui').length,
+    avenir:allLoans.filter(l=>loanCategory(l)==='avenir').length,
+    rembourses:allLoans.filter(l=>loanCategory(l)==='rembourses').length
+  };
+  const categories=[
+    ['tous','Tous'],
+    ['retard','En retard'],
+    ['aujourdhui',"Aujourd’hui"],
+    ['avenir','À venir'],
+    ['rembourses','Remboursés']
+  ];
+  const visibleLoans=allLoans
+    .filter(l=>category==='tous'||loanCategory(l)===category)
+    .filter(l=>`${l.prenom||''} ${l.nom||''} ${l.telegram||''} ${l.loan_id||''}`.toLowerCase().includes(query.toLowerCase()));
+
   async function save(l){try{const u=l.id?await api.updateLoan(l):await api.addLoan(l);setLoans(l.id?loans.map(x=>x.id===u.id?u:x):[u,...loans]);notify(l.id?'Prêt modifié':'Prêt créé')}catch(e){notify('⚠ '+e.message)}}
   async function del(l){if(!confirm('Supprimer définitivement ce prêt ?'))return;try{await api.deleteLoan(l.id);setLoans(loans.filter(x=>x.id!==l.id));setSel(null);notify('Prêt supprimé')}catch(e){notify('⚠ '+e.message)}}
   function openNew(){onLoanDraftChange?.(true);setModal(true)}
   function closeNew(){setModal(false);onLoanDraftChange?.(false);onQuickLoanHandled?.()}
   function openEdit(l){onLoanDraftChange?.(true);setSel({...l,_edit:true})}
   function closeEdit(){setSel(loans.find(x=>x.id===sel.id));onLoanDraftChange?.(false)}
-  if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={closeEdit} onSave={save}/></>}return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?openEdit(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify}/>} 
-  return <div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}><h1>Prêts</h1><Btn onClick={openNew}>+ Nouveau prêt</Btn></div><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:14}}>{loans.map(l=>{const next=l.echeances.find(e=>e.statut!=='paye');return <div key={l.id} onClick={()=>setSel(l)} style={{background:C.card,border:'1px solid '+C.bord,borderLeft:'4px solid '+(l.echeances.some(e=>st(e)==='retard')?C.red:C.blue),borderRadius:12,padding:16,cursor:'pointer'}}><b>{l.prenom} {l.nom}</b><p style={{color:C.muted,marginTop:6}}>{l.loan_id}</p><p>{fCur(l.somme)} → {fCur(l.total_a_rembourser)}</p>{next&&<Badge s={st(next)}/>}</div>})}</div><LoanModal open={modal} onClose={closeNew} onSave={save} clients={clients} prefill={openForClient}/></div>
+
+  if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={closeEdit} onSave={save}/></>}return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?openEdit(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify} reminders={reminders} setReminders={setReminders}/>} 
+  return <div>
+    <div className="bvh-loans-head">
+      <div><small>Registre commun des financements</small><h1>Prêts</h1><p>Les dossiers sont classés automatiquement par urgence et par prochaine échéance.</p></div>
+      <Btn onClick={openNew}>+ Nouveau prêt</Btn>
+    </div>
+    <div className="bvh-loan-filter-panel">
+      <div className="bvh-loan-tabs">{categories.map(([key,label])=><button key={key} className={'bvh-loan-tab '+(category===key?'active ':'')+key} onClick={()=>setCategory(key)}><span>{label}</span><b>{counts[key]}</b></button>)}</div>
+      <div className="bvh-loan-search"><Inp label="Recherche" placeholder="Client, référence ou télégramme…" value={query} onChange={e=>setQuery(e.target.value)}/></div>
+    </div>
+    <div className="bvh-loan-filter-summary">
+      <span>{category==='tous'?'Tous les prêts':categories.find(x=>x[0]===category)?.[1]}</span>
+      <b>{visibleLoans.length} résultat{visibleLoans.length===1?'':'s'}</b>
+    </div>
+    {visibleLoans.length===0?<div className="bvh-empty bvh-loan-empty">Aucun prêt dans cette catégorie{query?' pour cette recherche':''}.</div>:<div className="bvh-loan-grid">{visibleLoans.map(l=>{
+      const kind=loanCategory(l);
+      const next=nextDue(l);
+      const border={retard:C.red,aujourdhui:C.orange,avenir:C.blue,rembourses:C.green}[kind];
+      const label={retard:'En retard',aujourdhui:"Aujourd’hui",avenir:'À venir',rembourses:'Remboursé'}[kind];
+      const paid=paidAmount(l);
+      const remaining=Math.max(Number(l.total_a_rembourser||0)-paid,0);
+      return <button key={l.id} className={'bvh-loan-card '+kind} onClick={()=>setSel(l)} style={{'--loan-color':border}}>
+        <div className="bvh-loan-card-top"><span className="bvh-loan-reference">{l.loan_id}</span><span className="bvh-loan-status" style={{background:border}}>{label}</span></div>
+        <b className="bvh-loan-client">{l.prenom} {l.nom}</b>
+        <span className="bvh-loan-telegram">{l.telegram||'Télégramme non indiqué'}</span>
+        <div className="bvh-loan-amounts"><span>{fCur(l.somme)} <i>prêté</i></span><span>{kind==='rembourses'?fCur(Number(l.total_a_rembourser||0)):<>{fCur(remaining)} <i>restant</i></>}</span></div>
+        {next?<div className="bvh-loan-next"><span>Prochaine échéance</span><b>{fDate(next.date)} · {fCur(next.montant)}</b></div>:<div className="bvh-loan-next complete"><span>Prêt intégralement remboursé</span><b>✓ Dossier soldé</b></div>}
+      </button>
+    })}</div>}
+    <LoanModal open={modal} onClose={closeNew} onSave={save} clients={clients} prefill={openForClient}/>
+  </div>
 }
 
 
@@ -1073,7 +1375,8 @@ function TodayAppointments({appointments=[],onOpenAgenda,onOpenClient}){
     })}
   </div>
 }
-function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan}){
+function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan,reminders=[],setReminders,notify}){
+  const[reminderTarget,setReminderTarget]=useState(null);
   const upcoming=[];
   loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date);if(d<=7)upcoming.push({...e,loan:l,i,d});}}));
   upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
@@ -1084,13 +1387,22 @@ function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,on
   const restant=Math.max(totalAttendu-encaisse,0);
   const retards=upcoming.filter(e=>e.d<0).length;
   const derniers=(logs||[]).slice(0,5);
+  function savedReminder(reminder){setReminders?.([reminder,...reminders]);notify?.('Rappel enregistré dans le registre');}
   return <div>
     <div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div>
     <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div>
     <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🗓️" title="Agenda" value={(appointments||[]).filter(e=>appointmentTouchesDate(e,today())&&e.status!=='annule').length} note="Rendez-vous aujourd’hui"/></div>
     <div className="bvh-ledger" style={{marginBottom:14}}><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div>
     <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
-    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=><div className="bvh-row bvh-due-row" key={i}><button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt</small></button><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)} style={{padding:'8px 10px',whiteSpace:'nowrap'}}>Valider paiement</Btn></div>)}</div>
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=>{
+      const last=latestReminder(reminders,e.loan.id,e.i);
+      return <div className="bvh-row bvh-due-row bvh-due-row-reminder" key={i}>
+        <button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt{last?` · ${reminderSummary(last)}`:' · Aucun rappel noté'}</small></button>
+        <span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/>
+        <span className="bvh-due-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(e)}>Rappel</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></span>
+      </div>
+    })}</div>
+    <ReminderModal open={!!reminderTarget} loan={reminderTarget?.loan} echeance={reminderTarget} echeanceIndex={reminderTarget?.i} onClose={()=>setReminderTarget(null)} onSaved={savedReminder}/>
   </div>
 }
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
@@ -1099,10 +1411,10 @@ function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{item
 function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
 
 function App(){
-  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null);
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[reminders,setReminders]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null);
   const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
   async function loadAll(user){
-    const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications()];
+    const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications(),api.loanReminders()];
     if(roleRank[user.role]>=2) req.push(api.users());
     if(roleRank[user.role]>=2) req.push(api.logs());
     const r=await Promise.allSettled(req);
@@ -1110,7 +1422,8 @@ function App(){
     setClients(r[1].status==='fulfilled'?r[1].value:[]);
     setAppointments(r[2].status==='fulfilled'?r[2].value:[]);
     setApplications(r[3].status==='fulfilled'?r[3].value:[]);
-    let i=4;
+    setReminders(r[4].status==='fulfilled'?r[4].value:[]);
+    let i=5;
     if(roleRank[user.role]>=2 && r[i]?.status==='fulfilled')setUsers(r[i].value);
     if(roleRank[user.role]>=2 && r[i+1]?.status==='fulfilled')setLogs(r[i+1].value);
   }
@@ -1132,6 +1445,21 @@ function App(){
     document.addEventListener('visibilitychange',onVisibility);
     return ()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
   },[me,page,loanDraftActive]);
+
+
+  useEffect(()=>{
+    if(!me || !['dashboard','prets'].includes(page)) return;
+    let active=true;
+    const syncReminders=async()=>{
+      if(document.visibilityState!=='visible')return;
+      try{const latest=await api.loanReminders();if(active)setReminders(latest||[]);}catch{}
+    };
+    syncReminders();
+    const timer=window.setInterval(syncReminders,10000);
+    const onVisibility=()=>{if(document.visibilityState==='visible')syncReminders();};
+    document.addEventListener('visibilitychange',onVisibility);
+    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+  },[me,page]);
 
   useEffect(()=>{
     if(!me || page!=='dashboard') return;
@@ -1199,7 +1527,7 @@ function App(){
     </aside>
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
-      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} reminders={reminders} setReminders={setReminders} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} reminders={reminders} setReminders={setReminders}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
     </main>
   </div>
 }
