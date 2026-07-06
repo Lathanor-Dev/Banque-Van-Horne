@@ -427,7 +427,7 @@ const api={
  login:(username,password)=>call('/api/login',{method:'POST',body:JSON.stringify({username,password})}), logout:()=>call('/api/logout',{method:'POST'}), me:()=>call('/api/me'),
  users:()=>call('/api/users'), addUser:u=>call('/api/users',{method:'POST',body:JSON.stringify(u)}), updateUser:u=>call('/api/users',{method:'PUT',body:JSON.stringify(u)}), deleteUser:id=>call('/api/users',{method:'DELETE',body:JSON.stringify({id})}),
  clients:()=>call('/api/clients'), addClient:c=>call('/api/clients',{method:'POST',body:JSON.stringify(c)}), updateClient:c=>call('/api/clients',{method:'PUT',body:JSON.stringify(c)}), deleteClient:id=>call('/api/clients',{method:'DELETE',body:JSON.stringify({id})}),
- loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'), loanReminders:loanId=>call('/api/loan_reminders?actualisation='+Date.now()+(loanId!==undefined&&loanId!==null&&loanId!==''?`&loan_id=${encodeURIComponent(loanId)}`:'')), addLoanReminder:r=>call('/api/loan_reminders',{method:'POST',body:JSON.stringify(r)}),
+ loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'),
  documents:client_id=>call('/api/client_documents?client_id='+encodeURIComponent(client_id)), uploadDocument:d=>call('/api/client_documents',{method:'POST',body:JSON.stringify(d)}), deleteDocument:id=>call('/api/client_documents',{method:'DELETE',body:JSON.stringify({id})}), notes:client_id=>call('/api/client_notes?client_id='+encodeURIComponent(client_id)), addNote:d=>call('/api/client_notes',{method:'POST',body:JSON.stringify(d)}), deleteNote:id=>call('/api/client_notes',{method:'DELETE',body:JSON.stringify({id})}), agenda:(from,to)=>call('/api/agenda?actualisation='+Date.now()+(from&&to?`&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`:'')), addAgenda:a=>call('/api/agenda',{method:'POST',body:JSON.stringify(a)}), updateAgenda:a=>call('/api/agenda',{method:'PUT',body:JSON.stringify(a)}), deleteAgenda:id=>call('/api/agenda',{method:'DELETE',body:JSON.stringify({id})}), creditApplications:()=>call('/api/credit_applications?actualisation='+Date.now()), addCreditApplication:a=>call('/api/credit_applications',{method:'POST',body:JSON.stringify(a)}), updateCreditApplication:a=>call('/api/credit_applications',{method:'PUT',body:JSON.stringify(a)}), deleteCreditApplication:id=>call('/api/credit_applications',{method:'DELETE',body:JSON.stringify({id})}), horseCredits:()=>call('/api/horse_credits'), addHorseCredit:h=>call('/api/horse_credits',{method:'POST',body:JSON.stringify(h)}), updateHorseCredit:h=>call('/api/horse_credits',{method:'PUT',body:JSON.stringify(h)}), deleteHorseCredit:id=>call('/api/horse_credits',{method:'DELETE',body:JSON.stringify({id})})
 };
 function payment(capital,rate,n){capital=Number(capital);rate=Number(rate)/100;n=parseInt(n);if(!capital||!n)return 0;if(!rate)return capital/n;return capital*rate/(1-Math.pow(1+rate,-n));}
@@ -449,13 +449,12 @@ function localTimeNow(){
 function reminderDateTime(reminder){
   return new Date(`${reminder.reminder_date||'1970-01-01'}T${String(reminder.reminder_time||'00:00').slice(0,5)}:00`);
 }
-function remindersForEcheance(reminders,loanId,echeanceIndex){
-  return (reminders||[])
-    .filter(r=>String(r.loan_id)===String(loanId) && Number(r.echeance_index)===Number(echeanceIndex))
-    .sort((a,b)=>reminderDateTime(b)-reminderDateTime(a) || new Date(b.created_at||0)-new Date(a.created_at||0));
+function remindersForEcheance(echeance){
+  return [...(echeance?.rappels||[])]
+    .sort((a,b)=>reminderDateTime(b)-reminderDateTime(a)||new Date(b.created_at||0)-new Date(a.created_at||0));
 }
-function latestReminder(reminders,loanId,echeanceIndex){
-  return remindersForEcheance(reminders,loanId,echeanceIndex)[0]||null;
+function latestReminder(echeance){
+  return remindersForEcheance(echeance)[0]||null;
 }
 function reminderMethodLabel(value){
   return {telegram:'Télégramme',courrier:'Courrier',en_personne:'En personne',autre:'Autre'}[value]||'Autre';
@@ -465,7 +464,7 @@ function reminderSummary(reminder){
   const time=reminder.reminder_time?` à ${String(reminder.reminder_time).slice(0,5)}`:'';
   return `Dernier rappel : ${fDate(reminder.reminder_date)}${time} — ${reminder.recorded_by_username||'—'}`;
 }
-function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved}){
+function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
   const blank={reminder_date:today(),reminder_time:localTimeNow(),reminder_method:'telegram',note:''};
   const[f,setF]=useState(blank);
   const[busy,setBusy]=useState(false);
@@ -475,49 +474,30 @@ function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved}){
     if(!f.reminder_date)return alert('Indique la date réelle à laquelle le rappel a été envoyé.');
     try{
       setBusy(true);
-      const saved=await api.addLoanReminder({
-        loan_id:loan.id,
-        echeance_index:echeanceIndex,
-        echeance_date:echeance?.date||'',
-        reminder_date:f.reminder_date,
-        reminder_time:f.reminder_time,
-        reminder_method:f.reminder_method,
-        note:f.note
-      });
-      onSaved?.(saved);
+      const reminder={reminder_date:f.reminder_date,reminder_time:f.reminder_time,reminder_method:f.reminder_method,note:f.note,recorded_by_username:me?.username||'Utilisateur',created_at:new Date().toISOString()};
+      const echeances=[...(loan.echeances||[])];
+      const current=echeances[echeanceIndex]||{};
+      echeances[echeanceIndex]={...current,rappels:[reminder,...(current.rappels||[])]};
+      const updatedLoan=await api.updateLoan({id:loan.id,echeances});
+      onSaved?.(updatedLoan,reminder);
       onClose();
-    }catch(e){
-      alert(e.message||'Impossible d’enregistrer le rappel.');
-    }finally{
-      setBusy(false);
-    }
+    }catch(e){alert(e.message||'Impossible d’enregistrer le rappel.');}
+    finally{setBusy(false);}
   }
   return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:390,background:'#000b',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
     <div style={{width:620,maxWidth:'100%',background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:22,maxHeight:'92vh',overflow:'auto'}}>
       <h2 style={{color:'#f6d27b'}}>Noter un rappel d’échéance</h2>
       <p style={{color:'#d8bf82',marginTop:6,lineHeight:1.45}}>Prêt <b>{loan.loan_id}</b> · échéance n°{Number(echeanceIndex)+1} de <b>{fCur(echeance?.montant)}</b>, prévue le <b>{fDate(echeance?.date)}</b>.</p>
-      <div style={{marginTop:16,padding:11,border:'1px solid #765326',borderRadius:9,background:'#21150c',color:'#e7d3a0',fontSize:13}}>
-        Indique la date et l’heure où le client a réellement été relancé, même si tu notes le rappel dans le registre plus tard.
-      </div>
+      <div style={{marginTop:16,padding:11,border:'1px solid #765326',borderRadius:9,background:'#21150c',color:'#e7d3a0',fontSize:13}}>Indique la date et l’heure où le client a réellement été relancé, même si tu notes le rappel dans le registre plus tard.</div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginTop:16}} className="bvh-reminder-modal-grid">
         <Inp label="Date réelle du rappel" type="date" value={f.reminder_date} onChange={e=>setF({...f,reminder_date:e.target.value})}/>
         <Inp label="Heure réelle du rappel" type="time" value={f.reminder_time} onChange={e=>setF({...f,reminder_time:e.target.value})}/>
       </div>
-      <div style={{marginTop:12}}>
-        <Select label="Moyen utilisé" value={f.reminder_method} onChange={e=>setF({...f,reminder_method:e.target.value})}>
-          <option value="telegram">Télégramme</option>
-          <option value="courrier">Courrier</option>
-          <option value="en_personne">En personne</option>
-          <option value="autre">Autre</option>
-        </Select>
-      </div>
-      <div style={{marginTop:12}}>
-        <Txt label="Note facultative" value={f.note} onChange={e=>setF({...f,note:e.target.value})} placeholder="Ex. Le client a confirmé qu’il passera demain."/>
-      </div>
-      <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:18}}>
-        <Btn color="#555" onClick={onClose}>Annuler</Btn>
-        <Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':'Enregistrer le rappel'}</Btn>
-      </div>
+      <div style={{marginTop:12}}><Select label="Moyen utilisé" value={f.reminder_method} onChange={e=>setF({...f,reminder_method:e.target.value})}>
+        <option value="telegram">Télégramme</option><option value="courrier">Courrier</option><option value="en_personne">En personne</option><option value="autre">Autre</option>
+      </Select></div>
+      <div style={{marginTop:12}}><Txt label="Note facultative" value={f.note} onChange={e=>setF({...f,note:e.target.value})} placeholder="Ex. Le client a confirmé qu’il passera demain."/></div>
+      <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:18}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':'Enregistrer le rappel'}</Btn></div>
     </div>
   </div>
 }
@@ -640,58 +620,36 @@ function LoanModal({open,onClose,onSave,loan,clients,prefill}){
   return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:620,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn onClick={save}>Enregistrer</Btn></div></div></div>
 }
 
-function LoanDetail({loan,onBack,onUpdate,onDelete,notify,reminders=[],setReminders}){
+function LoanDetail({loan,onBack,onUpdate,onDelete,notify,me}){
   const[reminderTarget,setReminderTarget]=useState(null);
   const paid=(loan.echeances||[]).filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant||0),0);
   async function mark(i,val){
     const es=[...(loan.echeances||[])];
     es[i]={...es[i],statut:val?'paye':'attente'};
-    try{
-      const u=await api.updateLoan({id:loan.id,echeances:es});
-      onUpdate(u);
-      notify(val?'Paiement validé':'Paiement annulé');
-    }catch(e){notify('⚠ '+e.message)}
+    try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé');}catch(e){notify('⚠ '+e.message)}
   }
-  function savedReminder(reminder){
-    setReminders?.([reminder,...reminders]);
-    notify('Rappel enregistré dans le registre');
-  }
-  const history=(reminders||[]).filter(r=>String(r.loan_id)===String(loan.id)).sort((a,b)=>reminderDateTime(b)-reminderDateTime(a)||new Date(b.created_at||0)-new Date(a.created_at||0));
+  function savedReminder(updatedLoan){onUpdate(updatedLoan);notify('Rappel enregistré dans le registre');}
+  const history=(loan.echeances||[]).flatMap((e,i)=>remindersForEcheance(e).map(r=>({...r,echeance_index:i}))).sort((a,b)=>reminderDateTime(b)-reminderDateTime(a)||new Date(b.created_at||0)-new Date(a.created_at||0));
   return <div>
     <button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,gap:12,flexWrap:'wrap'}}><h1>{loan.prenom} {loan.nom}</h1><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div>
-    <div className="bvh-loan-detail-summary">
-      <div><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username||'—'}</p><p>Garanties : {loan.garanties||'—'}</p></div>
-      <div><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(Number(loan.total_a_rembourser||0)-paid)}</b></p></div>
-    </div>
+    <div className="bvh-loan-detail-summary"><div><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username||'—'}</p><p>Garanties : {loan.garanties||'—'}</p></div><div><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(Number(loan.total_a_rembourser||0)-paid)}</b></p></div></div>
     <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap'}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div>
-    <div className="bvh-ledger">
-      <div className="bvh-ledger-title">Échéances et rappels</div>
-      {(loan.echeances||[]).map((e,i)=>{
-        const last=latestReminder(reminders,loan.id,i);
-        return <div className="bvh-reminder-row" key={i}>
-          <span className="bvh-reminder-number">#{i+1}</span>
-          <b>{fCur(e.montant)}</b>
-          <span>{fDate(e.date)}</span>
-          <Badge s={st(e)}/>
-          <div className="bvh-reminder-latest">{e.statut==='paye'?<span className="bvh-reminder-paid">Échéance remboursée</span>:<><b>{last?reminderSummary(last):'Aucun rappel envoyé'}</b>{last&&<small>Noté dans le registre le {new Date(last.created_at).toLocaleString('fr-FR')} · {reminderMethodLabel(last.reminder_method)}</small>}</>}</div>
-          {e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<div className="bvh-reminder-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(i)}>{last?'Ajouter un rappel':'Noter un rappel'}</Btn><Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn></div>}
-        </div>
-      })}
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances et rappels</div>
+      {(loan.echeances||[]).map((e,i)=>{const last=latestReminder(e);return <div className="bvh-reminder-row" key={i}>
+        <span className="bvh-reminder-number">#{i+1}</span><b>{fCur(e.montant)}</b><span>{fDate(e.date)}</span><Badge s={st(e)}/>
+        <div className="bvh-reminder-latest">{e.statut==='paye'?<span className="bvh-reminder-paid">Échéance remboursée</span>:<><b>{last?reminderSummary(last):'Aucun rappel envoyé'}</b>{last&&<small>Noté dans le registre le {new Date(last.created_at).toLocaleString('fr-FR')} · {reminderMethodLabel(last.reminder_method)}</small>}</>}</div>
+        {e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<div className="bvh-reminder-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(i)}>{last?'Ajouter un rappel':'Noter un rappel'}</Btn><Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn></div>}
+      </div>})}
     </div>
-    <div className="bvh-ledger" style={{marginTop:14}}>
-      <div className="bvh-ledger-title">Historique des rappels</div>
-      {history.length===0?<p className="bvh-empty">Aucun rappel d’échéance n’a encore été noté pour ce prêt.</p>:history.map(r=><div className="bvh-reminder-history" key={r.id}>
-        <div><b>Échéance n°{Number(r.echeance_index)+1}</b><span>{fDate(r.reminder_date)}{r.reminder_time?` à ${String(r.reminder_time).slice(0,5)}`:''} · {reminderMethodLabel(r.reminder_method)}</span></div>
-        <div><b>{r.recorded_by_username||'—'}</b><small>Noté le {new Date(r.created_at).toLocaleString('fr-FR')}</small></div>
-        {r.note&&<p>{r.note}</p>}
-      </div>)}
+    <div className="bvh-ledger" style={{marginTop:14}}><div className="bvh-ledger-title">Historique des rappels</div>
+      {history.length===0?<p className="bvh-empty">Aucun rappel d’échéance n’a encore été noté pour ce prêt.</p>:history.map((r,index)=><div className="bvh-reminder-history" key={`${r.created_at||'rappel'}-${index}`}><div><b>Échéance n°{Number(r.echeance_index)+1}</b><span>{fDate(r.reminder_date)}{r.reminder_time?` à ${String(r.reminder_time).slice(0,5)}`:''} · {reminderMethodLabel(r.reminder_method)}</span></div><div><b>{r.recorded_by_username||'—'}</b><small>Noté le {new Date(r.created_at).toLocaleString('fr-FR')}</small></div>{r.note&&<p>{r.note}</p>}</div>)}
     </div>
-    <ReminderModal open={reminderTarget!==null} loan={loan} echeanceIndex={reminderTarget} echeance={reminderTarget!==null?(loan.echeances||[])[reminderTarget]:null} onClose={()=>setReminderTarget(null)} onSaved={savedReminder}/>
+    <ReminderModal open={reminderTarget!==null} loan={loan} echeanceIndex={reminderTarget} echeance={reminderTarget!==null?(loan.echeances||[])[reminderTarget]:null} onClose={()=>setReminderTarget(null)} onSaved={savedReminder} me={me}/>
   </div>
 }
 
-function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled,openLoanId,onOpenLoanHandled,reminders=[],setReminders}){
+function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled,openLoanId,onOpenLoanHandled,me}){
   const[modal,setModal]=useState(false),[sel,setSel]=useState(null),[category,setCategory]=useState('tous'),[query,setQuery]=useState('');
   useEffect(()=>{if(sel && !sel._edit){const live=loans.find(x=>String(x.id)===String(sel.id));if(live && live!==sel)setSel(live);}},[loans,sel]);
   useEffect(()=>{
@@ -749,7 +707,7 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
   function openEdit(l){onLoanDraftChange?.(true);setSel({...l,_edit:true})}
   function closeEdit(){setSel(loans.find(x=>x.id===sel.id));onLoanDraftChange?.(false)}
 
-  if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={closeEdit} onSave={save}/></>}return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?openEdit(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify} reminders={reminders} setReminders={setReminders}/>} 
+  if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={closeEdit} onSave={save}/></>}return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?openEdit(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify} me={me}/>} 
   return <div>
     <div className="bvh-loans-head">
       <div><small>Registre commun des financements</small><h1>Prêts</h1><p>Les dossiers sont classés automatiquement par urgence et par prochaine échéance.</p></div>
@@ -1375,7 +1333,7 @@ function TodayAppointments({appointments=[],onOpenAgenda,onOpenClient}){
     })}
   </div>
 }
-function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan,reminders=[],setReminders,notify}){
+function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan,notify}){
   const[reminderTarget,setReminderTarget]=useState(null);
   const upcoming=[];
   loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date);if(d<=7)upcoming.push({...e,loan:l,i,d});}}));
@@ -1387,22 +1345,18 @@ function Dashboard({loans,clients,logs,me,onMark,appointments=[],onOpenAgenda,on
   const restant=Math.max(totalAttendu-encaisse,0);
   const retards=upcoming.filter(e=>e.d<0).length;
   const derniers=(logs||[]).slice(0,5);
-  function savedReminder(reminder){setReminders?.([reminder,...reminders]);notify?.('Rappel enregistré dans le registre');}
+  function savedReminder(updatedLoan){onLoanUpdate?.(updatedLoan);notify?.('Rappel enregistré dans le registre');}
   return <div>
     <div className="bvh-topbar"><div><small>Système interne sécurisé</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div>
     <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Échéances dépassées"/></div>
     <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="🗓️" title="Agenda" value={(appointments||[]).filter(e=>appointmentTouchesDate(e,today())&&e.status!=='annule').length} note="Rendez-vous aujourd’hui"/></div>
     <div className="bvh-ledger" style={{marginBottom:14}}><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div>
     <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
-    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=>{
-      const last=latestReminder(reminders,e.loan.id,e.i);
-      return <div className="bvh-row bvh-due-row bvh-due-row-reminder" key={i}>
-        <button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt{last?` · ${reminderSummary(last)}`:' · Aucun rappel noté'}</small></button>
-        <span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/>
-        <span className="bvh-due-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(e)}>Rappel</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></span>
-      </div>
-    })}</div>
-    <ReminderModal open={!!reminderTarget} loan={reminderTarget?.loan} echeance={reminderTarget} echeanceIndex={reminderTarget?.i} onClose={()=>setReminderTarget(null)} onSaved={savedReminder}/>
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=>{const last=latestReminder(e);return <div className="bvh-row bvh-due-row bvh-due-row-reminder" key={i}>
+      <button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt{last?` · ${reminderSummary(last)}`:' · Aucun rappel noté'}</small></button>
+      <span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><span className="bvh-due-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(e)}>Rappel</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></span>
+    </div>})}</div>
+    <ReminderModal open={!!reminderTarget} loan={reminderTarget?.loan} echeance={reminderTarget} echeanceIndex={reminderTarget?.i} onClose={()=>setReminderTarget(null)} onSaved={savedReminder} me={me}/>
   </div>
 }
 function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
@@ -1411,10 +1365,10 @@ function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{item
 function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
 
 function App(){
-  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[reminders,setReminders]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null);
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null);
   const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
   async function loadAll(user){
-    const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications(),api.loanReminders()];
+    const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications()];
     if(roleRank[user.role]>=2) req.push(api.users());
     if(roleRank[user.role]>=2) req.push(api.logs());
     const r=await Promise.allSettled(req);
@@ -1422,8 +1376,7 @@ function App(){
     setClients(r[1].status==='fulfilled'?r[1].value:[]);
     setAppointments(r[2].status==='fulfilled'?r[2].value:[]);
     setApplications(r[3].status==='fulfilled'?r[3].value:[]);
-    setReminders(r[4].status==='fulfilled'?r[4].value:[]);
-    let i=5;
+    let i=4;
     if(roleRank[user.role]>=2 && r[i]?.status==='fulfilled')setUsers(r[i].value);
     if(roleRank[user.role]>=2 && r[i+1]?.status==='fulfilled')setLogs(r[i+1].value);
   }
@@ -1447,19 +1400,6 @@ function App(){
   },[me,page,loanDraftActive]);
 
 
-  useEffect(()=>{
-    if(!me || !['dashboard','prets'].includes(page)) return;
-    let active=true;
-    const syncReminders=async()=>{
-      if(document.visibilityState!=='visible')return;
-      try{const latest=await api.loanReminders();if(active)setReminders(latest||[]);}catch{}
-    };
-    syncReminders();
-    const timer=window.setInterval(syncReminders,10000);
-    const onVisibility=()=>{if(document.visibilityState==='visible')syncReminders();};
-    document.addEventListener('visibilitychange',onVisibility);
-    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
-  },[me,page]);
 
   useEffect(()=>{
     if(!me || page!=='dashboard') return;
@@ -1527,7 +1467,7 @@ function App(){
     </aside>
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
-      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} reminders={reminders} setReminders={setReminders} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} reminders={reminders} setReminders={setReminders}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+      {page==='dashboard'&&<Dashboard loans={loans} clients={clients} logs={logs} me={me} onMark={mark} onLoanUpdate={u=>setLoans(loans.map(x=>x.id===u.id?u:x))} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} me={me}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
     </main>
   </div>
 }
