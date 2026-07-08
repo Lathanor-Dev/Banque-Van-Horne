@@ -48,19 +48,54 @@ function safeEcheances(v){
   return [];
 }
 
+/*
+  Génération des nouveaux IDs sans repartir à zéro.
+
+  Le correctif précédent ne regardait que les IDs déjà au format VH-0001 / SD-0001.
+  Donc les anciens IDs comme BVH-1904-1300 ou BVH-1904-1200 n’étaient pas comptés.
+
+  Cette version tient compte :
+  - des nouveaux IDs : VH-0001, SD-0001 ;
+  - des anciens IDs terminés par un numéro : BVH-1904-1300, BVH-1904-1200 ;
+  - uniquement des prêts de la même banque, quand bank_code/agence existe ;
+  - sans prendre une date comme 20260708 pour un numéro de séquence.
+*/
+function sequenceFromLoanId(id, prefix){
+  const s = String(id || '').trim().toUpperCase();
+  if(!s) return 0;
+
+  let m = s.match(new RegExp(`^${prefix}-(\\d{1,})$`));
+  if(m) return Number(m[1]) || 0;
+
+  // Ancien format constaté : BVH-1904-1300, BVH-1904-1200, etc.
+  m = s.match(/^BVH-\d{4}-(\d{1,})$/);
+  if(prefix === 'VH' && m) return Number(m[1]) || 0;
+
+  // Autre ancien format possible : VH-1904-1300 ou SD-1904-1300.
+  m = s.match(new RegExp(`^${prefix}-\\d{4}-(\\d{1,})$`));
+  if(m) return Number(m[1]) || 0;
+
+  return 0;
+}
+function rowMatchesBank(row, bank_code){
+  const code = String(row.bank_code || '').trim();
+  if(code) return code === bank_code;
+  const agence = safeAgence(row.agence);
+  return bankCodeFrom(agence) === bank_code;
+}
 async function generateLoanId(bank_code){
   const prefix = bank_code === 'SD' ? 'SD' : 'VH';
+
   const { data, error } = await sb
     .from('pret_loans')
-    .select('loan_id')
-    .ilike('loan_id', `${prefix}-%`);
+    .select('loan_id, bank_code, agence');
 
   if(error) throw new Error(error.message);
 
   let max = 0;
   for(const row of data || []){
-    const match = String(row.loan_id || '').match(new RegExp(`^${prefix}-(\\d{1,})$`));
-    if(match) max = Math.max(max, Number(match[1]) || 0);
+    if(!rowMatchesBank(row, bank_code)) continue;
+    max = Math.max(max, sequenceFromLoanId(row.loan_id, prefix));
   }
 
   return `${prefix}-${String(max + 1).padStart(4,'0')}`;
