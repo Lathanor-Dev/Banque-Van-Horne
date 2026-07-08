@@ -92,13 +92,34 @@ async function generateLoanId(bank_code){
 
   if(error) throw new Error(error.message);
 
-  let max = 0;
+  let maxSequence = 0;
+  let bankLoanCount = 0;
+
   for(const row of data || []){
     if(!rowMatchesBank(row, bank_code)) continue;
-    max = Math.max(max, sequenceFromLoanId(row.loan_id, prefix));
+
+    bankLoanCount += 1;
+
+    // Prend en compte les anciens IDs numériques :
+    // BVH-1904-1300, VH-1904-1300, VH-0007, SD-0007...
+    maxSequence = Math.max(maxSequence, sequenceFromLoanId(row.loan_id, prefix));
   }
 
-  return `${prefix}-${String(max + 1).padStart(4,'0')}`;
+  /*
+    Cas important :
+    Les anciens prêts du site pouvaient avoir des IDs comme :
+      VH-20260704-3PY2T
+      VH-20260706-N6BEW
+
+    Ces IDs contiennent une date + lettres, donc ils n'ont pas de numéro de séquence fiable.
+    On ne peut pas en extraire "20260704" comme numéro, sinon le prochain ID deviendrait VH-20260705.
+    Par contre, ils doivent quand même compter comme prêts existants.
+
+    Donc le prochain numéro devient :
+      max(dernier numéro lisible, nombre total de prêts de cette banque) + 1
+  */
+  const next = Math.max(maxSequence, bankLoanCount) + 1;
+  return `${prefix}-${String(next).padStart(4,'0')}`;
 }
 
 function normalizeOutput(row){
