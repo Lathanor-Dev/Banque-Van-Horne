@@ -10,6 +10,22 @@ function safeApplicationId(v){
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
+function safeAgence(v){
+  const value = String(v || 'van_horn').trim();
+  return ['van_horn','saint_denis'].includes(value) ? value : 'van_horn';
+}
+function safeRecouvrementStatus(v){
+  const value = String(v || 'aucun').trim();
+  return ['aucun','relance_simple','mise_en_demeure','recouvrement_actif','saisie_garantie','cloture'].includes(value) ? value : 'aucun';
+}
+function safeText(v){
+  return String(v || '').trim();
+}
+function safeNullableDate(v){
+  if(v === undefined || v === null || v === '') return null;
+  const s = String(v).trim();
+  return s || null;
+}
 function safeEcheances(v){
   if(Array.isArray(v)) return v;
   if(typeof v === 'string') {
@@ -47,6 +63,10 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       loan_id:String(b.loan_id||'').trim(),
       client_id:safeClientId(b.client_id),
       application_id:safeApplicationId(b.application_id),
+      agence:safeAgence(b.agence),
+      recouvrement_status:safeRecouvrementStatus(b.recouvrement_status),
+      recouvrement_notes:safeText(b.recouvrement_notes),
+      recouvrement_started_at:safeNullableDate(b.recouvrement_started_at),
       nom:String(b.nom||'').trim(),
       prenom:String(b.prenom||'').trim(),
       telegram:String(b.telegram||'').trim(),
@@ -87,6 +107,10 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       .forEach(k=>{ if(b[k]!==undefined) patch[k]=b[k]; });
     if(b.client_id !== undefined) patch.client_id=safeClientId(b.client_id);
     if(b.application_id !== undefined) patch.application_id=safeApplicationId(b.application_id);
+    if(b.agence !== undefined) patch.agence=safeAgence(b.agence);
+    if(b.recouvrement_status !== undefined) patch.recouvrement_status=safeRecouvrementStatus(b.recouvrement_status);
+    if(b.recouvrement_notes !== undefined) patch.recouvrement_notes=safeText(b.recouvrement_notes);
+    if(b.recouvrement_started_at !== undefined) patch.recouvrement_started_at=safeNullableDate(b.recouvrement_started_at);
     if(b.echeances !== undefined) patch.echeances=safeEcheances(b.echeances);
 
     const { data, error } = await sb
