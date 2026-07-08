@@ -12,7 +12,16 @@ function safeApplicationId(v){
 }
 function safeAgence(v){
   const value = String(v || 'van_horn').trim();
-  return ['van_horn','saint_denis'].includes(value) ? value : 'van_horn';
+  if(value === 'SD' || value === 'saint_denis') return 'saint_denis';
+  return 'van_horn';
+}
+function bankCodeFrom(value){
+  const agence = safeAgence(value);
+  return agence === 'saint_denis' ? 'SD' : 'VH';
+}
+function agenceFromBankCode(value){
+  const v = String(value || '').trim();
+  return v === 'SD' ? 'saint_denis' : 'van_horn';
 }
 function safeRecouvrementStatus(v){
   const value = String(v || 'aucun').trim();
@@ -39,6 +48,34 @@ function safeEcheances(v){
   return [];
 }
 
+async function generateLoanId(bank_code){
+  const prefix = bank_code === 'SD' ? 'SD' : 'VH';
+  const { data, error } = await sb
+    .from('pret_loans')
+    .select('loan_id')
+    .ilike('loan_id', `${prefix}-%`);
+
+  if(error) throw new Error(error.message);
+
+  let max = 0;
+  for(const row of data || []){
+    const match = String(row.loan_id || '').match(new RegExp(`^${prefix}-(\\d{1,})$`));
+    if(match) max = Math.max(max, Number(match[1]) || 0);
+  }
+
+  return `${prefix}-${String(max + 1).padStart(4,'0')}`;
+}
+
+function normalizeOutput(row){
+  const bank_code = row.bank_code || bankCodeFrom(row.agence);
+  return {
+    ...row,
+    bank_code,
+    agence: row.agence || agenceFromBankCode(bank_code),
+    echeances: safeEcheances(row.echeances)
+  };
+}
+
 module.exports = (req,res)=>handler(req,res, async()=>{
   const actor = await currentUser(req);
   if(!actor) return json(res,401,{error:'Non connecté'});
@@ -50,7 +87,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       .order('created_at',{ascending:false});
 
     if(error) return json(res,500,{error:error.message});
-    return json(res,200,(data || []).map(l=>({...l,echeances:safeEcheances(l.echeances)})));
+    return json(res,200,(data || []).map(normalizeOutput));
   }
 
   if(req.method==='POST'){
@@ -59,11 +96,19 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       return json(res,400,{error:'Données prêt incomplètes'});
     }
 
+    const agence = safeAgence(b.agence || b.bank_code);
+    const bank_code = String(b.bank_code || bankCodeFrom(agence)).trim() === 'SD' ? 'SD' : 'VH';
+    const requestedId = safeText(b.loan_id);
+    const loan_id = requestedId && /^(VH|SD)-\d{4,}$/.test(requestedId)
+      ? requestedId
+      : await generateLoanId(bank_code);
+
     const payload={
-      loan_id:String(b.loan_id||'').trim(),
+      loan_id,
+      bank_code,
+      agence,
       client_id:safeClientId(b.client_id),
       application_id:safeApplicationId(b.application_id),
-      agence:safeAgence(b.agence),
       recouvrement_status:safeRecouvrementStatus(b.recouvrement_status),
       recouvrement_notes:safeText(b.recouvrement_notes),
       recouvrement_started_at:safeNullableDate(b.recouvrement_started_at),
@@ -85,6 +130,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
 
     await logAction(actor,'creation_pret',{
       loan_id:data.loan_id,
+      banque:data.bank_code,
       client:`${data.prenom} ${data.nom}`,
       client_id:data.client_id,
       application_id:data.application_id,
@@ -92,7 +138,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       total:data.total_a_rembourser
     });
 
-    return json(res,200,{...data,echeances:safeEcheances(data.echeances)});
+    return json(res,200,normalizeOutput(data));
   }
 
   if(req.method==='PUT'){
@@ -105,9 +151,18 @@ module.exports = (req,res)=>handler(req,res, async()=>{
     const patch={};
     ['nom','prenom','telegram','garanties','total_a_rembourser','somme','taux']
       .forEach(k=>{ if(b[k]!==undefined) patch[k]=b[k]; });
+
     if(b.client_id !== undefined) patch.client_id=safeClientId(b.client_id);
     if(b.application_id !== undefined) patch.application_id=safeApplicationId(b.application_id);
-    if(b.agence !== undefined) patch.agence=safeAgence(b.agence);
+    if(b.agence !== undefined || b.bank_code !== undefined){
+      const agence = safeAgence(b.agence || b.bank_code);
+      patch.agence = agence;
+      patch.bank_code = String(b.bank_code || bankCodeFrom(agence)).trim() === 'SD' ? 'SD' : 'VH';
+    }
+    if(b.loan_id !== undefined){
+      const requestedId = safeText(b.loan_id);
+      if(requestedId && /^(VH|SD)-\d{4,}$/.test(requestedId)) patch.loan_id = requestedId;
+    }
     if(b.recouvrement_status !== undefined) patch.recouvrement_status=safeRecouvrementStatus(b.recouvrement_status);
     if(b.recouvrement_notes !== undefined) patch.recouvrement_notes=safeText(b.recouvrement_notes);
     if(b.recouvrement_started_at !== undefined) patch.recouvrement_started_at=safeNullableDate(b.recouvrement_started_at);
@@ -124,9 +179,10 @@ module.exports = (req,res)=>handler(req,res, async()=>{
 
     await logAction(actor,'modification_pret',{
       loan_id:data.loan_id,
+      banque:data.bank_code,
       fields:Object.keys(patch)
     });
-    return json(res,200,{...data,echeances:safeEcheances(data.echeances)});
+    return json(res,200,normalizeOutput(data));
   }
 
   if(req.method==='DELETE'){
@@ -141,6 +197,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
 
     await logAction(actor,'suppression_pret',{
       loan_id:old.loan_id,
+      banque:old.bank_code,
       client:`${old.prenom} ${old.nom}`,
       montant:old.somme,
       total:old.total_a_rembourser
