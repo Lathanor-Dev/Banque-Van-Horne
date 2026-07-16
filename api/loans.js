@@ -83,7 +83,7 @@ function rowMatchesBank(row, bank_code){
   const agence = safeAgence(row.agence);
   return bankCodeFrom(agence) === bank_code;
 }
-async function generateLoanId(bank_code){
+async function generateLoanId(bank_code, offset = 0){
   const prefix = bank_code === 'SD' ? 'SD' : 'VH';
 
   const { data, error } = await sb
@@ -118,8 +118,48 @@ async function generateLoanId(bank_code){
     Donc le prochain numéro devient :
       max(dernier numéro lisible, nombre total de prêts de cette banque) + 1
   */
-  const next = Math.max(maxSequence, bankLoanCount) + 1;
+  const next = Math.max(maxSequence, bankLoanCount) + 1 + offset;
   return `${prefix}-${String(next).padStart(4,'0')}`;
+}
+
+function isDuplicateLoanIdError(error){
+  if(!error) return false;
+  const text = `${error.code || ''} ${error.message || ''} ${error.details || ''} ${error.hint || ''}`;
+  return error.code === '23505'
+    || text.includes('pret_loans_loan_id_key')
+    || text.toLowerCase().includes('duplicate key');
+}
+
+async function insertLoanWithUniqueId(basePayload, bank_code){
+  /*
+    La référence finale du prêt est décidée ici, côté serveur.
+    Le navigateur peut envoyer un ancien loan_id vide ou réutilisé : on l'ignore à la création.
+    Si deux banquiers enregistrent exactement au même moment, Supabase protège avec l'index unique,
+    puis on réessaie automatiquement avec le numéro suivant.
+  */
+  let lastError = null;
+
+  for(let attempt = 0; attempt < 30; attempt++){
+    const loan_id = await generateLoanId(bank_code, attempt);
+    const payload = { ...basePayload, loan_id };
+
+    const { data, error } = await sb
+      .from('pret_loans')
+      .insert(payload)
+      .select()
+      .single();
+
+    if(!error) return data;
+
+    lastError = error;
+    if(!isDuplicateLoanIdError(error)) throw new Error(error.message);
+  }
+
+  throw new Error(
+    lastError?.message
+      ? `Impossible de générer une référence de prêt unique après plusieurs essais. Dernière erreur : ${lastError.message}`
+      : 'Impossible de générer une référence de prêt unique après plusieurs essais.'
+  );
 }
 
 function normalizeOutput(row){
@@ -154,13 +194,8 @@ module.exports = (req,res)=>handler(req,res, async()=>{
 
     const agence = safeAgence(b.agence || b.bank_code);
     const bank_code = String(b.bank_code || bankCodeFrom(agence)).trim() === 'SD' ? 'SD' : 'VH';
-    const requestedId = safeText(b.loan_id);
-    const loan_id = requestedId && /^(VH|SD)-\d{4,}$/.test(requestedId)
-      ? requestedId
-      : await generateLoanId(bank_code);
 
     const payload={
-      loan_id,
       bank_code,
       agence,
       client_id:safeClientId(b.client_id),
@@ -181,8 +216,12 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       date_creation:b.date_creation || new Date().toISOString().split('T')[0]
     };
 
-    const { data, error } = await sb.from('pret_loans').insert(payload).select().single();
-    if(error) return json(res,500,{error:error.message});
+    let data;
+    try{
+      data = await insertLoanWithUniqueId(payload, bank_code);
+    }catch(error){
+      return json(res,500,{error:error.message});
+    }
 
     await logAction(actor,'creation_pret',{
       loan_id:data.loan_id,
@@ -215,10 +254,8 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       patch.agence = agence;
       patch.bank_code = String(b.bank_code || bankCodeFrom(agence)).trim() === 'SD' ? 'SD' : 'VH';
     }
-    if(b.loan_id !== undefined){
-      const requestedId = safeText(b.loan_id);
-      if(requestedId && /^(VH|SD)-\d{4,}$/.test(requestedId)) patch.loan_id = requestedId;
-    }
+    // La référence d'un prêt existant reste stable. Elle n'est pas modifiée depuis le navigateur,
+    // pour éviter les collisions ou les erreurs de double dossier.
     if(b.recouvrement_status !== undefined) patch.recouvrement_status=safeRecouvrementStatus(b.recouvrement_status);
     if(b.recouvrement_notes !== undefined) patch.recouvrement_notes=safeText(b.recouvrement_notes);
     if(b.recouvrement_started_at !== undefined) patch.recouvrement_started_at=safeNullableDate(b.recouvrement_started_at);
