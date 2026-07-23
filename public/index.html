@@ -1,0 +1,2165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<title>Registre bancaire de Reckless</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0905; --panel:#17100a; --panel2:#20150d; --ink:#f5e4b8;
+  --muted:#b69b68; --gold:#c9943c; --gold2:#f3d58a; --line:#62451f;
+  --blue:#4d8fbd; --green:#3f9b67; --red:#b94735; --black:#070503;
+}
+body{
+  font-family: Georgia,"Times New Roman",serif;
+  background:
+    radial-gradient(circle at top,#28190e 0%,#100a06 38%,#070503 100%);
+  color:var(--ink);
+}
+input,select,textarea,button{font-family:inherit}
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:#0b0704}
+::-webkit-scrollbar-thumb{background:#8b642c;border-radius:8px}
+h1,h2,h3{letter-spacing:.02em;text-shadow:0 2px 0 #000}
+button{transition:.15s ease}
+button:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.bvh-sidebar{
+  width:255px;background:linear-gradient(180deg,#1b1108,#0d0905);
+  border-right:1px solid var(--line);padding:18px 18px 20px;display:flex;flex-direction:column;
+  box-shadow:8px 0 28px #0008;position:relative;
+}
+.bvh-sidebar:after{content:"";position:absolute;right:0;top:0;bottom:0;width:1px;background:#d09c4a55}
+.bvh-brand{text-align:center;padding:8px 0 18px;margin-bottom:18px;border-bottom:1px solid #6d4b2266}
+.bvh-brand img{width:128px;max-width:90%;height:auto;display:block;margin:0 auto 12px;filter:drop-shadow(0 8px 16px #000)}
+.bvh-brand-title{font-size:27px;line-height:1.02;font-weight:900;color:#f6d27b;text-transform:uppercase;letter-spacing:.045em}
+.bvh-brand-date{margin-top:8px;color:#d9b66c;font-size:13px;letter-spacing:.22em;text-transform:uppercase}
+.bvh-main{flex:1;padding:26px 34px;overflow:auto;background:linear-gradient(180deg,#130d08aa,#090603aa)}
+.bvh-nav{display:grid;gap:9px;flex:1;align-content:start}
+.bvh-user{margin-top:auto}
+.bvh-nav button{
+  border:1px solid #4a321966;border-radius:9px;padding:13px 14px;text-align:left;
+  font-weight:800;cursor:pointer;color:#cfb57b;background:#120b06;
+  box-shadow:inset 0 0 0 1px #0008;
+}
+.bvh-nav button.active{
+  color:#ffe19b;background:linear-gradient(90deg,#4a3216,#2a1a0c);
+  border-color:#9f7431;box-shadow:0 0 18px #c9943c22,inset 0 0 0 1px #e0b45a33;
+}
+.bvh-user{border-top:1px solid #6d4b2266;padding-top:16px;color:#f1d99a}
+.bvh-topbar{
+  border:1px solid #6d4b22;border-radius:12px;margin-bottom:22px;padding:16px 20px;
+  background:linear-gradient(90deg,#25170c,#191007);display:flex;justify-content:space-between;gap:16px;align-items:center;
+  box-shadow:inset 0 0 0 1px #000,0 8px 24px #0005;
+}
+.bvh-topbar small{display:block;color:#c9a567;letter-spacing:.13em;text-transform:uppercase}
+.bvh-card{
+  background:linear-gradient(180deg,#1d130b,#130c07);border:1px solid #6d4b22;border-radius:14px;
+  padding:18px;box-shadow:inset 0 0 0 1px #000,0 12px 28px #0005;position:relative;overflow:hidden;
+}
+.bvh-card:before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
+.bvh-card .icon{font-size:27px;margin-bottom:7px}
+.bvh-card p{color:#c6aa72;font-size:14px}
+.bvh-card h2{font-size:30px;color:#f4c86d;margin-top:4px}
+.bvh-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.bvh-grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+.bvh-ledger{background:linear-gradient(180deg,#1b1109,#100a06);border:1px solid #6d4b22;border-radius:14px;overflow:hidden;box-shadow:inset 0 0 0 1px #000}
+.bvh-ledger-title{padding:14px 16px;border-bottom:1px solid #6d4b2266;color:#f0ce80;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.bvh-row{display:grid;grid-template-columns:1.4fr 110px 110px 110px 155px;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #3b281366}
+.bvh-row:first-of-type{border-top:none}
+.bvh-empty{padding:28px;text-align:center;color:#d7bc7b}
+.bvh-activity{padding:12px 16px;border-top:1px solid #3b281366;color:#d8bf82}
+.bvh-activity b{color:#f4d58b}
+.bvh-login-logo{width:185px;max-width:90%;display:block;margin:0 auto 14px;filter:drop-shadow(0 8px 16px #000)}
+.bvh-login-card{background:linear-gradient(180deg,#1e140b,#100a06);border:1px solid #805a28;border-top:4px solid #c9943c;border-radius:18px;padding:34px;width:420px;box-shadow:0 32px 90px #000}
+
+.bvh-client-list{display:grid;gap:10px;margin-top:16px}
+.bvh-client-row{display:grid;grid-template-columns:150px 1.5fr 120px 140px 150px;gap:12px;align-items:center;background:linear-gradient(180deg,#1b1109,#100a06);border:1px solid #6d4b22;border-radius:10px;padding:13px 15px;box-shadow:inset 0 0 0 1px #000;cursor:pointer}
+.bvh-client-row:hover{border-color:#c9943c;box-shadow:0 0 18px #c9943c22,inset 0 0 0 1px #000}
+.bvh-dossier-head{border:1px solid #7b5528;border-radius:14px;padding:18px 20px;background:linear-gradient(90deg,#28190d,#140c06);display:flex;justify-content:space-between;gap:16px;margin-bottom:16px}
+.bvh-dossier-code{color:#f3d58a;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+.bvh-dossier-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.bvh-field{display:grid;grid-template-columns:150px 1fr;padding:9px 0;border-bottom:1px solid #3b281366;color:#d8bf82}
+.bvh-field b{color:#f4d58b}
+.bvh-note-box{min-height:140px;border:1px dashed #7b5528;border-radius:10px;padding:14px;color:#b69b68;background:#100a06}
+
+.bvh-doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;padding:16px}
+.bvh-doc-card{border:1px solid #65451f;border-radius:12px;background:linear-gradient(180deg,#21160d,#120b06);padding:12px;display:flex;gap:12px;align-items:center;min-height:92px;box-shadow:inset 0 0 0 1px #0007}
+.bvh-doc-thumb{width:62px;height:62px;border-radius:8px;object-fit:cover;border:1px solid #7b5528;background:#0b0704;display:flex;align-items:center;justify-content:center;font-size:28px;color:#f3d58a;flex:0 0 auto}
+.bvh-doc-meta{min-width:0;flex:1;color:#d8bf82;font-size:13px}
+.bvh-doc-meta b{display:block;color:#f4d58b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.bvh-doc-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.bvh-upload-line{padding:14px 16px;border-top:1px solid #4a321966;display:grid;grid-template-columns:160px 1fr auto;gap:10px;align-items:end}
+.bvh-dossier-grid-wide{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:1100px){.bvh-upload-line{grid-template-columns:1fr}.bvh-dossier-grid-wide{grid-template-columns:1fr}}
+
+@media(max-width:900px){.bvh-client-row{grid-template-columns:1fr}.bvh-dossier-grid{grid-template-columns:1fr}}
+
+@media(max-width:1100px){.bvh-grid-4{grid-template-columns:repeat(2,1fr)}.bvh-grid-2{grid-template-columns:1fr}.bvh-sidebar{width:230px}}
+
+.bvh-note-input{width:100%;background:#120b06;border:1px solid #62451f;border-radius:8px;color:#f8e7b7;padding:12px;font-family:Georgia,serif;font-size:15px;outline:none}
+.bvh-note-card{background:linear-gradient(180deg,#f3dfad,#d8b66f);color:#1b1008;border:1px solid #8b642c;border-radius:8px;padding:12px;box-shadow:inset 0 0 18px #5b351033}
+.bvh-note-card small{color:#5b3510;font-weight:800}
+
+
+/* ===== Adaptation téléphone et tablette ===== */
+.bvh-mobile-top,.bvh-menu-backdrop{display:none}
+.bvh-shell{display:flex;min-height:100vh}
+
+@media (max-width:1100px) and (min-width:761px){
+  .bvh-sidebar{width:214px;padding-left:14px;padding-right:14px}
+  .bvh-main{padding:22px}
+  .bvh-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .bvh-grid-2,.bvh-dossier-grid-wide{grid-template-columns:1fr}
+}
+
+@media (max-width:760px){
+  html,body,#root{min-height:100%;overflow-x:hidden}
+  body{font-size:16px}
+  .bvh-shell{display:block;min-height:100dvh}
+  .bvh-mobile-top{
+    display:flex;position:fixed;z-index:250;left:0;right:0;top:0;height:60px;
+    align-items:center;gap:11px;padding:8px 12px;
+    background:linear-gradient(90deg,#1d120a,#0d0905);border-bottom:1px solid #6d4b22;
+    box-shadow:0 6px 18px #0009;
+  }
+  .bvh-mobile-menu-button{
+    width:42px;height:42px;border-radius:9px;border:1px solid #8b642c;
+    background:linear-gradient(180deg,#5c3d1c,#2e1b0d);color:#ffe0a0;font-size:21px;cursor:pointer;
+  }
+  .bvh-mobile-title{min-width:0;line-height:1.05}
+  .bvh-mobile-title b{display:block;color:#f6d27b;font-size:16px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bvh-mobile-title span{display:block;color:#c5a261;font-size:10px;text-transform:uppercase;letter-spacing:.16em;margin-top:3px}
+  .bvh-menu-backdrop{position:fixed;z-index:240;inset:0;background:#000a;opacity:0;pointer-events:none;transition:opacity .2s ease}
+  .bvh-menu-backdrop.open{display:block;opacity:1;pointer-events:auto}
+  .bvh-sidebar{
+    position:fixed;z-index:260;top:0;left:0;bottom:0;height:100dvh;width:min(84vw,310px);
+    transform:translateX(-105%);transition:transform .22s ease;overflow-y:auto;
+    padding-top:13px;box-shadow:14px 0 35px #000c;
+  }
+  .bvh-sidebar.open{transform:translateX(0)}
+  .bvh-brand{padding-top:8px;margin-bottom:12px}
+  .bvh-brand img{width:155px;max-width:74%;margin-bottom:8px}
+  .bvh-brand-title{font-size:24px}
+  .bvh-nav{flex:none}
+  .bvh-nav button{min-height:48px;font-size:16px}
+  .bvh-user{margin-top:16px}
+  .bvh-main{width:100%;min-height:100dvh;padding:76px 12px 20px;overflow:visible}
+  .bvh-topbar{flex-direction:column;align-items:flex-start;padding:14px;margin-bottom:14px;gap:9px}
+  .bvh-topbar h1{font-size:29px;line-height:1.05}
+  .bvh-topbar>div:last-child{text-align:left!important}
+  .bvh-grid-4,.bvh-grid-2,.bvh-dossier-grid,.bvh-dossier-grid-wide{grid-template-columns:1fr;gap:12px}
+  .bvh-card{padding:15px}
+  .bvh-card h2{font-size:29px}
+  .bvh-client-row{grid-template-columns:1fr 1fr;gap:7px;padding:13px}
+  .bvh-client-row>:first-child{grid-column:1/-1}
+  .bvh-client-row>:last-child{grid-column:1/-1}
+  .bvh-dossier-head{flex-direction:column;padding:15px;gap:12px}
+  .bvh-dossier-head h1{font-size:30px;line-height:1.03}
+  .bvh-dossier-head>div:last-child{width:100%;display:grid!important;grid-template-columns:1fr 1fr;gap:8px!important}
+  .bvh-dossier-head>div:last-child button{width:100%}
+  .bvh-field{grid-template-columns:1fr;gap:4px;padding:11px 0}
+  .bvh-upload-line{grid-template-columns:1fr;gap:10px;padding:14px}
+  .bvh-doc-grid{grid-template-columns:1fr;padding:12px}
+  .bvh-doc-card{min-height:82px}
+  .bvh-row{display:flex;flex-wrap:wrap;gap:7px;padding:13px 14px}
+  .bvh-row>*{min-width:0}
+  .bvh-row>b{flex:1 1 52%;font-size:16px}
+  .bvh-row>span{flex:1 1 38%}
+  .bvh-row>button,.bvh-row>a{flex:1 1 100%;justify-content:center;text-align:center}
+  .bvh-ledger-title{padding:13px 14px}
+  .bvh-note-box{min-height:110px}
+  .bvh-login-card{width:100%;max-width:420px;padding:26px 20px}
+  .bvh-login-logo{width:155px}
+  input,select,textarea{font-size:16px!important}
+  button{min-height:40px}
+}
+
+.bvh-agenda-event{min-height:36px}
+@media(max-width:760px){
+  .bvh-agenda-modal-grid{grid-template-columns:1fr!important}
+}
+
+
+/* ===== Agenda hebdomadaire — présentation calendrier visuel ===== */
+.bvh-calendar-panel{background:#100a06;border:1px solid #6d4b22;border-radius:14px;overflow:hidden;box-shadow:inset 0 0 0 1px #000,0 12px 28px #0005}
+.bvh-calendar-toolbar{padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #6d4b2266;background:linear-gradient(90deg,#24170c,#140d08)}
+.bvh-calendar-title{font-weight:900;color:#f3d58a;font-size:18px;margin-right:auto;white-space:nowrap}
+.bvh-view-toggle{display:flex;border:1px solid #765326;border-radius:9px;overflow:hidden;background:#120b06}
+.bvh-view-toggle button{border:0;border-radius:0;background:transparent;color:#d8bc78;padding:8px 12px;cursor:pointer;font-weight:800}
+.bvh-view-toggle button.active{background:#8b642c;color:#fff}
+.bvh-calendar-filter{min-width:190px;flex:1 1 210px}
+.bvh-calendar-scroll{overflow:auto;max-height:calc(100vh - 220px);background:#0f0a06}
+.bvh-week-grid{min-width:1050px;display:grid;grid-template-columns:72px repeat(var(--days),minmax(130px,1fr));position:relative}
+.bvh-calendar-corner{position:sticky;top:0;z-index:50;background:#1c1109;border-right:1px solid #503719;border-bottom:1px solid #765326;min-height:60px}
+.bvh-calendar-day-head{position:sticky;top:0;z-index:45;padding:10px 8px;text-align:center;background:linear-gradient(180deg,#25170c,#191007);border-right:1px solid #503719;border-bottom:1px solid #765326;color:#d8bc78;cursor:pointer}
+.bvh-calendar-day-head:hover{background:#2d1c0e}
+.bvh-calendar-day-head .dow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:#b69b68}
+.bvh-calendar-day-head .date{display:inline-flex;align-items:center;justify-content:center;margin-top:4px;min-width:30px;height:30px;border-radius:50%;font-weight:900;color:#f5e4b8}
+.bvh-calendar-day-head.today .date{background:#c9943c;color:#1b1008}
+.bvh-calendar-time-label{height:34px;padding:4px 9px;text-align:right;color:#b69b68;font-size:12px;border-right:1px solid #503719;border-bottom:1px solid #2e1f1066;background:#130c07}
+.bvh-calendar-day-column{position:relative;height:1632px;border-right:1px solid #503719;background:#100a06}
+.bvh-calendar-slot{height:34px;border-bottom:1px solid #2e1f1066;cursor:pointer}
+.bvh-calendar-slot:nth-child(2n+1){border-bottom-color:#4f351a88}
+.bvh-calendar-slot:hover{background:#c9943c12}
+.bvh-calendar-now{position:absolute;z-index:30;left:0;right:0;height:2px;background:#e24736;pointer-events:none;box-shadow:0 0 0 1px #0005}
+.bvh-calendar-now:before{content:"";position:absolute;left:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:#e24736}
+.bvh-agenda-event{position:absolute;z-index:20;border:0;border-left:4px solid #f3d58a;border-radius:7px;padding:6px 7px;text-align:left;overflow:hidden;cursor:pointer;box-shadow:0 3px 8px #0007;transition:filter .15s ease,box-shadow .15s ease;min-height:28px}
+.bvh-agenda-event:hover{transform:none;filter:brightness(1.08);box-shadow:0 6px 14px #000b;z-index:35}
+.bvh-agenda-event.dragging{opacity:.5}
+.bvh-agenda-event .event-time{font-size:11px;font-weight:900;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bvh-agenda-event .event-client{font-size:12px;font-weight:900;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bvh-agenda-event .event-meta{display:block;font-size:10px;opacity:.86;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.bvh-agenda-event.annule{opacity:.55;text-decoration:line-through;border-style:dashed}
+.bvh-agenda-legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid #6d4b2266;background:#160e08;color:#c8a96f;font-size:12px}
+.bvh-agenda-legend span{display:inline-flex;align-items:center;gap:5px}
+.bvh-agenda-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.bvh-agenda-empty{color:#9d7e49;text-align:center;padding:14px 16px;background:#130c07;border-bottom:1px solid #3b281366}
+.bvh-agenda-conflict{margin-top:2px;padding:10px 12px;border-radius:8px;border:1px solid #9f7431;background:#5c3d1c33;color:#f3d58a;font-size:13px}
+@media(max-width:760px){
+  .bvh-calendar-toolbar{padding:12px}
+  .bvh-calendar-title{width:100%;font-size:16px}
+  .bvh-calendar-filter{min-width:100%;flex-basis:100%}
+  .bvh-calendar-scroll{max-height:none}
+  .bvh-week-grid{min-width:650px}
+  .bvh-calendar-day-column{height:1632px}
+  .bvh-agenda-event{font-size:11px}
+}
+
+
+/* ===== Tableau de bord — rendez-vous du jour ===== */
+.bvh-today-agenda-row{
+  display:grid;grid-template-columns:112px minmax(190px,1.45fr) minmax(170px,1fr) auto;
+  gap:12px;align-items:center;padding:12px 16px;border-top:1px solid #3b281366;
+  background:linear-gradient(90deg,#160e08,#100a06);
+}
+.bvh-today-agenda-row:hover{background:linear-gradient(90deg,#24170c,#140d08)}
+.bvh-today-agenda-time{font-weight:900;color:#f3d58a;border-left:4px solid var(--agenda-color,#c9943c);padding-left:9px;line-height:1.2}
+.bvh-today-agenda-client{font-weight:900;color:#f5e4b8;display:block}
+.bvh-today-agenda-sub{display:block;color:#b69b68;font-size:13px;margin-top:3px}
+.bvh-today-agenda-responsable{display:flex;flex-direction:column;gap:6px;color:#d8bf82;font-size:13px}
+.bvh-today-agenda-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.bvh-today-agenda-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #6d4b2266}
+.bvh-today-agenda-head b{color:#f0ce80;text-transform:uppercase;letter-spacing:.06em}
+.bvh-today-agenda-count{color:#b69b68;font-size:13px;margin-left:8px}
+@media(max-width:760px){
+  .bvh-today-agenda-head{align-items:flex-start;flex-direction:column}
+  .bvh-today-agenda-row{grid-template-columns:1fr;gap:7px;padding:13px 14px}
+  .bvh-today-agenda-time{width:max-content}
+  .bvh-today-agenda-actions{justify-content:flex-start}
+}
+
+
+/* ===== Actions rapides depuis les fiches clients ===== */
+.bvh-client-actions{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 16px;padding:13px 15px;border:1px solid #765326;border-radius:12px;background:linear-gradient(90deg,#24170c,#140d08);box-shadow:inset 0 0 0 1px #000}
+.bvh-client-actions-title{width:100%;color:#f0ce80;font-weight:900;text-transform:uppercase;letter-spacing:.07em;font-size:12px;margin-bottom:1px}
+.bvh-client-actions small{width:100%;color:#b69b68;font-size:13px;margin-top:-3px;margin-bottom:2px}
+.bvh-client-actions button{min-height:42px}
+.bvh-credit-row{display:grid;grid-template-columns:1.25fr 1fr 120px 120px;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #3b281366}
+.bvh-credit-row:first-of-type{border-top:none}
+@media(max-width:760px){.bvh-client-actions{display:grid;grid-template-columns:1fr 1fr}.bvh-client-actions-title,.bvh-client-actions small{grid-column:1/-1}.bvh-client-actions button{width:100%}.bvh-credit-row{display:flex;flex-wrap:wrap;gap:7px;padding:13px 14px}.bvh-credit-row>*{flex:1 1 45%}}
+
+
+/* ===== Tableau de bord : échéances à traiter ===== */
+.bvh-due-row{
+  grid-template-columns:minmax(150px,1fr) 92px 110px 110px 150px;
+}
+.bvh-due-loan-link{
+  border:0;background:transparent;color:#f4d58b;font:inherit;font-weight:900;
+  text-align:left;cursor:pointer;min-width:0;padding:0;line-height:1.12;
+}
+.bvh-due-loan-link:hover{color:#ffe19b;text-decoration:underline;transform:none;filter:none}
+.bvh-due-loan-link small{
+  display:block;margin-top:4px;color:#b69b68;font-size:11px;font-weight:800;
+  text-decoration:none;
+}
+@media(max-width:760px){
+  .bvh-due-row{display:flex}
+  .bvh-due-loan-link{flex:1 1 52%;font-size:16px}
+}
+
+
+/* Tableau de bord : les échéances utilisent toute la largeur disponible */
+.bvh-due-row{grid-template-columns:minmax(190px,1.35fr) 130px 145px 130px 170px}
+@media(max-width:760px){.bvh-due-row{display:flex}}
+
+
+/* ===== Registre des prêts : catégories, recherche et tri ===== */
+.bvh-loans-head{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:16px;
+  padding:16px 20px;border:1px solid #6d4b22;border-radius:12px;
+  background:linear-gradient(90deg,#25170c,#191007);box-shadow:inset 0 0 0 1px #000,0 8px 24px #0005;
+}
+.bvh-loans-head small{display:block;color:#c9a567;letter-spacing:.13em;text-transform:uppercase}
+.bvh-loans-head h1{color:#f5e4b8;margin-top:2px}
+.bvh-loans-head p{color:#b69b68;margin-top:4px;font-size:13px}
+.bvh-loan-filter-panel{
+  display:flex;gap:12px;align-items:end;justify-content:space-between;flex-wrap:wrap;
+  padding:14px 16px;border:1px solid #6d4b22;border-radius:12px;background:linear-gradient(180deg,#1b1109,#100a06);
+  box-shadow:inset 0 0 0 1px #000;margin-bottom:10px;
+}
+.bvh-loan-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.bvh-loan-tab{
+  display:inline-flex;gap:8px;align-items:center;border:1px solid #5f421e;border-radius:9px;padding:8px 11px;
+  background:#120b06;color:#d8bf82;font-weight:900;cursor:pointer;
+}
+.bvh-loan-tab b{
+  min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:20px;
+  background:#30200f;color:#f5e4b8;font-size:12px;
+}
+.bvh-loan-tab:hover{border-color:#c9943c}
+.bvh-loan-tab.active{color:#fff0bc;border-color:#d2a04d;background:linear-gradient(90deg,#5a3a17,#2f1d0d);box-shadow:0 0 14px #c9943c22}
+.bvh-loan-tab.active.retard{border-color:#d76453;background:linear-gradient(90deg,#5b211b,#2f1510)}
+.bvh-loan-tab.active.aujourdhui{border-color:#db912e;background:linear-gradient(90deg,#5e3513,#2d1809)}
+.bvh-loan-tab.active.avenir{border-color:#569acd;background:linear-gradient(90deg,#153b58,#101d2d)}
+.bvh-loan-tab.active.rembourses{border-color:#55a978;background:linear-gradient(90deg,#17442c,#0f2519)}
+.bvh-loan-search{min-width:260px;flex:0 1 340px}
+.bvh-loan-filter-summary{display:flex;align-items:center;justify-content:space-between;color:#c7ab71;padding:0 4px 12px;font-size:13px}
+.bvh-loan-filter-summary b{color:#f3d58a}
+.bvh-loan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:13px}
+.bvh-loan-card{
+  display:block;width:100%;text-align:left;min-width:0;border:1px solid #5d4320;border-left:4px solid var(--loan-color);
+  border-radius:12px;padding:14px;background:linear-gradient(180deg,#1c2031,#121623);color:#e7e9f2;cursor:pointer;
+  box-shadow:inset 0 0 0 1px #0007,0 8px 20px #0004;
+}
+.bvh-loan-card:hover{border-color:var(--loan-color);box-shadow:0 0 20px color-mix(in srgb,var(--loan-color) 24%,transparent),inset 0 0 0 1px #0007}
+.bvh-loan-card-top{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:10px}
+.bvh-loan-reference{color:#8cbcf5;font-size:11px;font-weight:900;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bvh-loan-status{display:inline-flex;align-items:center;justify-content:center;color:#fff;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:900;white-space:nowrap}
+.bvh-loan-client{display:block;color:#f5e4b8;font-size:18px;line-height:1.08}
+.bvh-loan-telegram{display:block;color:#aeb5c6;font-size:12px;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bvh-loan-amounts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px;padding:10px 0;border-top:1px solid #ffffff13;border-bottom:1px solid #ffffff13}
+.bvh-loan-amounts span{color:#f6d27b;font-weight:900}
+.bvh-loan-amounts i{display:block;font-style:normal;font-weight:700;color:#9399ab;font-size:11px;margin-top:2px}
+.bvh-loan-next{padding-top:10px;display:flex;flex-direction:column;gap:3px;color:#aeb5c6;font-size:11px}
+.bvh-loan-next b{color:#f4d58b;font-size:13px}
+.bvh-loan-next.complete b{color:#74d59d}
+.bvh-loan-empty{border:1px dashed #765326;border-radius:12px;background:#130c07}
+@media(max-width:760px){
+  .bvh-loans-head{flex-direction:column;align-items:flex-start;padding:14px}
+  .bvh-loans-head button{width:100%;justify-content:center}
+  .bvh-loan-filter-panel{align-items:stretch}
+  .bvh-loan-tabs{display:grid;grid-template-columns:1fr 1fr}
+  .bvh-loan-tab{justify-content:space-between}
+  .bvh-loan-tab:first-child{grid-column:1/-1}
+  .bvh-loan-search{min-width:100%;flex-basis:100%}
+  .bvh-loan-grid{grid-template-columns:1fr}
+}
+
+
+/* ===== Rappels d’échéance — registre partagé ===== */
+.bvh-loan-detail-summary{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.bvh-loan-detail-summary>div{background:#1a1d2e;border:1px solid #2a2d3e;border-radius:12px;padding:16px}
+.bvh-loan-detail-summary p{margin:4px 0}
+.bvh-reminder-row{
+  display:grid;grid-template-columns:52px 100px 122px 118px minmax(220px,1fr) minmax(185px,auto);
+  gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #3b281366;
+}
+.bvh-reminder-row:first-of-type{border-top:0}
+.bvh-reminder-number{color:#e8ca82;font-weight:900}
+.bvh-reminder-latest{display:flex;flex-direction:column;min-width:0;color:#e9d7a3;font-size:12px;line-height:1.3}
+.bvh-reminder-latest b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#f3d58a}
+.bvh-reminder-latest small{color:#aa9163;margin-top:3px}
+.bvh-reminder-paid{color:#72d49a;font-weight:900}
+.bvh-reminder-actions{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.bvh-reminder-actions button{padding:8px 10px;white-space:nowrap}
+.bvh-reminder-history{display:grid;grid-template-columns:minmax(220px,1fr) 210px;gap:10px;padding:12px 16px;border-top:1px solid #3b281366;color:#d8bf82}
+.bvh-reminder-history>div{display:flex;flex-direction:column;gap:3px}
+.bvh-reminder-history b{color:#f3d58a}
+.bvh-reminder-history small{color:#aa9163}
+.bvh-reminder-history p{grid-column:1/-1;padding:9px 11px;border-left:3px solid #8b642c;background:#2a1b0e;border-radius:0 7px 7px 0;color:#e2c98d;white-space:pre-wrap}
+.bvh-due-row-reminder{grid-template-columns:minmax(260px,1.35fr) 110px 125px 115px minmax(220px,auto)}
+.bvh-due-actions{display:flex;gap:7px;justify-content:flex-end;flex-wrap:wrap}
+.bvh-due-actions button{padding:8px 10px;white-space:nowrap}
+@media(max-width:900px){
+  .bvh-reminder-row{grid-template-columns:1fr 1fr;align-items:start}
+  .bvh-reminder-row .bvh-reminder-number{grid-column:1/-1}
+  .bvh-reminder-latest,.bvh-reminder-actions{grid-column:1/-1}
+  .bvh-reminder-actions{justify-content:flex-start}
+}
+@media(max-width:760px){
+  .bvh-loan-detail-summary{grid-template-columns:1fr}
+  .bvh-reminder-modal-grid{grid-template-columns:1fr!important}
+  .bvh-reminder-history{grid-template-columns:1fr}
+  .bvh-due-row-reminder{display:flex}
+  .bvh-due-actions{flex:1 1 100%;justify-content:flex-start}
+}
+
+
+
+/* ===== Agences et recouvrement ===== */
+.bvh-mini-badges{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.bvh-mini-badge{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:3px 8px;font-size:11px;font-weight:900;color:#fff;background:#5f4725;white-space:nowrap}
+.bvh-mini-badge.agence{background:#375b7d}
+.bvh-mini-badge.recouvrement{background:#9f2f2f}
+.bvh-recovery-panel{margin-bottom:14px;background:linear-gradient(180deg,#1b1109,#100a06);border:1px solid #7b5528;border-radius:14px;overflow:hidden;box-shadow:inset 0 0 0 1px #000}
+.bvh-recovery-head{padding:14px 16px;border-bottom:1px solid #6d4b2266;display:flex;justify-content:space-between;gap:12px;align-items:center;background:linear-gradient(90deg,#25170c,#160e08)}
+.bvh-recovery-head b{color:#f0ce80;text-transform:uppercase;letter-spacing:.06em}
+.bvh-recovery-grid{padding:16px;display:grid;grid-template-columns:260px 1fr auto;gap:12px;align-items:end}
+.bvh-recovery-note{color:#b69b68;font-size:13px;margin-top:6px;line-height:1.35}
+.bvh-loan-tab.active.recouvrement{border-color:#b94735;background:linear-gradient(90deg,#5d1b16,#2f100d)}
+.bvh-loan-tab.active.toutes-agences{border-color:#4d8fbd}
+@media(max-width:900px){.bvh-recovery-grid{grid-template-columns:1fr}.bvh-recovery-grid button{width:100%;justify-content:center}}
+
+
+/* ===== Pandore Studio x Banque de Reckless RP ===== */
+:root{
+  --pandore-black:#030303;
+  --pandore-gray:#1d1d1f;
+  --pandore-white:#f7f7f2;
+  --pandore-gold:#d7a64d;
+  --pandore-gold-soft:#f2cf7a;
+  --pandore-green:#37c886;
+  --pandore-line:rgba(215,166,77,.42);
+}
+body{
+  background:
+    radial-gradient(circle at 20% 0%,rgba(215,166,77,.14),transparent 28%),
+    radial-gradient(circle at 78% 8%,rgba(55,200,134,.08),transparent 24%),
+    linear-gradient(135deg,#050505 0%,#120b06 42%,#020202 100%);
+}
+.bvh-main{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 28%),
+    radial-gradient(circle at top right,rgba(55,200,134,.055),transparent 32%),
+    linear-gradient(180deg,#100b07cc,#050505ee)!important;
+}
+.bvh-sidebar{
+  background:linear-gradient(180deg,#050505,#11100f 45%,#070504)!important;
+  border-right:1px solid var(--pandore-line)!important;
+}
+.bvh-sidebar:after{background:linear-gradient(180deg,transparent,var(--pandore-gold),transparent)!important;opacity:.78}
+.bvh-brand-title{color:var(--pandore-white)!important;letter-spacing:.07em}
+.bvh-brand-date{color:var(--pandore-gold)!important}
+.bvh-card,.bvh-ledger,.bvh-calendar-panel,.bvh-recovery-panel,.bvh-loans-head,.bvh-loan-filter-panel,.bvh-topbar{
+  border-color:var(--pandore-line)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 14px 30px rgba(0,0,0,.42)!important;
+}
+.bvh-card:before{height:2px;background:linear-gradient(90deg,var(--pandore-gold),var(--pandore-green),transparent)!important}
+.bvh-nav button{
+  background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(215,166,77,.035))!important;
+  border-color:rgba(215,166,77,.22)!important;
+  color:#d9c79b!important;
+}
+.bvh-nav button.active{
+  color:var(--pandore-white)!important;
+  background:linear-gradient(90deg,rgba(55,200,134,.20),rgba(215,166,77,.16))!important;
+  border-color:rgba(55,200,134,.62)!important;
+  box-shadow:0 0 22px rgba(55,200,134,.13),inset 0 0 0 1px rgba(255,255,255,.05)!important;
+}
+.bvh-pandore-panel{
+  display:flex;gap:12px;align-items:center;margin:0 0 16px;padding:13px 12px;
+  border:1px solid rgba(215,166,77,.42);border-radius:12px;
+  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(215,166,77,.09) 48%,rgba(55,200,134,.08));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 8px 18px rgba(0,0,0,.35);
+}
+.bvh-pandore-mark{
+  width:42px;height:42px;border-radius:11px;border:1px solid rgba(215,166,77,.65);
+  display:flex;align-items:center;justify-content:center;color:var(--pandore-gold-soft);
+  font-family:Arial,sans-serif;font-weight:900;font-size:25px;letter-spacing:-.08em;
+  background:linear-gradient(135deg,#111,#050505);box-shadow:0 0 18px rgba(215,166,77,.12);
+}
+.bvh-pandore-panel b{display:block;color:var(--pandore-white);letter-spacing:.05em;text-transform:uppercase;font-size:13px}
+.bvh-pandore-panel span{display:block;color:var(--pandore-gold);font-size:11px;margin-top:3px;text-transform:uppercase;letter-spacing:.12em}
+.bvh-footer{
+  margin-top:22px;padding:15px 18px;border:1px solid rgba(215,166,77,.32);border-radius:12px;
+  background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(55,200,134,.055),rgba(215,166,77,.045));
+  color:#cdbb90;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+}
+.bvh-footer b{color:var(--pandore-white)}
+.bvh-footer span{color:var(--pandore-gold)}
+.bvh-mini-badge.agence{background:linear-gradient(90deg,#24374c,#315b45)!important;border:1px solid rgba(55,200,134,.36)}
+.bvh-login-card{border-color:rgba(215,166,77,.66)!important;border-top-color:var(--pandore-green)!important}
+@media(max-width:760px){.bvh-footer{font-size:13px}.bvh-pandore-panel{margin-top:4px}}
+
+/* ===== Identité générale : Registre bancaire de Reckless ===== */
+.bvh-brand{padding:12px 0 18px!important;margin-bottom:16px!important}
+.bvh-brand-seal{
+  width:92px;height:92px;margin:0 auto 14px;border-radius:50%;
+  display:grid;place-items:center;position:relative;
+  color:#f4d27f;font-family:Georgia,"Times New Roman",serif;
+  font-size:42px;font-weight:900;letter-spacing:-.04em;
+  border:2px solid rgba(215,166,77,.72);
+  background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.11),transparent 25%),radial-gradient(circle,#24201b 0%,#101010 62%,#050505 100%);
+  box-shadow:0 0 0 5px rgba(215,166,77,.08),0 12px 28px rgba(0,0,0,.56),inset 0 0 0 2px rgba(255,255,255,.035);
+}
+.bvh-brand-seal:before,.bvh-brand-seal:after{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(215,166,77,.32)}
+.bvh-brand-seal:after{inset:17px;border-style:dashed;opacity:.72}
+.bvh-brand-title{
+  max-width:220px;margin:0 auto;text-align:center;text-transform:uppercase;
+  font-family:Georgia,"Times New Roman",serif;
+}
+.bvh-brand-title span{
+  display:block;color:#f7f2e7;font-size:20px;line-height:1.12;
+  font-weight:900;letter-spacing:.075em;
+}
+.bvh-brand-title strong{
+  display:inline-block;margin-top:8px;padding:4px 14px 5px;
+  color:#f1c96f;font-size:22px;line-height:1;
+  font-weight:900;letter-spacing:.15em;
+  border-top:1px solid rgba(215,166,77,.44);
+  border-bottom:1px solid rgba(215,166,77,.44);
+}
+.bvh-brand-date{
+  margin-top:14px!important;
+  color:#f1c96f!important;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:11px!important;
+  font-weight:900;
+  letter-spacing:.13em!important;
+  line-height:1.25;
+  text-transform:uppercase;
+  text-align:center;
+}
+.bvh-brand-date span,
+.bvh-brand-year{
+  display:block;
+  color:#f1c96f;
+  font:inherit;
+  font-weight:900;
+  letter-spacing:inherit;
+}
+.bvh-brand-year{margin-top:4px}
+.bvh-pandore-panel{margin:14px 0 0!important;padding:10px 11px!important;opacity:.82}
+.bvh-pandore-panel b{font-size:11px!important}
+.bvh-pandore-panel span{font-size:9px!important}
+.bvh-pandore-mark{width:34px!important;height:34px!important;font-size:20px!important}
+.bvh-bank-context{margin-top:14px;padding-top:13px;border-top:1px solid rgba(215,166,77,.24)}
+.bvh-bank-context-title{display:block;margin-bottom:7px;color:#9f8550;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.16em}
+.bvh-footer{font-size:13px}
+@media(max-width:760px){.bvh-brand-seal{width:78px;height:78px;font-size:36px}.bvh-brand-title span{font-size:18px}.bvh-brand-title strong{font-size:20px}.bvh-brand-date{font-size:10px!important}}
+
+
+
+
+/* ===== Sidebar finale stable et professionnelle V10 ===== */
+.bvh-shell{min-width:0}
+.bvh-main{min-width:0}
+
+.bvh-sidebar{
+  flex:0 0 300px;
+  width:300px;
+  height:100vh;
+  min-height:100vh;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  padding:16px 18px 18px!important;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(215,166,77,.32) transparent;
+}
+.bvh-sidebar::-webkit-scrollbar{width:7px}
+.bvh-sidebar::-webkit-scrollbar-track{background:transparent}
+.bvh-sidebar::-webkit-scrollbar-thumb{
+  background:rgba(215,166,77,.28);
+  border-radius:999px;
+}
+
+.bvh-brand-stable{
+  padding:0 0 14px!important;
+  margin:0 0 14px!important;
+  border-bottom:1px solid rgba(215,166,77,.18);
+}
+.bvh-brand-card{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:172px;
+  padding:14px 10px;
+  border-radius:18px;
+  border:1px solid rgba(215,166,77,.22);
+  background:
+    radial-gradient(circle at top, rgba(18,64,56,.14), transparent 46%),
+    linear-gradient(180deg, rgba(18,18,18,.92), rgba(8,8,8,.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.02),
+    0 12px 26px rgba(0,0,0,.28);
+}
+.bvh-brand-logo-stable{
+  display:block;
+  width:182px!important;
+  max-width:100%!important;
+  max-height:142px!important;
+  height:auto!important;
+  object-fit:contain;
+  margin:0 auto!important;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.55));
+}
+
+.bvh-nav{
+  flex:none!important;
+  gap:9px!important;
+}
+.bvh-nav button{
+  min-height:0!important;
+  padding:12px 14px!important;
+}
+
+.bvh-bank-context{
+  margin-top:12px!important;
+  padding-top:12px!important;
+}
+.bvh-bank-context-title{
+  font-size:9px!important;
+  letter-spacing:.14em!important;
+}
+.bvh-pandore-panel{
+  margin-top:12px!important;
+  padding:9px 10px!important;
+  flex-shrink:0;
+}
+.bvh-pandore-panel b{font-size:10px!important}
+.bvh-pandore-panel span{font-size:8px!important}
+.bvh-user{
+  margin-top:12px!important;
+  flex-shrink:0;
+}
+
+.bvh-login-stable-logo{
+  display:block;
+  width:290px;
+  max-width:90%;
+  height:auto;
+  margin:0 auto 14px;
+  object-fit:contain;
+  filter:drop-shadow(0 18px 36px rgba(0,0,0,.66));
+}
+
+/* Laptop heights */
+@media(max-height:940px) and (min-width:761px){
+  .bvh-sidebar{
+    padding-top:10px!important;
+    padding-bottom:12px!important;
+  }
+  .bvh-brand-card{
+    min-height:150px;
+    padding:10px 8px;
+  }
+  .bvh-brand-logo-stable{
+    width:164px!important;
+    max-height:126px!important;
+  }
+  .bvh-nav{gap:7px!important}
+  .bvh-nav button{padding:10px 12px!important}
+  .bvh-bank-context{
+    margin-top:10px!important;
+    padding-top:10px!important;
+  }
+  .bvh-pandore-panel{
+    margin-top:10px!important;
+    padding:8px 9px!important;
+  }
+}
+
+/* Narrow desktops / tablets */
+@media(max-width:1120px) and (min-width:761px){
+  .bvh-sidebar{
+    flex-basis:272px;
+    width:272px;
+    padding-left:14px!important;
+    padding-right:14px!important;
+  }
+  .bvh-brand-card{
+    min-height:150px;
+  }
+  .bvh-brand-logo-stable{
+    width:158px!important;
+    max-height:122px!important;
+  }
+}
+
+/* Mobile drawer */
+@media(max-width:760px){
+  .bvh-sidebar{
+    width:min(86vw,320px)!important;
+    height:100dvh;
+    min-height:100dvh;
+  }
+  .bvh-brand-card{
+    min-height:164px;
+  }
+  .bvh-brand-logo-stable{
+    width:176px!important;
+    max-height:136px!important;
+  }
+  .bvh-login-stable-logo{
+    width:250px;
+  }
+}
+
+
+/* ===== Correctif V12 : un seul défilement global sur desktop ===== */
+@media(min-width:761px){
+  html,
+  body{
+    height:auto!important;
+    min-height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+  }
+
+  .bvh-shell{
+    display:flex!important;
+    align-items:stretch!important;
+    min-height:100vh!important;
+    height:auto!important;
+    overflow:visible!important;
+  }
+
+  .bvh-sidebar{
+    position:relative!important;
+    top:auto!important;
+    left:auto!important;
+    bottom:auto!important;
+    height:auto!important;
+    min-height:100vh!important;
+    max-height:none!important;
+    overflow:visible!important;
+    overflow-y:visible!important;
+    overflow-x:hidden!important;
+    align-self:stretch!important;
+  }
+
+  .bvh-sidebar::-webkit-scrollbar{
+    display:none!important;
+    width:0!important;
+  }
+
+  .bvh-main{
+    height:auto!important;
+    min-height:100vh!important;
+    max-height:none!important;
+    overflow:visible!important;
+    overflow-y:visible!important;
+    overflow-x:visible!important;
+  }
+}
+
+/* En mobile, on garde le tiroir latéral indépendant, car c'est nécessaire. */
+@media(max-width:760px){
+  .bvh-sidebar{
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+  }
+}
+
+
+/* ===== Footer institutionnel + pages d'information V13 ===== */
+.bvh-site-footer{
+  margin-top:28px;
+  padding:22px 20px 24px;
+  border-top:1px solid rgba(215,166,77,.24);
+  color:#8f8775;
+  text-align:center;
+}
+.bvh-footer-brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+  color:#d7c8a0;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.bvh-footer-brand strong{
+  color:#f4d27f;
+}
+.bvh-footer-brand span{
+  color:#8d826a;
+}
+.bvh-footer-links{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.bvh-footer-links button{
+  border:0;
+  background:transparent;
+  padding:5px 2px;
+  color:#9f9685;
+  font:inherit;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:color .15s ease, transform .15s ease;
+}
+.bvh-footer-links button:hover{
+  color:#f4d27f;
+  transform:translateY(-1px);
+}
+.bvh-info-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  background:rgba(0,0,0,.72);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  backdrop-filter:blur(4px);
+}
+.bvh-info-modal{
+  width:min(760px,100%);
+  max-height:min(82vh,760px);
+  overflow:auto;
+  border:1px solid rgba(215,166,77,.42);
+  border-top-color:rgba(55,200,134,.55);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at top right,rgba(55,200,134,.08),transparent 30%),
+    linear-gradient(180deg,#18100b,#080604 82%);
+  box-shadow:0 28px 70px rgba(0,0,0,.62), inset 0 0 0 1px rgba(255,255,255,.025);
+  padding:24px;
+  color:#d8c79c;
+}
+.bvh-info-modal-header{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  border-bottom:1px solid rgba(215,166,77,.22);
+  padding-bottom:14px;
+  margin-bottom:16px;
+}
+.bvh-info-modal small{
+  display:block;
+  color:#9d8555;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:900;
+  margin-bottom:5px;
+}
+.bvh-info-modal h2{
+  color:#f6d27b;
+  margin:0;
+  font-size:28px;
+  line-height:1.1;
+}
+.bvh-info-close{
+  border:1px solid rgba(215,166,77,.34);
+  background:rgba(255,255,255,.035);
+  color:#f4d27f;
+  border-radius:10px;
+  min-width:38px;
+  height:38px;
+  font-weight:900;
+  cursor:pointer;
+}
+.bvh-info-modal p{
+  line-height:1.62;
+  margin:0 0 12px;
+}
+.bvh-info-modal ul{
+  margin:8px 0 0;
+  padding-left:20px;
+}
+.bvh-info-modal li{
+  margin:8px 0;
+  line-height:1.5;
+}
+.bvh-info-note{
+  margin-top:16px;
+  padding:12px 14px;
+  border:1px solid rgba(55,200,134,.22);
+  border-radius:12px;
+  background:rgba(55,200,134,.055);
+  color:#b9cdb9;
+  font-size:14px;
+}
+@media(max-width:760px){
+  .bvh-site-footer{
+    padding:18px 12px 20px;
+    font-size:13px;
+  }
+  .bvh-footer-links{
+    gap:11px;
+  }
+  .bvh-footer-links button{
+    font-size:13px;
+  }
+  .bvh-info-modal{
+    padding:18px;
+  }
+  .bvh-info-modal h2{
+    font-size:23px;
+  }
+}
+
+</style>
+</head>
+<body><div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect,useMemo}=React;
+const C={bg:'#0f1117',card:'#1a1d2e',bord:'#2a2d3e',blue:'#4a9eff',gold:'#f0b429',green:'#2ecc71',red:'#ff4444',orange:'#ff8800',txt:'#e2e8f0',muted:'#8892a0'};
+const roles={admin:'Administrateur',directeur:'Directeur',co_directeur:'Co-directeur',employe:'Employé'};
+const roleRank={employe:1,co_directeur:2,directeur:3,admin:4};
+const fCur=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(n)||0);
+const fDate=d=>d?new Date(d+'T12:00:00').toLocaleDateString('fr-FR'):'—';
+const today=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().split('T')[0];};
+const plusDays=(days)=>{const d=new Date();d.setDate(d.getDate()+days);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().split('T')[0];};
+const daysDiff=d=>{const a=new Date(d+'T00:00:00'),b=new Date();a.setHours(0,0,0,0);b.setHours(0,0,0,0);return Math.floor((a-b)/86400000);};
+const genId=()=>`VH-${today().replaceAll('-','')}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
+const date1904=()=>new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());
+
+async function call(url,opts={}){
+  const {headers:customHeaders={},...rest}=opts;
+  const r=await fetch(url,{
+    credentials:'same-origin',
+    cache:'no-store',
+    headers:{
+      'Content-Type':'application/json',
+      'Cache-Control':'no-cache, no-store, max-age=0, must-revalidate',
+      'Pragma':'no-cache',
+      ...customHeaders
+    },
+    ...rest
+  });
+  const txt=await r.text();
+  let data;
+  try{data=txt?JSON.parse(txt):{};}catch{data={error:txt||'Réponse invalide'};}
+  if(!r.ok) throw new Error(data.error||'Erreur serveur');
+  return data;
+}
+const api={
+ login:(username,password)=>call('/api/login',{method:'POST',body:JSON.stringify({username,password})}), logout:()=>call('/api/logout',{method:'POST'}), me:()=>call('/api/me'),
+ users:()=>call('/api/users'), addUser:u=>call('/api/users',{method:'POST',body:JSON.stringify(u)}), updateUser:u=>call('/api/users',{method:'PUT',body:JSON.stringify(u)}), deleteUser:id=>call('/api/users',{method:'DELETE',body:JSON.stringify({id})}),
+ clients:()=>call('/api/clients'), addClient:c=>call('/api/clients',{method:'POST',body:JSON.stringify(c)}), updateClient:c=>call('/api/clients',{method:'PUT',body:JSON.stringify(c)}), deleteClient:id=>call('/api/clients',{method:'DELETE',body:JSON.stringify({id})}),
+ loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'),
+ documents:client_id=>call('/api/client_documents?client_id='+encodeURIComponent(client_id)), uploadDocument:d=>call('/api/client_documents',{method:'POST',body:JSON.stringify(d)}), deleteDocument:id=>call('/api/client_documents',{method:'DELETE',body:JSON.stringify({id})}), notes:client_id=>call('/api/client_notes?client_id='+encodeURIComponent(client_id)), addNote:d=>call('/api/client_notes',{method:'POST',body:JSON.stringify(d)}), deleteNote:id=>call('/api/client_notes',{method:'DELETE',body:JSON.stringify({id})}), agenda:(from,to)=>call('/api/agenda?actualisation='+Date.now()+(from&&to?`&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`:'')), addAgenda:a=>call('/api/agenda',{method:'POST',body:JSON.stringify(a)}), updateAgenda:a=>call('/api/agenda',{method:'PUT',body:JSON.stringify(a)}), deleteAgenda:id=>call('/api/agenda',{method:'DELETE',body:JSON.stringify({id})}), creditApplications:()=>call('/api/credit_applications?actualisation='+Date.now()), addCreditApplication:a=>call('/api/credit_applications',{method:'POST',body:JSON.stringify(a)}), updateCreditApplication:a=>call('/api/credit_applications',{method:'PUT',body:JSON.stringify(a)}), deleteCreditApplication:id=>call('/api/credit_applications',{method:'DELETE',body:JSON.stringify({id})}), horseCredits:()=>call('/api/horse_credits'), addHorseCredit:h=>call('/api/horse_credits',{method:'POST',body:JSON.stringify(h)}), updateHorseCredit:h=>call('/api/horse_credits',{method:'PUT',body:JSON.stringify(h)}), deleteHorseCredit:id=>call('/api/horse_credits',{method:'DELETE',body:JSON.stringify({id})})
+};
+function payment(capital,rate,n){capital=Number(capital);rate=Number(rate)/100;n=parseInt(n);if(!capital||!n)return 0;if(!rate)return capital/n;return capital*rate/(1-Math.pow(1+rate,-n));}
+function schedule({capital,rate,n,start}){const p=payment(capital,rate,n); const e=[]; for(let i=0;i<n;i++){const d=new Date(start+'T12:00:00');d.setDate(d.getDate()+i*7);e.push({montant:Number(p.toFixed(2)),date:d.toISOString().split('T')[0],statut:'attente'});} return {echeances:e,total:Number((p*n).toFixed(2)),montant:Number(p.toFixed(2))};}
+function st(e){if(e.statut==='paye')return 'paye'; const d=daysDiff(e.date); return d<0?'retard':d===0?'aujourdhui':'avenir';}
+const ST={retard:['#ff4444','#fff','En retard'],aujourdhui:['#ff8800','#fff',"Aujourd'hui"],avenir:['#e6b800','#111','À venir'],paye:['#2ecc71','#fff','Payé']};
+function Badge({s}){const a=ST[s]||ST.avenir;return <span style={{padding:'3px 10px',borderRadius:20,fontSize:12,fontWeight:700,background:a[0],color:a[1]}}>{a[2]}</span>}
+const AGENCIES={van_horn:'Van Horn',saint_denis:'Saint-Denis',rhodes:'Rhodes'};
+const BANKS={toutes:'Toutes les banques',van_horn:'Van Horn',saint_denis:'Saint-Denis',rhodes:'Rhodes'};
+function normalizeAgence(value){
+  const v=String(value||'').trim().toLowerCase();
+  if(v==='sd'||v==='saint_denis')return 'saint_denis';
+  if(v==='rh'||v==='rhodes')return 'rhodes';
+  if(v==='vh'||v==='van_horn')return 'van_horn';
+  return 'van_horn';
+}
+function agenceCode(value){const a=normalizeAgence(value);return a==='saint_denis'?'SD':a==='rhodes'?'RH':'VH';}
+function loanAgence(loan){return normalizeAgence(loan?.agence||loan?.bank_code||'van_horn');}
+function bankDisplay(value){return BANKS[value]||agenceLabel(value);}
+const RECOUVREMENT_STATES={
+  aucun:['Aucun','#6b7280'],
+  relance_simple:['Relance simple','#8b642c'],
+  mise_en_demeure:['Mise en demeure','#d97706'],
+  recouvrement_actif:['Recouvrement actif','#b94735'],
+  saisie_garantie:['Saisie / garantie','#7f1d1d'],
+  cloture:['Clôturé','#3f9b67']
+};
+function agenceLabel(v){return AGENCIES[normalizeAgence(v)]||'Van Horn';}
+function recouvrementLabel(v){return (RECOUVREMENT_STATES[v||'aucun']||RECOUVREMENT_STATES.aucun)[0];}
+function recouvrementColor(v){return (RECOUVREMENT_STATES[v||'aucun']||RECOUVREMENT_STATES.aucun)[1];}
+function isLoanInRecouvrement(l){const s=l?.recouvrement_status||'aucun';return s!=='aucun'&&s!=='cloture';}
+function RecoveryBadge({status}){const color=recouvrementColor(status);return <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',background:color,color:'#fff',borderRadius:20,padding:'4px 10px',fontWeight:900,fontSize:12,whiteSpace:'nowrap'}}>{recouvrementLabel(status)}</span>}
+function AgencyBadge({agence}){return <span className="bvh-mini-badge agence">🏦 {agenceLabel(agence)}</span>}
+
+function Btn({children,onClick,color=C.blue,disabled,full,style={}}){return <button disabled={disabled} onClick={onClick} style={{background:disabled?'#2a2d3e':color,color:'#fff',border:'none',borderRadius:8,padding:'9px 14px',fontWeight:700,cursor:disabled?'not-allowed':'pointer',display:'inline-flex',alignItems:'center',justifyContent:full?'center':'flex-start',gap:8,width:full?'100%':'auto',...style}}>{children}</button>}
+function Inp({label,error,...p}){return <div style={{display:'flex',flexDirection:'column',gap:5}}>{label&&<label style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:C.muted}}>{label}</label>}<input {...p} style={{background:'#13151f',border:'1px solid '+(error?C.red:C.bord),borderRadius:8,padding:'9px 12px',color:C.txt,outline:'none',width:'100%',...(p.style||{})}}/>{error&&<span style={{color:C.red,fontSize:12}}>{error}</span>}</div>}
+function Select({label,value,onChange,children}){return <div style={{display:'flex',flexDirection:'column',gap:5}}><label style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:C.muted}}>{label}</label><select value={value} onChange={onChange} style={{background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,padding:'9px 12px',color:C.txt,outline:'none',width:'100%'}}>{children}</select></div>}
+function Txt({label,error,...p}){return <div style={{display:'flex',flexDirection:'column',gap:5}}>{label&&<label style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:C.muted}}>{label}</label>}<textarea {...p} style={{background:'#13151f',border:'1px solid '+(error?C.red:C.bord),borderRadius:8,padding:'9px 12px',color:C.txt,outline:'none',width:'100%',minHeight:80,...(p.style||{})}}/>{error&&<span style={{color:C.red,fontSize:12}}>{error}</span>}</div>}
+function Sec({children}){return <p style={{fontSize:12,fontWeight:800,textTransform:'uppercase',letterSpacing:'.1em',color:C.blue,margin:'18px 0 12px'}}>{children}</p>}
+function Toast({msg}){return msg?<div style={{position:'fixed',top:20,right:20,zIndex:999,background:C.card,border:'1px solid '+C.gold,color:C.gold,borderRadius:10,padding:'12px 18px',boxShadow:'0 8px 24px #0008'}}>{msg}</div>:null}
+
+function localTimeNow(){
+  const d=new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function reminderDateTime(reminder){
+  return new Date(`${reminder.reminder_date||'1970-01-01'}T${String(reminder.reminder_time||'00:00').slice(0,5)}:00`);
+}
+function remindersForEcheance(echeance){
+  return [...(echeance?.rappels||[])]
+    .sort((a,b)=>reminderDateTime(b)-reminderDateTime(a)||new Date(b.created_at||0)-new Date(a.created_at||0));
+}
+function latestReminder(echeance){
+  return remindersForEcheance(echeance)[0]||null;
+}
+function reminderMethodLabel(value){
+  return {telegram:'Télégramme',courrier:'Courrier',en_personne:'En personne',autre:'Autre'}[value]||'Autre';
+}
+function reminderSummary(reminder){
+  if(!reminder)return 'Aucun rappel noté';
+  const time=reminder.reminder_time?` à ${String(reminder.reminder_time).slice(0,5)}`:'';
+  return `Dernier rappel : ${fDate(reminder.reminder_date)}${time} — ${reminder.recorded_by_username||'—'}`;
+}
+function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
+  const blank={reminder_date:today(),reminder_time:localTimeNow(),reminder_method:'telegram',note:''};
+  const[f,setF]=useState(blank);
+  const[busy,setBusy]=useState(false);
+  useEffect(()=>{if(open)setF({...blank,reminder_date:today(),reminder_time:localTimeNow()});},[open,loan?.id,echeanceIndex]);
+  if(!open||!loan||echeanceIndex===null||echeanceIndex===undefined)return null;
+  async function save(){
+    if(!f.reminder_date)return alert('Indique la date réelle à laquelle le rappel a été envoyé.');
+    try{
+      setBusy(true);
+      const reminder={reminder_date:f.reminder_date,reminder_time:f.reminder_time,reminder_method:f.reminder_method,note:f.note,recorded_by_username:me?.username||'Utilisateur',created_at:new Date().toISOString()};
+      const echeances=[...(loan.echeances||[])];
+      const current=echeances[echeanceIndex]||{};
+      echeances[echeanceIndex]={...current,rappels:[reminder,...(current.rappels||[])]};
+      const updatedLoan=await api.updateLoan({id:loan.id,echeances});
+      onSaved?.(updatedLoan,reminder);
+      onClose();
+    }catch(e){alert(e.message||'Impossible d’enregistrer le rappel.');}
+    finally{setBusy(false);}
+  }
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:390,background:'#000b',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+    <div style={{width:620,maxWidth:'100%',background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:22,maxHeight:'92vh',overflow:'auto'}}>
+      <h2 style={{color:'#f6d27b'}}>Noter un rappel d’échéance</h2>
+      <p style={{color:'#d8bf82',marginTop:6,lineHeight:1.45}}>Prêt <b>{loan.loan_id}</b> · échéance n°{Number(echeanceIndex)+1} de <b>{fCur(echeance?.montant)}</b>, prévue le <b>{fDate(echeance?.date)}</b>.</p>
+      <div style={{marginTop:16,padding:11,border:'1px solid #765326',borderRadius:9,background:'#21150c',color:'#e7d3a0',fontSize:13}}>Indique la date et l’heure où le client a réellement été relancé, même si tu notes le rappel dans le registre plus tard.</div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginTop:16}} className="bvh-reminder-modal-grid">
+        <Inp label="Date réelle du rappel" type="date" value={f.reminder_date} onChange={e=>setF({...f,reminder_date:e.target.value})}/>
+        <Inp label="Heure réelle du rappel" type="time" value={f.reminder_time} onChange={e=>setF({...f,reminder_time:e.target.value})}/>
+      </div>
+      <div style={{marginTop:12}}><Select label="Moyen utilisé" value={f.reminder_method} onChange={e=>setF({...f,reminder_method:e.target.value})}>
+        <option value="telegram">Télégramme</option><option value="courrier">Courrier</option><option value="en_personne">En personne</option><option value="autre">Autre</option>
+      </Select></div>
+      <div style={{marginTop:12}}><Txt label="Note facultative" value={f.note} onChange={e=>setF({...f,note:e.target.value})} placeholder="Ex. Le client a confirmé qu’il passera demain."/></div>
+      <div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:18}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':'Enregistrer le rappel'}</Btn></div>
+    </div>
+  </div>
+}
+
+function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-stable-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès sécurisé au registre</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
+
+function UserPanel({me,users,setUsers,notify}){const[f,setF]=useState({username:'',password:'',role:'employe'}); const canCreate=['admin','directeur','co_directeur'].includes(me.role); async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF({username:'',password:'',role:'employe'});notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}} async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}} async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}return <div><h1 style={{marginBottom:18}}>Utilisateurs</h1>{canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 180px auto',gap:10,alignItems:'end'}}><Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/><Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/><Select label="Rôle" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="employe">Employé</option>{roleRank[me.role]>=2&&<option value="co_directeur">Co-directeur</option>}{roleRank[me.role]>=3&&<option value="directeur">Directeur</option>}</Select><Btn onClick={add}>Créer</Btn></div>}<div style={{display:'grid',gap:10}}>{users.map(u=><div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'flex',alignItems:'center',gap:12}}><b style={{flex:1}}>{u.username} {u.protected?'🔒':''}</b><span style={{color:C.muted}}>{roles[u.role]||u.role}</span><Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn><Btn color={C.red} onClick={()=>del(u)}>Supprimer</Btn></div>)}</div></div>}
+
+
+function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=reject;reader.readAsDataURL(file);});}
+function DocumentPanel({client,focusSignal}){
+  const[docs,setDocs]=useState([]),[busy,setBusy]=useState(false),[docType,setDocType]=useState('document'),[file,setFile]=useState(null),[link,setLink]=useState(''),[name,setName]=useState(''),[mode,setMode]=useState('file'),[err,setErr]=useState('');
+  const fileId=`client-doc-file-${client.id}`;
+  async function load(){try{setErr('');const r=await api.documents(client.id);setDocs(r||[])}catch(e){setErr(e.message)}}
+  useEffect(()=>{load()},[client.id]);
+  useEffect(()=>{if(!focusSignal)return;setMode('file');setTimeout(()=>document.getElementById(fileId)?.focus(),40)},[focusSignal]);
+  async function add(){try{setBusy(true);setErr('');let d;if(mode==='link'){if(!link.trim())throw new Error('Colle un lien avant d’ajouter.');d=await api.uploadDocument({client_id:client.id,doc_type:docType,filename:name||'lien-document',external_url:link.trim()});setLink('');setName('');}else{if(!file)throw new Error('Choisis d’abord un fichier.');const content=await fileToBase64(file);d=await api.uploadDocument({client_id:client.id,doc_type:docType,filename:file.name,mime_type:file.type||'application/octet-stream',content});setFile(null);const inp=document.getElementById(fileId);if(inp)inp.value='';}setDocs([d,...docs]);}catch(e){setErr(e.message)}finally{setBusy(false)}}
+  async function del(d){if(!confirm('Retirer cette pièce du dossier ?'))return;try{await api.deleteDocument(d.id);setDocs(docs.filter(x=>x.id!==d.id));}catch(e){setErr(e.message)}}
+  function label(t){return {portrait:'Portrait',identite:"Carte d’identité",contrat:'Contrat signé',document:'Autre pièce'}[t]||t}
+  function isImg(d){return (d.view_url||d.signed_url||d.external_url)&&String(d.mime_type||'').startsWith('image/')}
+  return <div className="bvh-ledger" id={`archives-client-${client.id}`}><div className="bvh-ledger-title">Archives du dossier</div><div style={{padding:'12px 16px 0',display:'flex',gap:8,flexWrap:'wrap'}}><Btn color={mode==='file'?'#8b642c':'#555'} onClick={()=>setMode('file')}>Importer une pièce</Btn><Btn color={mode==='link'?'#8b642c':'#555'} onClick={()=>setMode('link')}>Ajouter par lien</Btn></div><div className="bvh-upload-line"><Select label="Type" value={docType} onChange={e=>setDocType(e.target.value)}><option value="portrait">Portrait</option><option value="identite">Carte d'identité</option><option value="contrat">Contrat signé</option><option value="document">Autre pièce</option></Select>{mode==='file'?<div><label style={{fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'#b69b68'}}>Fichier</label><input id={fileId} type="file" accept="image/*,.pdf" onChange={e=>setFile(e.target.files?.[0]||null)} style={{display:'block',width:'100%',marginTop:5,color:'#d8bf82',background:'#120b06',border:'1px solid #62451f',borderRadius:8,padding:8}}/></div>:<div style={{display:'grid',gridTemplateColumns:'1fr 1.5fr',gap:8}}><Inp label="Nom de la pièce" value={name} onChange={e=>setName(e.target.value)} placeholder="Carte d’identité"/><Inp label="Lien" value={link} onChange={e=>setLink(e.target.value)} placeholder="https://..."/></div>}<Btn color="#8b642c" disabled={busy} onClick={add}>{busy?'Ajout…':'Ajouter'}</Btn></div>{err&&<div style={{padding:'0 16px 12px',color:'#ffb0a6'}}>⚠ {err}</div>}{docs.length===0?<p className="bvh-empty">Aucune archive attachée à ce dossier.</p>:<div className="bvh-doc-grid">{docs.map(d=><div className="bvh-doc-card" key={d.id}>{isImg(d)?<img className="bvh-doc-thumb" src={d.view_url||d.signed_url||d.external_url} alt={d.filename}/>:<div className="bvh-doc-thumb">{d.external_url?'🔗':'📄'}</div>}<div className="bvh-doc-meta"><b>{label(d.doc_type)}</b><span title={d.filename}>{d.filename}</span><br/><small>Ajouté par {d.uploaded_by_username||'—'}</small><div className="bvh-doc-actions">{(d.view_url||d.signed_url||d.external_url)&&<a href={d.view_url||d.signed_url||d.external_url} target="_blank" rel="noreferrer" style={{color:'#f3d58a',fontWeight:800}}>Consulter</a>}<button onClick={()=>del(d)} style={{background:'none',border:'none',color:'#ffb0a6',cursor:'pointer',fontWeight:800}}>Retirer</button></div></div></div>)}</div>}</div>
+}
+function clientCode(c){return `BVH-${String(c.id||'').padStart(4,'0')}`;}
+function clientFullName(c){return `${c.prenom||''} ${c.nom||''}`.trim();}
+function clientLoans(c,loans){const cid=String(c.id||'');const name=clientFullName(c).toLowerCase();return (loans||[]).filter(l=>String(l.client_id||'')===cid || `${l.prenom||''} ${l.nom||''}`.trim().toLowerCase()===name);}
+function calcClientStats(c,loans){const ls=clientLoans(c,loans);const total=ls.reduce((s,l)=>s+Number(l.somme||0),0);const expected=ls.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);const paid=ls.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);const active=ls.filter(l=>(l.echeances||[]).some(e=>e.statut!=='paye')).length;const late=ls.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut!=='paye'&&daysDiff(e.date)<0).length,0);return{loans:ls,total,expected,paid,active,late};}
+function NotesPanel({client,focusSignal}){
+  const[notes,setNotes]=useState([]),[text,setText]=useState(''),[busy,setBusy]=useState(false),[err,setErr]=useState('');
+  const noteId=`client-note-input-${client.id}`;
+  async function load(){try{setErr('');const r=await api.notes(client.id);setNotes(r||[])}catch(e){setErr(e.message)}}
+  useEffect(()=>{load()},[client.id]);
+  useEffect(()=>{if(focusSignal)setTimeout(()=>document.getElementById(noteId)?.focus(),40)},[focusSignal]);
+  async function add(){const note=text.trim();if(!note)return setErr('Écris une note avant d’ajouter.');try{setBusy(true);setErr('');const n=await api.addNote({client_id:client.id,note});setNotes([n,...notes]);setText('')}catch(e){setErr(e.message)}finally{setBusy(false)}}
+  async function del(n){if(!confirm('Supprimer cette note ?'))return;try{await api.deleteNote(n.id);setNotes(notes.filter(x=>x.id!==n.id))}catch(e){setErr(e.message)}}
+  return <div className="bvh-ledger" id={`notes-client-${client.id}`}><div className="bvh-ledger-title" style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><span>Notes internes</span><Btn color="#8b642c" disabled={busy} onClick={add}>{busy?'Ajout…':'Ajouter la note'}</Btn></div><div style={{padding:16}}><textarea id={noteId} value={text} onChange={e=>setText(e.target.value)} placeholder="Rédiger une note interne datée automatiquement…" rows={4} className="bvh-note-input" />{err&&<div style={{color:'#ffb0a6',marginTop:8}}>⚠ {err}</div>}<div style={{display:'grid',gap:10,marginTop:14}}>{notes.length===0?<div className="bvh-note-box">Aucune note interne pour ce dossier.</div>:notes.map(n=><div className="bvh-note-card" key={n.id}><div style={{display:'flex',justifyContent:'space-between',gap:10}}><b>{new Date(n.created_at).toLocaleString('fr-FR')}</b><button onClick={()=>del(n)} style={{background:'none',border:'none',color:'#ffb0a6',cursor:'pointer',fontWeight:900}}>Supprimer</button></div><p style={{whiteSpace:'pre-wrap',marginTop:8}}>{n.note}</p><small>Par {n.created_by_username||'—'}</small></div>)}</div></div></div>
+}
+
+function creditStatusLabel(status){return {brouillon:'Brouillon',en_attente:'En attente',validee:'Validée',refusee:'Refusée',transformee:'Prêt créé'}[status]||status||'Brouillon';}
+function creditStatusColor(status){return {brouillon:'#6b7280',en_attente:'#8b642c',validee:'#3f9b67',refusee:'#b94735',transformee:'#4d8fbd'}[status]||'#6b7280';}
+function creditDiscordText(f){
+  const d=f.details||{};
+  const check=v=>v?'[x]':'[]';
+  const header=f.application_type==='hypothecaire'?'DEMANDE DE PRÊT HYPOTHÉCAIRE / IMMOBILIER':'DEMANDE DE CRÉDIT À LA CONSOMMATION';
+  const subject=f.application_type==='hypothecaire'?'INFORMATIONS SUR LA PROPRIÉTÉ À FINANCER':'INFORMATIONS SUR LE CRÉDIT';
+  const body=f.application_type==='hypothecaire'
+    ? `        **Adresse du bien immobilier :** ${d.property_address||''}\n        **Utilisation du bien :** ${d.property_use||''}\n        **Type de propriété :** ${d.property_type||''}\n        **Montant total du bien :** ${d.property_total||''}\n        **Apport personnel :** ${d.apport||''}`
+    : `        **Motif du crédit :** ${d.motif||''}\n        **Description du projet ou de la dépense :** ${d.description||''}\n        **Apport personnel :** ${d.apport||''}`;
+  return `## ${header} — ${f.client_prenom||''} ${String(f.client_nom||'').toUpperCase()} ##\n\n**INFORMATIONS PERSONNELLES**\n        **Date du jour :** ${new Date().toLocaleDateString('fr-FR')}\n        **Votre identité :** ${f.client_prenom||''} ${f.client_nom||''}\n        **Télégramme :** ${f.telegram||''}\n        **Adresse résidentielle actuelle :** ${d.adresse||''}\n        **Date de naissance :** ${d.date_naissance||''}\n        **Nationalité :** ${d.nationalite||''}\n        **État civil :** ${d.etat_civil||''}\n\n**EMPLOI**\n        **Statut d’emploi :** ${d.statut_emploi||''}\n        **Nom de l’entreprise :** ${d.entreprise||''}\n        **Profession et poste exact :** ${d.profession||''}\n        **Salaire hebdomadaire approximatif :** ${d.salaire||''}\n\n**${subject}**\n${body}\n\n**DÉTAILS FINANCIERS DU PRÊT**\n        **Montant du prêt demandé :** ${f.montant_demande||0}$\n        **Durée souhaitée :** ${f.nb_echeances||0} échéance(s)\n        **Taux d’intérêt fixe :** ${f.taux||0}%\n        **Première échéance :** ${d.date1||''}\n        **Conditions de retard :** ${d.penalites||'3 jours / +5%'}\n        ${check(!!d.remboursement_anticipe)} Possibilité de remboursement anticipé\n\n**GARANTIES ET COLLATÉRAUX**\n        **Garantie proposée :** ${d.garantie_type||''}\n        **Description détaillée :** ${d.garantie_description||''}\n        **Valeur estimée :** ${d.garantie_valeur||''}\n\n*Le demandeur accepte que les biens mentionnés ci-dessus puissent être saisis, placés sous gage ou transférés à la banque en cas de défaut de paiement.*`;
+}
+function CreditApplicationModal({open,onClose,client,onSave}){
+  const blank={application_type:'consommation',statut:'brouillon',montant_demande:'',taux:'10',nb_echeances:'3',details:{motif:'',description:'',apport:'',property_address:'',property_use:'Occupation du propriétaire',property_type:'Maison / Appartement',property_total:'',date1:plusDays(7),penalites:'3 jours / +5%',remboursement_anticipe:true,garantie_type:'',garantie_description:'',garantie_valeur:''}};
+  const[f,setF]=useState(blank);
+  const[busy,setBusy]=useState(false);
+  useEffect(()=>{if(open)setF({...blank,client_id:client?.id||'',client_prenom:client?.prenom||'',client_nom:client?.nom||'',telegram:client?.telegram||'',details:{...blank.details,adresse:client?.adresse||''}})},[open,client]);
+  if(!open)return null;
+  const d=f.details||{};
+  const patchDetail=(key,value)=>setF({...f,details:{...d,[key]:value}});
+  const discord=creditDiscordText(f);
+  async function copy(){try{await navigator.clipboard.writeText(discord);alert('Le formulaire Discord a été copié.')}catch(e){alert('Copie impossible sur ce navigateur.')}}
+  async function save(){
+    if(!f.montant_demande||!f.nb_echeances)return alert('Montant demandé et nombre d’échéances requis.');
+    try{
+      setBusy(true);
+      const saved=await onSave({...f,montant_demande:Number(f.montant_demande),taux:Number(f.taux),nb_echeances:Number(f.nb_echeances),discord_text:discord});
+      if(saved!==false)onClose();
+    }finally{setBusy(false)}
+  }
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:360,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{width:840,maxWidth:'100%',maxHeight:'92vh',overflow:'auto',background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:22}}><div style={{display:'flex',justifyContent:'space-between',gap:12,alignItems:'start'}}><div><h2 style={{color:'#f6d27b'}}>Nouvelle demande de crédit</h2><p style={{color:'#b69b68',marginTop:5}}>Dossier prérempli pour <b style={{color:'#f3d58a'}}>{clientFullName(client||{})}</b>.</p></div><Btn color="#5f4725" onClick={copy}>📋 Copier Discord</Btn></div><div style={{display:'grid',gap:12,marginTop:18}}><Select label="Type de demande" value={f.application_type} onChange={e=>setF({...f,application_type:e.target.value})}><option value="consommation">Crédit à la consommation</option><option value="hypothecaire">Prêt hypothécaire / immobilier</option></Select><div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}><Inp label="Montant demandé ($)" type="number" value={f.montant_demande} onChange={e=>setF({...f,montant_demande:e.target.value})}/><Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/><Inp label="Nombre d’échéances" type="number" value={f.nb_echeances} onChange={e=>setF({...f,nb_echeances:e.target.value})}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><Inp label="Première échéance" type="date" value={d.date1||''} onChange={e=>patchDetail('date1',e.target.value)}/><Inp label="Apport personnel" value={d.apport||''} onChange={e=>patchDetail('apport',e.target.value)}/></div>{f.application_type==='hypothecaire'?<><Inp label="Adresse du bien immobilier" value={d.property_address||''} onChange={e=>patchDetail('property_address',e.target.value)}/><div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}><Inp label="Utilisation du bien" value={d.property_use||''} onChange={e=>patchDetail('property_use',e.target.value)}/><Inp label="Type de propriété" value={d.property_type||''} onChange={e=>patchDetail('property_type',e.target.value)}/><Inp label="Montant total du bien" value={d.property_total||''} onChange={e=>patchDetail('property_total',e.target.value)}/></div></>:<><Inp label="Motif du crédit" value={d.motif||''} onChange={e=>patchDetail('motif',e.target.value)} placeholder="Achat personnel, véhicule, projet professionnel…"/><Txt label="Description du projet ou de la dépense" value={d.description||''} onChange={e=>patchDetail('description',e.target.value)}/></>}<Sec>Garanties</Sec><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><Inp label="Type de garantie" value={d.garantie_type||''} onChange={e=>patchDetail('garantie_type',e.target.value)} placeholder="Véhicule, bien, compte…"/><Inp label="Valeur estimée" value={d.garantie_valeur||''} onChange={e=>patchDetail('garantie_valeur',e.target.value)}/></div><Txt label="Description des biens mis en garantie" value={d.garantie_description||''} onChange={e=>patchDetail('garantie_description',e.target.value)}/><Select label="Statut du dossier" value={f.statut} onChange={e=>setF({...f,statut:e.target.value})}><option value="brouillon">Brouillon</option><option value="en_attente">En attente</option><option value="validee">Validée</option><option value="refusee">Refusée</option></Select></div><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:18}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':'Enregistrer la demande'}</Btn></div></div></div>
+}
+function ClientCreditApplicationsPanel({client,applications=[]}){
+  const list=(applications||[]).filter(a=>String(a.client_id||'')===String(client.id||'')).slice(0,8);
+  return <div className="bvh-ledger"><div className="bvh-ledger-title">Demandes de crédit du client</div>{list.length===0?<p className="bvh-empty">Aucune demande de crédit enregistrée.</p>:list.map(a=><div key={a.id} className="bvh-credit-row"><b>{a.dossier_id||'Demande de crédit'}</b><span>{a.application_type==='hypothecaire'?'Immobilier':'Consommation'} · {fCur(a.montant_demande)}</span><span style={{color:'#d8bf82'}}>{fDate(String(a.created_at||'').slice(0,10))}</span><span style={{background:creditStatusColor(a.statut),color:'#fff',borderRadius:20,padding:'4px 10px',fontWeight:800,fontSize:12,textAlign:'center'}}>{creditStatusLabel(a.statut)}</span></div>)}</div>
+}
+function ClientDossier({client,loans,onBack,onEdit,onDelete,appointments=[],applications=[],onQuickLoan,onQuickAppointment,onQuickCredit}){
+  const stt=calcClientStats(client,loans);
+  const[noteFocus,setNoteFocus]=useState(0),[docFocus,setDocFocus]=useState(0);
+  function focusNote(){setNoteFocus(Date.now());setTimeout(()=>document.getElementById(`notes-client-${client.id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),0)}
+  function focusDoc(){setDocFocus(Date.now());setTimeout(()=>document.getElementById(`archives-client-${client.id}`)?.scrollIntoView({behavior:'smooth',block:'center'}),0)}
+  return <div><button onClick={onBack} style={{background:'none',border:'none',color:'#f3d58a',cursor:'pointer',marginBottom:14,fontWeight:900}}>← Retour au registre des clients</button><div className="bvh-dossier-head"><div><div className="bvh-dossier-code">Dossier {clientCode(client)}</div><h1>{clientFullName(client)}</h1><p style={{color:'#b69b68'}}>Fiche client officielle — Registre bancaire de Reckless</p></div><div style={{display:'flex',gap:8,alignItems:'center'}}><Btn color="#5f4725" onClick={()=>onEdit(client)}>Modifier</Btn><Btn color={C.red} onClick={()=>onDelete(client)}>Supprimer</Btn></div></div>
+    <div className="bvh-client-actions"><div className="bvh-client-actions-title">Actions rapides</div><small>Les formulaires ouverts depuis cette fiche sont automatiquement liés à {clientFullName(client)}.</small><Btn color="#4a7fbd" onClick={()=>onQuickLoan?.(client)}>📜 Ajouter un prêt</Btn><Btn color="#8b642c" onClick={()=>onQuickCredit?.(client)}>✒️ Créer une demande de crédit</Btn><Btn color="#3f9b67" onClick={()=>onQuickAppointment?.(client)}>🗓️ Planifier un rendez-vous</Btn><Btn color="#5f4725" onClick={focusNote}>📝 Ajouter une note</Btn><Btn color="#5f4725" onClick={focusDoc}>📎 Ajouter un document</Btn></div>
+    <div className="bvh-grid-4"><InfoCard icon="📜" title="Prêts enregistrés" value={stt.loans.length} note="Historique bancaire"/><InfoCard icon="⏳" title="Prêts en cours" value={stt.active} note="Non soldés"/><InfoCard icon="💰" title="Total emprunté" value={fCur(stt.total)} note="Capital nominal"/><InfoCard icon="✅" title="Total remboursé" value={fCur(stt.paid)} note="Paiements validés"/></div>
+    <div className="bvh-dossier-grid-wide"><div className="bvh-ledger"><div className="bvh-ledger-title">Informations générales</div><div style={{padding:'8px 16px 16px'}}><div className="bvh-field"><b>Nom complet</b><span>{clientFullName(client)}</span></div><div className="bvh-field"><b>Télégramme</b><span>{client.telegram||'—'}</span></div><div className="bvh-field"><b>Adresse / État</b><span>{client.adresse||'—'}</span></div><div className="bvh-field"><b>Statut</b><span>{stt.late>0?'🔴 Paiement en retard':'🟢 Dossier à jour'}</span></div></div></div><DocumentPanel client={client} focusSignal={docFocus}/></div>
+    <div className="bvh-dossier-grid-wide"><NotesPanel client={client} focusSignal={noteFocus}/><div className="bvh-ledger"><div className="bvh-ledger-title">Résumé du dossier</div><div style={{padding:'8px 16px 16px'}}><div className="bvh-field"><b>Paiements en retard</b><span>{stt.late}</span></div><div className="bvh-field"><b>Prêts en cours</b><span>{stt.active}</span></div><div className="bvh-field"><b>Total récupéré</b><span>{fCur(stt.paid)}</span></div></div></div></div>
+    <div className="bvh-dossier-grid-wide"><ClientCreditApplicationsPanel client={client} applications={applications}/><ClientAgendaPanel client={client} appointments={appointments}/></div>
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Prêts du client</div>{stt.loans.length===0?<p className="bvh-empty">Aucun prêt enregistré pour ce client.</p>:stt.loans.map(l=><div className="bvh-row" key={l.id}><b>{l.loan_id}</b><span>{fCur(l.somme)}</span><span>{fCur(l.total_a_rembourser)}</span><Badge s={(l.echeances||[]).some(e=>e.statut!=='paye'&&daysDiff(e.date)<0)?'retard':'avenir'}/><span style={{color:'#d8bf82'}}>{agenceLabel(loanAgence(l))}{isLoanInRecouvrement(l)?' · Recouvrement':''}</span></div>)}</div></div>
+}
+function ClientModal({open,onClose,onSave,client}){const empty={nom:'',prenom:'',telegram:'',adresse:''};const[f,setF]=useState(empty);useEffect(()=>{if(open)setF(client?{...empty,...client}:empty)},[open,client]);if(!open)return null;async function save(){if(!f.nom||!f.prenom)return alert('Nom et prénom requis');await onSave(f);onClose();}return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:210,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:24,width:620,maxWidth:'96vw'}}><h2 style={{color:'#f6d27b',marginBottom:12}}>{client?'Modifier le dossier client':'Ouvrir un dossier client'}</h2><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Prénom" value={f.prenom||''} onChange={e=>setF({...f,prenom:e.target.value})}/><Inp label="Nom" value={f.nom||''} onChange={e=>setF({...f,nom:e.target.value})}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram||''} onChange={e=>setF({...f,telegram:e.target.value})}/><Inp label="Adresse / État" value={f.adresse||''} onChange={e=>setF({...f,adresse:e.target.value})}/></div><div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" onClick={save}>Enregistrer</Btn></div></div></div>}
+function ClientsPage({clients,setClients,loans=[],appointments=[],applications=[],setApplications,notify,openClientId,onOpenClientHandled,onQuickLoan,onQuickAppointment}){
+  const[query,setQuery]=useState(''),[selected,setSelected]=useState(null),[modal,setModal]=useState(false),[editing,setEditing]=useState(null),[creditClient,setCreditClient]=useState(null);
+  useEffect(()=>{if(!openClientId)return;const target=clients.find(c=>String(c.id)===String(openClientId));if(target){setSelected(target);onOpenClientHandled?.();}},[openClientId,clients]);
+  async function saveClient(f){try{const payload=editing?{...f,id:editing.id}:f;const c=editing?await api.updateClient(payload):await api.addClient(payload);setClients(editing?clients.map(x=>x.id===c.id?c:x):[c,...clients]);setSelected(c);setEditing(null);notify(editing?'Client modifié':'Client ajouté')}catch(e){notify('⚠ '+e.message)}}
+  async function saveCredit(f){
+    try{
+      const a=await api.addCreditApplication(f);
+      setApplications?.([a,...applications]);
+      notify('Demande de crédit enregistrée');
+      return true;
+    }catch(e){
+      notify('⚠ '+e.message);
+      return false;
+    }
+  }
+  function add(){setEditing(null);setModal(true)}
+  function edit(c){setEditing(c);setModal(true)}
+  async function del(c){if(!confirm('Supprimer '+clientFullName(c)+' ?'))return;try{await api.deleteClient(c.id);setClients(clients.filter(x=>x.id!==c.id));setSelected(null);notify('Client supprimé')}catch(e){notify('⚠ '+e.message)}}
+  const list=clients.filter(c=>(clientFullName(c)+' '+(c.telegram||'')+' '+(c.adresse||'')).toLowerCase().includes(query.toLowerCase()));
+  if(selected)return <><ClientDossier client={selected} loans={loans} appointments={appointments} applications={applications} onBack={()=>setSelected(null)} onEdit={edit} onDelete={del} onQuickLoan={onQuickLoan} onQuickAppointment={onQuickAppointment} onQuickCredit={setCreditClient}/><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/><CreditApplicationModal open={!!creditClient} client={creditClient} onClose={()=>setCreditClient(null)} onSave={saveCredit}/></>;
+  return <div><div className="bvh-topbar"><div><small>Registre clientèle</small><h1>Clients</h1></div><Btn onClick={add}>+ Ouvrir un dossier</Btn></div><Inp placeholder="Recherche par nom, télégramme ou état…" value={query} onChange={e=>setQuery(e.target.value)} style={{marginBottom:16}}/><div className="bvh-client-list">{list.map(c=>{const stt=calcClientStats(c,loans);return <div key={c.id} className="bvh-client-row" onClick={()=>setSelected(c)}><div className="bvh-dossier-code">{clientCode(c)}</div><b>{clientFullName(c)}</b><span>{c.telegram||'—'}</span><span>{c.adresse||'—'}</span><span>{stt.late>0?'🔴 En retard':'🟢 À jour'}</span></div>})}</div><ClientModal open={modal} client={editing} onClose={()=>{setModal(false);setEditing(null)}} onSave={saveClient}/><CreditApplicationModal open={!!creditClient} client={creditClient} onClose={()=>setCreditClient(null)} onSave={saveCredit}/></div>
+}
+
+function LoanModal({open,onClose,onSave,loan,clients,prefill,defaultAgence='van_horn'}){
+  const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:'',agence:normalizeAgence(defaultAgence),recouvrement_status:'aucun',recouvrement_notes:'',recouvrement_started_at:null};
+  const[f,setF]=useState(empty);
+  const[saving,setSaving]=useState(false);
+  useEffect(()=>{if(open){setSaving(false);const base=loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7),agence:loanAgence(loan),recouvrement_status:loan.recouvrement_status||'aucun',recouvrement_notes:loan.recouvrement_notes||'',recouvrement_started_at:loan.recouvrement_started_at||null}:prefill?{...empty,client_id:prefill.id||'',nom:prefill.nom||'',prenom:prefill.prenom||'',telegram:prefill.telegram||'',agence:normalizeAgence(defaultAgence)}:{...empty,agence:normalizeAgence(defaultAgence)};setF(base)}},[open,loan,prefill,defaultAgence]);
+  if(!open)return null;
+  const sched=schedule({capital:f.somme,rate:f.taux,n:f.nb,start:f.date1});
+  function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,nom:c?.nom||'',prenom:c?.prenom||'',telegram:c?.telegram||''});}
+  async function save(){
+    if(saving)return;
+    if(!f.nom||!f.prenom)return alert('Client requis');
+    const activeRecovery=f.recouvrement_status&&f.recouvrement_status!=='aucun'&&f.recouvrement_status!=='cloture';
+    try{
+      setSaving(true);
+      await onSave({...loan,...f,loan_id:loan?.loan_id||'',bank_code:agenceCode(f.agence),agence:normalizeAgence(f.agence),somme:Number(f.somme),taux:Number(f.taux),total_a_rembourser:sched.total,echeances:sched.echeances,date_creation:loan?.date_creation||today(),recouvrement_started_at:activeRecovery?(f.recouvrement_started_at||new Date().toISOString()):f.recouvrement_started_at});
+      onClose();
+    }catch(e){
+      setSaving(false);
+    }
+  }
+  const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:680,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Select label="Banque" value={normalizeAgence(f.agence)} onChange={e=>setF({...f,agence:e.target.value})}><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option><option value="rhodes">Rhodes</option></Select></div><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/>{loan&&<><Sec>Suivi de recouvrement</Sec><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Select label="Statut recouvrement" value={f.recouvrement_status||'aucun'} onChange={e=>setF({...f,recouvrement_status:e.target.value})}>{Object.entries(RECOUVREMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select><Inp label="Ouvert depuis" value={f.recouvrement_started_at?new Date(f.recouvrement_started_at).toLocaleString('fr-FR'):'—'} readOnly/></div><Txt label="Notes recouvrement" value={f.recouvrement_notes||''} onChange={e=>setF({...f,recouvrement_notes:e.target.value})}/></>}<div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" disabled={saving} onClick={onClose}>Annuler</Btn><Btn disabled={saving} onClick={save}>{saving?'Enregistrement…':'Enregistrer'}</Btn></div></div></div>
+}
+
+function LoanDetail({loan,onBack,onUpdate,onDelete,notify,me}){
+  const[reminderTarget,setReminderTarget]=useState(null);
+  const[recoveryStatus,setRecoveryStatus]=useState(loan.recouvrement_status||'aucun');
+  const[recoveryNotes,setRecoveryNotes]=useState(loan.recouvrement_notes||'');
+  useEffect(()=>{setRecoveryStatus(loan.recouvrement_status||'aucun');setRecoveryNotes(loan.recouvrement_notes||'');},[loan.id,loan.recouvrement_status,loan.recouvrement_notes]);
+  const paid=(loan.echeances||[]).filter(e=>e.statut==='paye').reduce((s,e)=>s+Number(e.montant||0),0);
+  async function mark(i,val){
+    const es=[...(loan.echeances||[])];
+    es[i]={...es[i],statut:val?'paye':'attente'};
+    try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé');}catch(e){notify('⚠ '+e.message)}
+  }
+  async function saveRecovery(status=recoveryStatus){
+    try{
+      const active=status&&status!=='aucun'&&status!=='cloture';
+      const patch={id:loan.id,recouvrement_status:status,recouvrement_notes:recoveryNotes,recouvrement_started_at:active?(loan.recouvrement_started_at||new Date().toISOString()):(loan.recouvrement_started_at||null)};
+      const u=await api.updateLoan(patch);
+      onUpdate(u);
+      notify(status==='aucun'?'Suivi de recouvrement retiré':'Suivi de recouvrement enregistré');
+    }catch(e){notify('⚠ '+e.message)}
+  }
+  function savedReminder(updatedLoan){onUpdate(updatedLoan);notify('Rappel enregistré dans le registre');}
+  const history=(loan.echeances||[]).flatMap((e,i)=>remindersForEcheance(e).map(r=>({...r,echeance_index:i}))).sort((a,b)=>reminderDateTime(b)-reminderDateTime(a)||new Date(b.created_at||0)-new Date(a.created_at||0));
+  const remaining=Math.max(Number(loan.total_a_rembourser||0)-paid,0);
+  return <div>
+    <button onClick={onBack} style={{background:'none',border:'none',color:C.blue,cursor:'pointer',marginBottom:16}}>← Retour</button>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16,gap:12,flexWrap:'wrap'}}><div><h1>{loan.prenom} {loan.nom}</h1><div className="bvh-mini-badges"><AgencyBadge agence={loanAgence(loan)}/>{isLoanInRecouvrement(loan)&&<span className="bvh-mini-badge recouvrement">⚖️ {recouvrementLabel(loan.recouvrement_status)}</span>}</div></div><code style={{background:C.bord,padding:'5px 10px',borderRadius:6,color:C.blue}}>{loan.loan_id}</code></div>
+    <div className="bvh-loan-detail-summary"><div><p>📱 {loan.telegram||'—'}</p><p>🏦 {loan.banquier_username||'—'}</p><p>Agence : <b>{agenceLabel(loan.agence)}</b></p><p>Garanties : {loan.garanties||'—'}</p></div><div><p>Somme : <b>{fCur(loan.somme)}</b></p><p>Total : <b>{fCur(loan.total_a_rembourser)}</b></p><p>Payé : <b style={{color:C.green}}>{fCur(paid)}</b></p><p>Restant : <b style={{color:C.gold}}>{fCur(remaining)}</b></p></div></div>
+    <div className="bvh-recovery-panel"><div className="bvh-recovery-head"><b>Suivi de recouvrement</b><RecoveryBadge status={recoveryStatus}/></div><div className="bvh-recovery-grid"><div><Select label="Statut" value={recoveryStatus} onChange={e=>setRecoveryStatus(e.target.value)}>{Object.entries(RECOUVREMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select>{loan.recouvrement_started_at&&<p className="bvh-recovery-note">Ouvert le {new Date(loan.recouvrement_started_at).toLocaleString('fr-FR')}</p>}</div><Txt label="Notes de recouvrement" value={recoveryNotes} onChange={e=>setRecoveryNotes(e.target.value)} placeholder="Relances, mise en demeure, saisie prévue, garantie concernée…"/><Btn color={recouvrementColor(recoveryStatus)} onClick={()=>saveRecovery(recoveryStatus)}>Enregistrer le suivi</Btn></div></div>
+    <div style={{display:'flex',gap:10,marginBottom:14,flexWrap:'wrap'}}><Btn onClick={()=>onUpdate({...loan,_edit:true})}>Modifier le prêt</Btn><Btn color="#8b642c" onClick={()=>{setRecoveryStatus('recouvrement_actif');setTimeout(()=>saveRecovery('recouvrement_actif'),0)}}>Passer en recouvrement</Btn><Btn color={C.red} onClick={()=>onDelete(loan)}>Supprimer le prêt</Btn></div>
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances et rappels</div>
+      {(loan.echeances||[]).map((e,i)=>{const last=latestReminder(e);return <div className="bvh-reminder-row" key={i}>
+        <span className="bvh-reminder-number">#{i+1}</span><b>{fCur(e.montant)}</b><span>{fDate(e.date)}</span><Badge s={st(e)}/>
+        <div className="bvh-reminder-latest">{e.statut==='paye'?<span className="bvh-reminder-paid">Échéance remboursée</span>:<><b>{last?reminderSummary(last):'Aucun rappel envoyé'}</b>{last&&<small>Noté dans le registre le {new Date(last.created_at).toLocaleString('fr-FR')} · {reminderMethodLabel(last.reminder_method)}</small>}</>}</div>
+        {e.statut==='paye'?<Btn color="#555" onClick={()=>mark(i,false)}>Annuler paiement</Btn>:<div className="bvh-reminder-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(i)}>{last?'Ajouter un rappel':'Noter un rappel'}</Btn><Btn color={C.green} onClick={()=>mark(i,true)}>Valider paiement</Btn></div>}
+      </div>})}
+    </div>
+    <div className="bvh-ledger" style={{marginTop:14}}><div className="bvh-ledger-title">Historique des rappels</div>
+      {history.length===0?<p className="bvh-empty">Aucun rappel d’échéance n’a encore été noté pour ce prêt.</p>:history.map((r,index)=><div className="bvh-reminder-history" key={`${r.created_at||'rappel'}-${index}`}><div><b>Échéance n°{Number(r.echeance_index)+1}</b><span>{fDate(r.reminder_date)}{r.reminder_time?` à ${String(r.reminder_time).slice(0,5)}`:''} · {reminderMethodLabel(r.reminder_method)}</span></div><div><b>{r.recorded_by_username||'—'}</b><small>Noté le {new Date(r.created_at).toLocaleString('fr-FR')}</small></div>{r.note&&<p>{r.note}</p>}</div>)}
+    </div>
+    <ReminderModal open={reminderTarget!==null} loan={loan} echeanceIndex={reminderTarget} echeance={reminderTarget!==null?(loan.echeances||[])[reminderTarget]:null} onClose={()=>setReminderTarget(null)} onSaved={savedReminder} me={me}/>
+  </div>
+}
+
+function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClient,onQuickLoanHandled,openLoanId,onOpenLoanHandled,me,activeAgence='toutes',onActiveAgenceChange}){
+  const[modal,setModal]=useState(false),[sel,setSel]=useState(null),[category,setCategory]=useState('tous'),[query,setQuery]=useState(''),[agency,setAgency]=useState(activeAgence||'toutes');
+  useEffect(()=>{setAgency(activeAgence||'toutes')},[activeAgence]);
+  useEffect(()=>{if(sel && !sel._edit){const live=loans.find(x=>String(x.id)===String(sel.id));if(live && live!==sel)setSel(live);}},[loans,sel]);
+  useEffect(()=>{if(!openLoanId)return;const target=loans.find(x=>String(x.id)===String(openLoanId));if(target){setSel(target);onOpenLoanHandled?.();}},[openLoanId,loans]);
+  useEffect(()=>()=>onLoanDraftChange?.(false),[]);
+  useEffect(()=>{if(openForClient){onLoanDraftChange?.(true);setModal(true)}},[openForClient]);
+
+  function unpaid(l){return [...(l.echeances||[])].filter(e=>e.statut!=='paye').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));}
+  function loanCategory(l){
+    if(isLoanInRecouvrement(l))return 'recouvrement';
+    const open=unpaid(l);
+    if(open.length===0)return 'rembourses';
+    if(open.some(e=>st(e)==='retard'))return 'retard';
+    return st(open[0])==='aujourdhui'?'aujourdhui':'avenir';
+  }
+  function nextDue(l){return unpaid(l)[0]||null;}
+  function paidAmount(l){return (l.echeances||[]).filter(e=>e.statut==='paye').reduce((sum,e)=>sum+Number(e.montant||0),0);}
+  function sortLoans(a,b){
+    const order={recouvrement:0,retard:1,aujourdhui:2,avenir:3,rembourses:4};
+    const aCat=loanCategory(a),bCat=loanCategory(b);
+    if(order[aCat]!==order[bCat])return order[aCat]-order[bCat];
+    if(aCat==='rembourses'){
+      const aLast=[...(a.echeances||[])].map(e=>e.date||'').sort().pop()||'';
+      const bLast=[...(b.echeances||[])].map(e=>e.date||'').sort().pop()||'';
+      return bLast.localeCompare(aLast);
+    }
+    return String(nextDue(a)?.date||'').localeCompare(String(nextDue(b)?.date||''));
+  }
+
+  const allLoans=[...(loans||[])].sort(sortLoans);
+  const agencyLoans=allLoans.filter(l=>agency==='toutes'||loanAgence(l)===agency);
+  const counts={
+    tous:agencyLoans.length,
+    recouvrement:agencyLoans.filter(l=>loanCategory(l)==='recouvrement').length,
+    retard:agencyLoans.filter(l=>loanCategory(l)==='retard').length,
+    aujourdhui:agencyLoans.filter(l=>loanCategory(l)==='aujourdhui').length,
+    avenir:agencyLoans.filter(l=>loanCategory(l)==='avenir').length,
+    rembourses:agencyLoans.filter(l=>loanCategory(l)==='rembourses').length
+  };
+  const categories=[['tous','Tous'],['recouvrement','Recouvrement'],['retard','Retards'],['aujourdhui',"Aujourd’hui"],['avenir','À venir'],['rembourses','Remboursés']];
+  const visibleLoans=agencyLoans
+    .filter(l=>category==='tous'||loanCategory(l)===category)
+    .filter(l=>`${l.prenom||''} ${l.nom||''} ${l.telegram||''} ${l.loan_id||''} ${agenceLabel(loanAgence(l))} ${recouvrementLabel(l.recouvrement_status)}`.toLowerCase().includes(query.toLowerCase()));
+
+  async function save(l){try{const u=l.id?await api.updateLoan(l):await api.addLoan(l);setLoans(l.id?loans.map(x=>x.id===u.id?u:x):[u,...loans]);notify(l.id?'Prêt modifié':'Prêt créé')}catch(e){notify('⚠ '+e.message)}}
+  async function del(l){if(!confirm('Supprimer définitivement ce prêt ?'))return;try{await api.deleteLoan(l.id);setLoans(loans.filter(x=>x.id!==l.id));setSel(null);notify('Prêt supprimé')}catch(e){notify('⚠ '+e.message)}}
+  function openNew(){onLoanDraftChange?.(true);setModal(true)}
+  function closeNew(){setModal(false);onLoanDraftChange?.(false);onQuickLoanHandled?.()}
+  function openEdit(l){onLoanDraftChange?.(true);setSel({...l,_edit:true})}
+  function closeEdit(){setSel(loans.find(x=>x.id===sel.id));onLoanDraftChange?.(false)}
+
+  if(sel){if(sel._edit){return <><LoanModal open={true} loan={sel} clients={clients} onClose={closeEdit} onSave={save}/></>}return <LoanDetail loan={sel} onBack={()=>setSel(null)} onUpdate={u=>u._edit?openEdit(u):(setLoans(loans.map(x=>x.id===u.id?u:x)),setSel(u))} onDelete={del} notify={notify} me={me}/>} 
+  return <div>
+    <div className="bvh-loans-head">
+      <div><small>Registre multi-banques des financements</small><h1>Prêts</h1><p>La banque active filtre les dossiers. Les retards restent séparés du recouvrement.</p></div>
+      <Btn onClick={openNew}>+ Nouveau prêt</Btn>
+    </div>
+    <div className="bvh-loan-filter-panel">
+      <div className="bvh-loan-tabs">{categories.map(([key,label])=><button key={key} className={'bvh-loan-tab '+(category===key?'active ':'')+key} onClick={()=>setCategory(key)}><span>{label}</span><b>{counts[key]}</b></button>)}</div>
+      <div style={{display:'flex',gap:10,alignItems:'end',flexWrap:'wrap'}}><div style={{minWidth:180}}><Select label="Banque" value={agency} onChange={e=>{setAgency(e.target.value);onActiveAgenceChange?.(e.target.value)}}><option value="toutes">Toutes les banques</option><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option><option value="rhodes">Rhodes</option></Select></div><div className="bvh-loan-search"><Inp label="Recherche" placeholder="Client, référence, télégramme…" value={query} onChange={e=>setQuery(e.target.value)}/></div></div>
+    </div>
+    <div className="bvh-loan-filter-summary">
+      <span>{category==='tous'?'Tous les prêts':categories.find(x=>x[0]===category)?.[1]} · {agency==='toutes'?'Toutes banques':agenceLabel(agency)}</span>
+      <b>{visibleLoans.length} résultat{visibleLoans.length===1?'':'s'}</b>
+    </div>
+    {visibleLoans.length===0?<div className="bvh-empty bvh-loan-empty">Aucun prêt dans cette catégorie{query?' pour cette recherche':''}.</div>:<div className="bvh-loan-grid">{visibleLoans.map(l=>{
+      const kind=loanCategory(l);
+      const next=nextDue(l);
+      const border={recouvrement:recouvrementColor(l.recouvrement_status),retard:C.red,aujourdhui:C.orange,avenir:C.blue,rembourses:C.green}[kind];
+      const label={recouvrement:'Recouvrement',retard:'En retard',aujourdhui:"Aujourd’hui",avenir:'À venir',rembourses:'Remboursé'}[kind];
+      const paid=paidAmount(l);
+      const remaining=Math.max(Number(l.total_a_rembourser||0)-paid,0);
+      return <button key={l.id} className={'bvh-loan-card '+kind} onClick={()=>setSel(l)} style={{'--loan-color':border}}>
+        <div className="bvh-loan-card-top"><span className="bvh-loan-reference">{l.loan_id}</span><span className="bvh-loan-status" style={{background:border}}>{label}</span></div>
+        <b className="bvh-loan-client">{l.prenom} {l.nom}</b>
+        <span className="bvh-loan-telegram">{l.telegram||'Télégramme non indiqué'}</span>
+        <div className="bvh-mini-badges"><AgencyBadge agence={loanAgence(l)}/>{isLoanInRecouvrement(l)&&<span className="bvh-mini-badge recouvrement">⚖️ {recouvrementLabel(l.recouvrement_status)}</span>}</div>
+        <div className="bvh-loan-amounts"><span>{fCur(l.somme)} <i>prêté</i></span><span>{kind==='rembourses'?fCur(Number(l.total_a_rembourser||0)):<>{fCur(remaining)} <i>restant</i></>}</span></div>
+        {next?<div className="bvh-loan-next"><span>{kind==='recouvrement'?'Échéance concernée':'Prochaine échéance'}</span><b>{fDate(next.date)} · {fCur(next.montant)}</b></div>:<div className="bvh-loan-next complete"><span>Prêt intégralement remboursé</span><b>✓ Dossier soldé</b></div>}
+      </button>
+    })}</div>}
+    <LoanModal open={modal} onClose={closeNew} onSave={save} clients={clients} prefill={openForClient} defaultAgence={agency==='toutes'?'van_horn':agency}/>
+  </div>
+}
+
+
+const AGENDA_TIMES=Array.from({length:48},(_,i)=>`${String(Math.floor(i/2)).padStart(2,'0')}:${i%2?'30':'00'}`);
+const AGENDA_TYPES={
+  etude_pret:"Étude de prêt",
+  signature:"Signature de prêt",
+  remboursement:"Remboursement",
+  immobilier:"Rendez-vous immobilier",
+  consultation:"Consultation bancaire",
+  autre:"Autre rendez-vous"
+};
+const AGENDA_STATUSES={
+  prevu:["Prévu","#8b642c"],
+  confirme:["Confirmé","#3f9b67"],
+  termine:["Terminé","#4d8fbd"],
+  annule:["Annulé","#b94735"]
+};
+function agendaDateTime(date,time){return new Date(`${date}T${time||'00:00'}:00`);}
+function agendaEndDate(date,start,end){return end<=start?plusDaysFrom(date,1):date;}
+function plusDaysFrom(iso,days){const d=new Date(`${iso}T12:00:00`);d.setDate(d.getDate()+days);return d.toISOString().split('T')[0];}
+function agendaDuration(event){
+  const start=agendaDateTime(event.appointment_date,event.start_time);
+  const end=agendaDateTime(event.end_date||event.appointment_date,event.end_time);
+  const mins=Math.max(0,Math.round((end-start)/60000));
+  if(!mins)return '—';
+  const h=Math.floor(mins/60),m=mins%60;
+  return h?(m?`${h} h ${m}`:`${h} h`):`${m} min`;
+}
+function agendaOverlapsSlot(event,day,time){
+  const slotStart=agendaDateTime(day,time);
+  const slotEnd=new Date(slotStart.getTime()+30*60000);
+  const start=agendaDateTime(event.appointment_date,event.start_time);
+  const end=agendaDateTime(event.end_date||event.appointment_date,event.end_time);
+  return start<slotEnd && end>slotStart;
+}
+function agendaEventsForClient(client,events){
+  return (events||[]).filter(e=>String(e.client_id||'')===String(client.id||''));
+}
+function AgendaStatus({status}){const s=AGENDA_STATUSES[status]||AGENDA_STATUSES.prevu;return <span style={{display:'inline-block',background:s[1],color:'#fff',padding:'3px 9px',borderRadius:20,fontSize:12,fontWeight:800}}>{s[0]}</span>}
+
+function ClientAgendaPanel({client,appointments=[]}){
+  const events=agendaEventsForClient(client,appointments).sort((a,b)=>agendaDateTime(a.appointment_date,a.start_time)-agendaDateTime(b.appointment_date,b.start_time));
+  const now=new Date();
+  const upcoming=events.filter(e=>agendaDateTime(e.end_date||e.appointment_date,e.end_time)>=now);
+  return <div className="bvh-ledger">
+    <div className="bvh-ledger-title">Rendez-vous du client</div>
+    {events.length===0?<p className="bvh-empty">Aucun rendez-vous lié à ce client.</p>:<div>
+      {upcoming.length>0&&<div style={{padding:'12px 16px 2px',color:'#f0ce80',fontWeight:900}}>À venir</div>}
+      {(upcoming.length?upcoming:events).slice(0,8).map(e=><div className="bvh-row" key={e.id} style={{gridTemplateColumns:'1.25fr 1fr 150px 1fr'}}>
+        <b>{fDate(e.appointment_date)} · {e.start_time} – {e.end_time}</b>
+        <span>{AGENDA_TYPES[e.appointment_type]||e.appointment_type||'Rendez-vous'}</span>
+        <AgendaStatus status={e.status}/>
+        <span style={{color:'#d8bf82'}}>{e.responsable_username||'—'}</span>
+      </div>)}
+      {events.length>8&&<p style={{padding:'12px 16px',color:'#b69b68'}}>Les rendez-vous plus anciens restent consultables dans l’agenda.</p>}
+    </div>}
+  </div>
+}
+
+
+const AGENDA_SLOT_HEIGHT=34;
+const AGENDA_COLORS={
+  etude_pret:'#3f6f9f',
+  signature:'#7a5a9e',
+  remboursement:'#3f8f67',
+  immobilier:'#9b6531',
+  consultation:'#53788c',
+  autre:'#776348'
+};
+function minutesFromTime(t){const [h,m]=String(t||'00:00').split(':').map(Number);return (h||0)*60+(m||0);}
+function timeFromDate(d){return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+function isoFromDate(d){const x=new Date(d);x.setMinutes(x.getMinutes()-x.getTimezoneOffset());return x.toISOString().slice(0,10);}
+function mondayOf(iso){
+  const d=new Date(`${iso}T12:00:00`);
+  const shift=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-shift);
+  return isoFromDate(d);
+}
+function weekDaysFrom(iso){const monday=mondayOf(iso);return Array.from({length:7},(_,i)=>plusDaysFrom(monday,i));}
+function dateLong(iso){return new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+function dateShort(iso){return new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR',{day:'numeric',month:'short'});}
+function dayShort(iso){return new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR',{weekday:'short'}).replace('.','');}
+function sameDay(a,b){return String(a)===String(b);}
+function agendaInterval(event){
+  return {
+    start:agendaDateTime(event.appointment_date,event.start_time),
+    end:agendaDateTime(event.end_date||event.appointment_date,event.end_time)
+  };
+}
+function eventsOverlap(a,b){
+  const A=agendaInterval(a),B=agendaInterval(b);
+  return A.start<B.end && A.end>B.start;
+}
+function segmentForDay(event,day){
+  const startDay=agendaDateTime(day,'00:00');
+  const endDay=agendaDateTime(plusDaysFrom(day,1),'00:00');
+  const interval=agendaInterval(event);
+  const start=interval.start>startDay?interval.start:startDay;
+  const end=interval.end<endDay?interval.end:endDay;
+  if(end<=start)return null;
+  const top=((start-startDay)/60000/30)*AGENDA_SLOT_HEIGHT;
+  const height=Math.max(28,((end-start)/60000/30)*AGENDA_SLOT_HEIGHT-2);
+  return {...event,_segmentStart:start,_segmentEnd:end,_top:top,_height:height};
+}
+function layoutSegments(events,day){
+  const segments=events.map(e=>segmentForDay(e,day)).filter(Boolean).sort((a,b)=>a._segmentStart-b._segmentStart);
+  const final=[];
+  let i=0;
+  while(i<segments.length){
+    const group=[segments[i]];
+    let groupEnd=segments[i]._segmentEnd;
+    let j=i+1;
+    while(j<segments.length && segments[j]._segmentStart<groupEnd){
+      group.push(segments[j]);
+      if(segments[j]._segmentEnd>groupEnd)groupEnd=segments[j]._segmentEnd;
+      j++;
+    }
+    const laneEnds=[];
+    group.forEach(s=>{
+      let lane=laneEnds.findIndex(end=>end<=s._segmentStart);
+      if(lane<0){lane=laneEnds.length;laneEnds.push(s._segmentEnd);}
+      else laneEnds[lane]=s._segmentEnd;
+      s._lane=lane;
+    });
+    const laneCount=Math.max(1,laneEnds.length);
+    group.forEach(s=>{s._laneCount=laneCount;final.push(s);});
+    i=j;
+  }
+  return final;
+}
+function nextSlot(time){
+  const index=AGENDA_TIMES.indexOf(time);
+  return index===AGENDA_TIMES.length-1?'00:00':AGENDA_TIMES[Math.max(0,index+1)];
+}
+function appointmentDraft(day,time){
+  return {appointment_date:day,start_time:time,end_time:nextSlot(time),appointment_type:'etude_pret',status:'prevu'};
+}
+function AgendaModal({open,onClose,onSave,onDelete,event,initial,clients,me,appointments=[]}){
+  const blank={client_id:'',appointment_date:today(),start_time:'09:00',end_time:'09:30',appointment_type:'etude_pret',title:'',location:'',notes:'',status:'prevu',responsable_username:me?.username||''};
+  const[f,setF]=useState(blank);
+  const[search,setSearch]=useState('');
+  const[busy,setBusy]=useState(false);
+  useEffect(()=>{
+    if(open){
+      setF(event?.id?{...blank,...event,responsable_username:event.responsable_username||me?.username||''}:{...blank,...(initial||{}),responsable_username:(initial||{}).responsable_username||me?.username||''});
+      setSearch('');
+    }
+  },[open,event,initial,me?.username]);
+  if(!open)return null;
+  const matches=(clients||[]).filter(c=>(`${c.prenom||''} ${c.nom||''} ${c.telegram||''}`).toLowerCase().includes(search.toLowerCase())).slice(0,80);
+  const selected=clients.find(c=>String(c.id)===String(f.client_id));
+  const preview={...f,end_date:agendaEndDate(f.appointment_date,f.start_time,f.end_time)};
+  const conflicts=(appointments||[]).filter(e=>String(e.id)!==String(f.id||'') && e.status!=='annule' && eventsOverlap(preview,e));
+  function pick(id){
+    const c=clients.find(x=>String(x.id)===String(id));
+    setF({...f,client_id:id,title:f.title||`${AGENDA_TYPES[f.appointment_type]||'Rendez-vous'} — ${c?clientFullName(c):''}`.trim()});
+  }
+  async function save(){
+    if(!f.client_id)return alert('Sélectionne un client dans le registre.');
+    if(!f.appointment_date||!f.start_time||!f.end_time)return alert('Date et heures requises.');
+    try{
+      setBusy(true);
+      await onSave({...f,end_date:agendaEndDate(f.appointment_date,f.start_time,f.end_time)});
+      onClose();
+    }finally{setBusy(false)}
+  }
+  async function remove(){
+    if(!event?.id)return;
+    if(!confirm('Supprimer ce rendez-vous du registre ?'))return;
+    try{setBusy(true);await onDelete(event);onClose();}finally{setBusy(false)}
+  }
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,zIndex:350,background:'#000b',display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
+    <div style={{width:800,maxWidth:'100%',maxHeight:'92vh',overflow:'auto',background:'linear-gradient(180deg,#1e140b,#100a06)',border:'1px solid #805a28',borderTop:'4px solid #c9943c',borderRadius:14,padding:22}}>
+      <div style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'start'}}>
+        <div><h2 style={{color:'#f6d27b'}}>{event?.id?'Modifier le rendez-vous':'Nouveau rendez-vous'}</h2><p style={{color:'#b69b68',marginTop:5}}>Le rendez-vous est relié au dossier client choisi dans le registre.</p></div>
+        {event?.id&&<AgendaStatus status={f.status}/>}
+      </div>
+      <div style={{display:'grid',gap:12,marginTop:18}}>
+        <Inp label="Rechercher un client" placeholder="Prénom, nom ou télégramme…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        <Select label="Client concerné" value={f.client_id} onChange={e=>pick(e.target.value)}>
+          <option value="">— Choisir un client —</option>
+          {matches.map(c=><option key={c.id} value={c.id}>{clientFullName(c)}{c.telegram?` — ${c.telegram}`:''}</option>)}
+        </Select>
+        {selected&&<div style={{background:'#25170c',border:'1px solid #6d4b22',borderRadius:9,padding:10,color:'#d8bf82'}}>Dossier sélectionné : <b style={{color:'#f3d58a'}}>{clientFullName(selected)}</b> · {selected.telegram||'sans télégramme'} · {selected.adresse||'adresse non indiquée'}</div>}
+        <div className="bvh-agenda-modal-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+          <Inp label="Date" type="date" value={f.appointment_date} onChange={e=>setF({...f,appointment_date:e.target.value})}/>
+          <Select label="Début" value={f.start_time} onChange={e=>setF({...f,start_time:e.target.value})}>{AGENDA_TIMES.map(t=><option key={t} value={t}>{t}</option>)}</Select>
+          <Select label="Fin" value={f.end_time} onChange={e=>setF({...f,end_time:e.target.value})}>{AGENDA_TIMES.map(t=><option key={t} value={t}>{t}</option>)}</Select>
+        </div>
+        <p style={{color:'#d8bf82',fontSize:13}}>Si l’heure de fin est avant ou égale à l’heure de début, le rendez-vous se termine automatiquement le lendemain.</p>
+        {conflicts.length>0&&<div className="bvh-agenda-conflict">⚠ Créneau également occupé par {conflicts.length} rendez-vous. Il reste possible d’enregistrer : l’agenda les présentera côte à côte.</div>}
+        <div className="bvh-agenda-modal-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <Select label="Type de rendez-vous" value={f.appointment_type} onChange={e=>setF({...f,appointment_type:e.target.value,title:f.title||AGENDA_TYPES[e.target.value]})}>{Object.entries(AGENDA_TYPES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select>
+          <Select label="Statut" value={f.status} onChange={e=>setF({...f,status:e.target.value})}>{Object.entries(AGENDA_STATUSES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select>
+        </div>
+        <Inp label="Intitulé / objet" value={f.title||''} onChange={e=>setF({...f,title:e.target.value})} placeholder="Ex. Signature du dossier immobilier"/>
+        <div className="bvh-agenda-modal-grid" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <Inp label="Banquier responsable" value={f.responsable_username||''} onChange={e=>setF({...f,responsable_username:e.target.value})}/>
+          <Inp label="Lieu" value={f.location||''} onChange={e=>setF({...f,location:e.target.value})} placeholder="Banque Van Horn, bureau…"/>
+        </div>
+        <Txt label="Notes internes" value={f.notes||''} onChange={e=>setF({...f,notes:e.target.value})} placeholder="Informations utiles pour le rendez-vous…"/>
+      </div>
+      <div style={{display:'flex',justifyContent:'space-between',gap:10,flexWrap:'wrap',marginTop:18}}>
+        <div>{event?.id&&<Btn color={C.red} disabled={busy} onClick={remove}>Supprimer</Btn>}</div>
+        <div style={{display:'flex',gap:10}}><Btn color="#555" onClick={onClose}>Annuler</Btn><Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':'Enregistrer le rendez-vous'}</Btn></div>
+      </div>
+    </div>
+  </div>
+}
+function AgendaPage({appointments,setAppointments,clients,me,notify,openForClient,onQuickAppointmentHandled}){
+  const[anchor,setAnchor]=useState(today());
+  const[view,setView]=useState(()=>window.innerWidth<=760?'day':'week');
+  const[modal,setModal]=useState(false);
+  const[editing,setEditing]=useState(null);
+  const[draft,setDraft]=useState(null);
+  const[filter,setFilter]=useState('');
+  const[responsable,setResponsable]=useState('');
+  const[typeFilter,setTypeFilter]=useState('');
+  const[refreshing,setRefreshing]=useState(false);
+  const[dragged,setDragged]=useState(null);
+  const[nowTick,setNowTick]=useState(Date.now());
+
+  useEffect(()=>{
+    if(openForClient){
+      setEditing(null);
+      setDraft({client_id:openForClient.id||'',appointment_date:today(),start_time:'09:00',end_time:'09:30',appointment_type:'etude_pret',status:'prevu'});
+      setModal(true);
+      onQuickAppointmentHandled?.();
+    }
+  },[openForClient]);
+
+  const days=view==='week'?weekDaysFrom(anchor):[anchor];
+  const rangeStart=days[0],rangeEnd=days[days.length-1];
+  const responsables=Array.from(new Set((appointments||[]).map(e=>e.responsable_username).filter(Boolean))).sort();
+  const filteredEvents=(appointments||[])
+    .filter(e=>!filter || `${e.client_prenom||''} ${e.client_nom||''} ${e.responsable_username||''} ${e.title||''} ${e.location||''}`.toLowerCase().includes(filter.toLowerCase()))
+    .filter(e=>!responsable || e.responsable_username===responsable)
+    .filter(e=>!typeFilter || e.appointment_type===typeFilter)
+    .filter(e=>{
+      const it=agendaInterval(e);
+      return it.start<agendaDateTime(plusDaysFrom(rangeEnd,1),'00:00') && it.end>agendaDateTime(rangeStart,'00:00');
+    });
+
+  useEffect(()=>{
+    if(modal)return;
+    let active=true;
+    const reload=async()=>{
+      if(document.visibilityState!=='visible')return;
+      try{setRefreshing(true);const r=await api.agenda();if(active)setAppointments(r||[]);}catch(e){}finally{if(active)setRefreshing(false);}
+    };
+    reload();
+    const timer=window.setInterval(reload,10000);
+    const visibility=()=>{if(document.visibilityState==='visible')reload();};
+    document.addEventListener('visibilitychange',visibility);
+    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',visibility);};
+  },[modal]);
+
+  useEffect(()=>{const id=window.setInterval(()=>setNowTick(Date.now()),60000);return()=>window.clearInterval(id);},[]);
+
+  function changePeriod(delta){setAnchor(plusDaysFrom(anchor,view==='week'?delta*7:delta));}
+  function openNew(initial={}){setEditing(null);setDraft(initial);setModal(true);}
+  function openEdit(event){setEditing(event);setDraft(null);setModal(true);}
+  function closeModal(){setModal(false);setEditing(null);setDraft(null);}
+  async function save(data){
+    try{
+      const r=data.id?await api.updateAgenda(data):await api.addAgenda(data);
+      setAppointments(data.id?appointments.map(x=>String(x.id)===String(r.id)?r:x):[r,...appointments]);
+      notify(data.id?'Rendez-vous modifié':'Rendez-vous enregistré');
+    }catch(e){notify('⚠ '+e.message);throw e;}
+  }
+  async function remove(event){
+    try{await api.deleteAgenda(event.id);setAppointments(appointments.filter(x=>String(x.id)!==String(event.id)));notify('Rendez-vous supprimé');}catch(e){notify('⚠ '+e.message);throw e;}
+  }
+  async function dropEvent(day,time){
+    if(!dragged)return;
+    const source=dragged;
+    setDragged(null);
+    const before=agendaInterval(source);
+    const duration=Math.max(30,Math.round((before.end-before.start)/60000));
+    const nextStart=agendaDateTime(day,time);
+    const nextEnd=new Date(nextStart.getTime()+duration*60000);
+    try{
+      await save({...source,appointment_date:day,start_time:time,end_date:isoFromDate(nextEnd),end_time:timeFromDate(nextEnd)});
+      notify('Rendez-vous déplacé');
+    }catch(e){}
+  }
+  const weekLabel=view==='week'
+    ? `${dateShort(rangeStart)} — ${dateShort(rangeEnd)}`
+    : dateLong(anchor);
+  const activeCount=filteredEvents.filter(e=>e.status!=='annule').length;
+  return <div>
+    <div className="bvh-topbar">
+      <div><small>Registre des rendez-vous</small><h1>Agenda partagé</h1><p style={{color:'#d8bc78',marginTop:4}}>Vue calendrier · 30 minutes · 24 heures sur 24 · relié aux dossiers clients</p></div>
+      <Btn color="#8b642c" onClick={()=>openNew({appointment_date:anchor,start_time:'09:00',end_time:'09:30'})}>+ Nouveau rendez-vous</Btn>
+    </div>
+    <div className="bvh-calendar-panel">
+      <div className="bvh-calendar-toolbar">
+        <Btn color="#5f4725" onClick={()=>changePeriod(-1)}>←</Btn>
+        <Btn color="#5f4725" onClick={()=>setAnchor(today())}>Aujourd’hui</Btn>
+        <Btn color="#5f4725" onClick={()=>changePeriod(1)}>→</Btn>
+        <Inp type="date" value={anchor} onChange={e=>setAnchor(e.target.value)} style={{width:165}}/>
+        <span className="bvh-calendar-title">{weekLabel}</span>
+        <div className="bvh-view-toggle">
+          <button className={view==='week'?'active':''} onClick={()=>setView('week')}>Semaine</button>
+          <button className={view==='day'?'active':''} onClick={()=>setView('day')}>Jour</button>
+        </div>
+        <span style={{color:'#b69b68',fontSize:13}}>{refreshing?'Actualisation…':`${activeCount} rendez-vous`}</span>
+        <div className="bvh-calendar-filter"><Inp placeholder="Client, responsable, objet…" value={filter} onChange={e=>setFilter(e.target.value)}/></div>
+        <Select label="" value={responsable} onChange={e=>setResponsable(e.target.value)}><option value="">Tous les responsables</option>{responsables.map(x=><option key={x} value={x}>{x}</option>)}</Select>
+        <Select label="" value={typeFilter} onChange={e=>setTypeFilter(e.target.value)}><option value="">Tous les types</option>{Object.entries(AGENDA_TYPES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select>
+      </div>
+      <div className="bvh-agenda-legend">
+        {Object.entries(AGENDA_TYPES).map(([k,label])=><span key={k}><i className="bvh-agenda-dot" style={{background:AGENDA_COLORS[k]}}></i>{label}</span>)}
+        <span style={{marginLeft:'auto'}}>Glisse un bloc sur un autre créneau pour déplacer le rendez-vous.</span>
+      </div>
+      {filteredEvents.length===0&&<div className="bvh-agenda-empty">Aucun rendez-vous dans cette période avec les filtres actuels. Clique sur une case pour en créer un.</div>}
+      <div className="bvh-calendar-scroll">
+        <div className="bvh-week-grid" style={{'--days':days.length}}>
+          <div className="bvh-calendar-corner"></div>
+          {days.map(day=><div key={day} className={'bvh-calendar-day-head '+(sameDay(day,today())?'today':'')} onClick={()=>{setAnchor(day);setView('day')}} title="Ouvrir cette journée">
+            <div className="dow">{dayShort(day)}</div><div className="date">{new Date(`${day}T12:00:00`).getDate()}</div>
+          </div>)}
+          <div>
+            {AGENDA_TIMES.map((time,i)=><div className="bvh-calendar-time-label" key={time}>{i%2===0?time:''}</div>)}
+          </div>
+          {days.map(day=>{
+            const segments=layoutSegments(filteredEvents,day);
+            const now=new Date(nowTick);
+            const isToday=sameDay(day,today());
+            const nowTop=(now.getHours()*2+(now.getMinutes()/30))*AGENDA_SLOT_HEIGHT;
+            return <div key={day} className="bvh-calendar-day-column">
+              {AGENDA_TIMES.map(time=><div key={time} className="bvh-calendar-slot"
+                onClick={()=>openNew(appointmentDraft(day,time))}
+                onDragOver={e=>e.preventDefault()}
+                onDrop={e=>{e.preventDefault();dropEvent(day,time);}}
+                title={`${dateLong(day)} · ${time} — créer un rendez-vous`}
+              />)}
+              {isToday&&<div className="bvh-calendar-now" style={{top:nowTop}}></div>}
+              {segments.map(e=>{
+                const color=AGENDA_COLORS[e.appointment_type]||AGENDA_COLORS.autre;
+                const left=`calc(${(e._lane/e._laneCount)*100}% + 3px)`;
+                const width=`calc(${100/e._laneCount}% - 6px)`;
+                const begins=e._segmentStart.getTime()===agendaDateTime(e.appointment_date,e.start_time).getTime();
+                const endText=e._segmentEnd.getTime()===agendaDateTime(e.end_date||e.appointment_date,e.end_time).getTime()?e.end_time:'00:00';
+                return <button key={`${e.id}-${day}`} draggable
+                  className={'bvh-agenda-event '+(e.status==='annule'?'annule':'')}
+                  onDragStart={ev=>{setDragged(e);ev.dataTransfer.effectAllowed='move';}}
+                  onDragEnd={()=>setDragged(null)}
+                  onClick={ev=>{ev.stopPropagation();openEdit(e)}}
+                  title={`${e.client_prenom} ${e.client_nom}\n${e.title||AGENDA_TYPES[e.appointment_type]}\n${e.start_time} — ${e.end_time}\nResponsable : ${e.responsable_username||'—'}`}
+                  style={{top:e._top+2,height:e._height,left,width,background:`linear-gradient(135deg,${color},${color}bb)`,borderLeftColor:'#f6dfaa',color:'#fff'}}>
+                  {begins?<><span className="event-time">{e.start_time} – {endText}</span><span className="event-client">{e.client_prenom} {e.client_nom}</span><span className="event-meta">{e.title||AGENDA_TYPES[e.appointment_type]} · {e.responsable_username||'—'}</span></>:<><span className="event-client">↳ {e.client_prenom} {e.client_nom}</span><span className="event-meta">Suite jusqu’à {endText}</span></>}
+                </button>
+              })}
+            </div>
+          })}
+        </div>
+      </div>
+    </div>
+    <AgendaModal open={modal} event={editing} initial={draft} clients={clients} me={me} appointments={appointments} onClose={closeModal} onSave={save} onDelete={remove}/>
+  </div>
+}
+
+function Check({label,checked,onChange}){return <label style={{display:'flex',gap:8,alignItems:'center',color:'#d8bf82',fontWeight:700}}><input type="checkbox" checked={!!checked} onChange={e=>onChange(e.target.checked)}/>{label}</label>}
+function horseDiscord(f){const coupons=(f.numeros_coupons||'').split('\n').map(x=>x.trim()).filter(Boolean);const check=v=>v?'[x]':'[]';return `## DOSSIER DE CRÉDIT DE MISE HIPPIQUE ##\n\n**INFORMATIONS PERSONNELLES**\n        **Date du jour :** ${f.date_du_jour||'JJ/MM/AAAA'}\n        **Télégramme :** ${f.telegram||''}\n        **Adresse résidentielle actuelle :** ${f.adresse||''}\n        **Profession actuelle :** ${f.profession||''}\n\n**VÉRIFICATION D’IDENTITÉ**\n        ${check(f.identite_presentee)} Pièce d’identité valide présentée\n        ${check(f.photographie_ajoutee)} Photographie du client réalisée et ajoutée au dossier\n        **Lien pièce d’identité :** ${f.piece_identite_url||''}\n        **Lien photographie :** ${f.photographie_url||''}\n\n**DEMANDE DE CRÉDIT DE MISE**\n        **Montant total emprunté :** 25$ x ${f.coupons_count||1} = ${25*(Number(f.coupons_count)||1)}$\n        **Taux d’intérêt FIXE appliqué :** ${f.taux||0} %\n\n**INFORMATIONS SUR LE PARI HIPPIQUE**\n        **Date de la course :** ${f.date_course||'JJ/MM/AAAA'}\n        **Nom de l’écurie ou du cheval sélectionné :** ${f.cheval_ecurie||''}\n        **Type de pari envisagé :**\n        ${check(f.type_pari==='gagnant')} Gagnant\n        ${check(f.type_pari==='place')} Placé\n        ${check(f.type_pari==='couple')} Couplé\n        ${check(f.type_pari==='autre')} Autres : ${f.type_pari_autre||''}\n\n        **Bookmaker partenaire chargé de la prise de pari :** ${f.bookmaker||''}\n\n**COUPONS DE MISE**\n        **Numéros de série des coupons remis :**\n${coupons.length?coupons.map(x=>'        N°'+x).join('\n'):'        N°____'}\n\n        ${check(f.coupons_enregistres)} Coupons enregistrés dans le registre officiel\n        ${check(f.numeros_verifies)} Vérification des numéros de série effectuée\n\n**SITUATION FINANCIÈRE**\n        **Revenus mensuels estimés :** ${f.revenus_mensuels||''}\n        **Patrimoine déclaré :** ${f.patrimoine||''}\n        **Biens susceptibles de garantir le remboursement :** ${f.garanties||''}\n\n**RÉFÉRENCES**\n        **Êtes-vous recommandé par un employé, client ou partenaire de l’Hippodrome Howley & Co. ou de l'institution ?**\n        ${check(f.recommande)} Oui\n        ${check(!f.recommande)} Non\n\n        **Si oui, précisez le nom du référent :** ${f.referent||''}\n        **Autres recommandations :** ${f.recommandations||''}\n\n**DÉCLARATIONS ET ACCEPTATION**\n        ${check(f.a1)} Je reconnais que les coupons demeurent la propriété de la banque jusqu’à leur utilisation.\n        ${check(f.a2)} Je m’engage à rembourser immédiatement le financement accordé après la course hippique.\n        ${check(f.a3)} En cas de gains, j’accepte de rembourser le montant emprunté ainsi que les intérêts convenus.\n        ${check(f.a4)} J’accepte que mes biens personnels puisse être saisi en cas de défaut de paiement.\n        ${check(f.a5)} Je certifie l’exactitude des informations fournies.\n        ${check(f.a6)} J’accepte les conditions générales du service de crédit de mise hippique.\n\n*Le demandeur reconnaît qu’un crédit de mise hippique constitue un engagement financier immédiat et que tout défaut de remboursement pourra entraîner des mesures de recouvrement, des saisies patrimoniales, une procédure judiciaire fédérale ainsi que l’inscription dans les registres officiels des débiteurs insolvables.*\n\n*Par sa signature, le demandeur atteste avoir pris connaissance de l’ensemble des présentes conditions et les accepter sans réserve.*`}
+
+function HorseCreditPage({clients,notify}){
+  const empty={
+    id:null,dossier_id:'',client_id:'',client_nom:'',client_prenom:'',telegram:'',adresse:'',profession:'',
+    date_du_jour:new Date().toLocaleDateString('fr-FR'),
+    identite_presentee:false,photographie_ajoutee:false,piece_identite_url:'',photographie_url:'',
+    coupons_count:1,taux:0,date_course:'',cheval_ecurie:'',type_pari:'gagnant',type_pari_autre:'',
+    bookmaker:'',numeros_coupons:'',coupons_enregistres:false,numeros_verifies:false,
+    revenus_mensuels:'',patrimoine:'',garanties:'',recommande:false,referent:'',recommandations:'',
+    a1:false,a2:false,a3:false,a4:false,a5:false,a6:false,statut:'en_cours'
+  };
+  const[f,setF]=useState(empty);
+  const[credits,setCredits]=useState([]);
+  const[busy,setBusy]=useState(false);
+  const[view,setView]=useState(null);
+  const[query,setQuery]=useState('');
+
+  useEffect(()=>{api.horseCredits().then(setCredits).catch(e=>notify('⚠ '+e.message))},[]);
+
+  function fromCredit(c){
+    const acc=c.acceptations||{};
+    return {
+      ...empty,
+      ...c,
+      client_id:c.client_id||'',
+      numeros_coupons:Array.isArray(c.numeros_coupons)?c.numeros_coupons.join('\n'):'',
+      a1:!!acc.a1,a2:!!acc.a2,a3:!!acc.a3,a4:!!acc.a4,a5:!!acc.a5,a6:!!acc.a6,
+      statut:c.statut||'en_cours'
+    };
+  }
+
+  function payloadFromForm(){
+    const discord=horseDiscord(f);
+    return {
+      ...f,
+      numeros_coupons:String(f.numeros_coupons||'').split('\n').map(x=>x.trim()).filter(Boolean),
+      acceptations:{a1:f.a1,a2:f.a2,a3:f.a3,a4:f.a4,a5:f.a5,a6:f.a6},
+      discord_text:discord
+    };
+  }
+
+  function resetForm(){setF(empty);setView(null);}
+  function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,client_nom:c?.nom||'',client_prenom:c?.prenom||'',telegram:c?.telegram||'',adresse:c?.adresse||''});}
+  const discord=horseDiscord(f);
+
+  async function copy(text=discord){await navigator.clipboard.writeText(text);notify('Formulaire Discord copié')}
+  async function save(){
+    try{
+      setBusy(true);
+      const payload=payloadFromForm();
+      const r=payload.id?await api.updateHorseCredit(payload):await api.addHorseCredit(payload);
+      setCredits(payload.id?credits.map(x=>x.id===r.id?r:x):[r,...credits]);
+      setView(r);
+      setF(fromCredit(r));
+      notify(payload.id?'Crédit hippique modifié':'Crédit hippique enregistré');
+    }catch(e){notify('⚠ '+e.message)}
+    finally{setBusy(false)}
+  }
+  async function remove(c){
+    if(!confirm(`Supprimer définitivement le dossier ${c.dossier_id} ?`))return;
+    try{
+      await api.deleteHorseCredit(c.id);
+      setCredits(credits.filter(x=>x.id!==c.id));
+      if(view?.id===c.id)setView(null);
+      if(f.id===c.id)resetForm();
+      notify('Crédit hippique supprimé');
+    }catch(e){notify('⚠ '+e.message)}
+  }
+  function edit(c){setView(null);setF(fromCredit(c));window.scrollTo({top:0,behavior:'smooth'});}
+  function show(c){setView(c);window.scrollTo({top:0,behavior:'smooth'});}
+  function badgeStatus(s){
+    const map={en_cours:['#8b642c','En cours'],termine:['#3f9b67','Terminé'],refuse:['#b94735','Refusé']};
+    const v=map[s]||map.en_cours;
+    return <span style={{background:v[0],color:'#fff',borderRadius:20,padding:'4px 10px',fontWeight:900,fontSize:12}}>{v[1]}</span>
+  }
+
+  const filtered=credits.filter(c=>`${c.dossier_id||''} ${c.client_prenom||''} ${c.client_nom||''} ${c.telegram||''}`.toLowerCase().includes(query.toLowerCase()));
+
+  return <div>
+    <div className="bvh-topbar">
+      <div><small>Hippodrome Howley & Co.</small><h1>Crédit de mise hippique</h1></div>
+      <div style={{display:'flex',gap:8,flexWrap:'wrap',justifyContent:'flex-end'}}>
+        {f.id&&<Btn color="#555" onClick={resetForm}>Nouveau dossier</Btn>}
+        <Btn color="#5f4725" onClick={()=>copy()}>📋 Copier Discord</Btn>
+        <Btn color="#8b642c" disabled={busy} onClick={save}>{busy?'Enregistrement…':f.id?'Enregistrer les modifications':'Enregistrer'}</Btn>
+      </div>
+    </div>
+
+    {view&&<div className="bvh-ledger" style={{marginBottom:14}}>
+      <div className="bvh-ledger-title" style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center'}}>
+        <span>Dossier enregistré — {view.dossier_id}</span>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+          <Btn color="#5f4725" onClick={()=>copy(view.discord_text||horseDiscord(fromCredit(view)))}>Copier Discord</Btn>
+          <Btn color="#8b642c" onClick={()=>edit(view)}>Modifier</Btn>
+          <Btn color={C.red} onClick={()=>remove(view)}>Supprimer</Btn>
+          <Btn color="#555" onClick={()=>setView(null)}>Fermer</Btn>
+        </div>
+      </div>
+      <div style={{padding:16,display:'grid',gridTemplateColumns:'1fr 1fr',gap:14}}>
+        <div>
+          <div className="bvh-field"><b>Client</b><span>{view.client_prenom} {view.client_nom}</span></div>
+          <div className="bvh-field"><b>Télégramme</b><span>{view.telegram||'—'}</span></div>
+          <div className="bvh-field"><b>Adresse</b><span>{view.adresse||'—'}</span></div>
+          <div className="bvh-field"><b>Profession</b><span>{view.profession||'—'}</span></div>
+          <div className="bvh-field"><b>Montant</b><span>{fCur(view.montant_total)}</span></div>
+          <div className="bvh-field"><b>Taux</b><span>{view.taux||0} %</span></div>
+          <div className="bvh-field"><b>Statut</b><span>{badgeStatus(view.statut)}</span></div>
+        </div>
+        <div>
+          <div className="bvh-field"><b>Course</b><span>{view.date_course||'—'}</span></div>
+          <div className="bvh-field"><b>Cheval / écurie</b><span>{view.cheval_ecurie||'—'}</span></div>
+          <div className="bvh-field"><b>Type de pari</b><span>{view.type_pari||'—'} {view.type_pari_autre||''}</span></div>
+          <div className="bvh-field"><b>Bookmaker</b><span>{view.bookmaker||'—'}</span></div>
+          <div className="bvh-field"><b>Pièce d'identité</b><span>{view.piece_identite_url?<a href={view.piece_identite_url} target="_blank" rel="noreferrer" style={{color:'#f3d58a'}}>Consulter</a>:'—'}</span></div>
+          <div className="bvh-field"><b>Photographie</b><span>{view.photographie_url?<a href={view.photographie_url} target="_blank" rel="noreferrer" style={{color:'#f3d58a'}}>Consulter</a>:'—'}</span></div>
+        </div>
+      </div>
+      <pre style={{whiteSpace:'pre-wrap',padding:16,color:'#f0d899',fontSize:13,lineHeight:1.45,maxHeight:360,overflow:'auto',borderTop:'1px solid #6d4b2266'}}>{view.discord_text||horseDiscord(fromCredit(view))}</pre>
+    </div>}
+
+    <div className="bvh-dossier-grid-wide">
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">{f.id?'Modification du dossier':'Nouveau dossier de crédit'}</div>
+        <div style={{padding:16,display:'grid',gap:12}}>
+          <Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Aucun / nouveau parieur —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><Inp label="Prénom" value={f.client_prenom} onChange={e=>setF({...f,client_prenom:e.target.value})}/><Inp label="Nom" value={f.client_nom} onChange={e=>setF({...f,client_nom:e.target.value})}/></div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><Inp label="Date du jour" value={f.date_du_jour} onChange={e=>setF({...f,date_du_jour:e.target.value})}/><Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/></div>
+          <Inp label="Adresse résidentielle actuelle" value={f.adresse} onChange={e=>setF({...f,adresse:e.target.value})}/>
+          <Inp label="Profession actuelle" value={f.profession} onChange={e=>setF({...f,profession:e.target.value})}/>
+
+          <Sec>Vérification d'identité</Sec>
+          <Check label="Pièce d’identité valide présentée" checked={f.identite_presentee} onChange={v=>setF({...f,identite_presentee:v})}/>
+          <Check label="Photographie du client réalisée et ajoutée au dossier" checked={f.photographie_ajoutee} onChange={v=>setF({...f,photographie_ajoutee:v})}/>
+          <Inp label="Lien pièce d’identité" value={f.piece_identite_url} onChange={e=>setF({...f,piece_identite_url:e.target.value})}/>
+          <Inp label="Lien photographie" value={f.photographie_url} onChange={e=>setF({...f,photographie_url:e.target.value})}/>
+
+          <Sec>Demande et course</Sec>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><Inp label="Nombre de coupons" type="number" value={f.coupons_count} onChange={e=>setF({...f,coupons_count:e.target.value})}/><Inp label="Taux fixe (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/></div>
+          <p style={{color:'#f3d58a'}}>Montant total : <b>{25*(Number(f.coupons_count)||1)} $</b></p>
+          <Inp label="Date de la course" value={f.date_course} onChange={e=>setF({...f,date_course:e.target.value})}/>
+          <Inp label="Écurie ou cheval" value={f.cheval_ecurie} onChange={e=>setF({...f,cheval_ecurie:e.target.value})}/>
+          <Select label="Type de pari" value={f.type_pari} onChange={e=>setF({...f,type_pari:e.target.value})}><option value="gagnant">Gagnant</option><option value="place">Placé</option><option value="couple">Couplé</option><option value="autre">Autre</option></Select>
+          {f.type_pari==='autre'&&<Inp label="Autre type de pari" value={f.type_pari_autre} onChange={e=>setF({...f,type_pari_autre:e.target.value})}/>}
+          <Inp label="Bookmaker partenaire" value={f.bookmaker} onChange={e=>setF({...f,bookmaker:e.target.value})}/>
+          <Txt label="Numéros de série des coupons — un par ligne" value={f.numeros_coupons} onChange={e=>setF({...f,numeros_coupons:e.target.value})}/>
+          <Check label="Coupons enregistrés dans le registre officiel" checked={f.coupons_enregistres} onChange={v=>setF({...f,coupons_enregistres:v})}/>
+          <Check label="Vérification des numéros de série effectuée" checked={f.numeros_verifies} onChange={v=>setF({...f,numeros_verifies:v})}/>
+
+          <Sec>Situation financière et références</Sec>
+          <Inp label="Revenus mensuels estimés" value={f.revenus_mensuels} onChange={e=>setF({...f,revenus_mensuels:e.target.value})}/>
+          <Inp label="Patrimoine déclaré" value={f.patrimoine} onChange={e=>setF({...f,patrimoine:e.target.value})}/>
+          <Inp label="Biens en garantie" value={f.garanties} onChange={e=>setF({...f,garanties:e.target.value})}/>
+          <Check label="Recommandé par un employé/client/partenaire" checked={f.recommande} onChange={v=>setF({...f,recommande:v})}/>
+          <Inp label="Nom du référent" value={f.referent} onChange={e=>setF({...f,referent:e.target.value})}/>
+          <Txt label="Autres recommandations" value={f.recommandations} onChange={e=>setF({...f,recommandations:e.target.value})}/>
+
+          <Sec>Déclarations</Sec>
+          {[
+            ['a1','Coupons propriété de la banque jusqu’à utilisation'],
+            ['a2','Remboursement immédiat après la course'],
+            ['a3','Remboursement du montant et intérêts en cas de gains'],
+            ['a4','Saisie possible des biens en cas de défaut'],
+            ['a5','Exactitude des informations certifiée'],
+            ['a6','Conditions générales acceptées']
+          ].map(x=><Check key={x[0]} label={x[1]} checked={f[x[0]]} onChange={v=>setF({...f,[x[0]]:v})}/>)}
+          <Select label="Statut du dossier" value={f.statut} onChange={e=>setF({...f,statut:e.target.value})}><option value="en_cours">En cours</option><option value="termine">Terminé</option><option value="refuse">Refusé</option></Select>
+        </div>
+      </div>
+
+      <div className="bvh-ledger">
+        <div className="bvh-ledger-title">Aperçu Discord</div>
+        <pre style={{whiteSpace:'pre-wrap',padding:16,color:'#f0d899',fontSize:13,lineHeight:1.45,maxHeight:620,overflow:'auto'}}>{discord}</pre>
+      </div>
+    </div>
+
+    <div className="bvh-ledger" style={{marginTop:14}}>
+      <div className="bvh-ledger-title" style={{display:'flex',justifyContent:'space-between',gap:10,alignItems:'center'}}>
+        <span>Crédits hippiques enregistrés</span>
+        <input placeholder="Rechercher un dossier..." value={query} onChange={e=>setQuery(e.target.value)} style={{background:'#120b06',border:'1px solid #62451f',borderRadius:8,padding:'8px 10px',color:'#f8e7b7',minWidth:260}}/>
+      </div>
+      {filtered.length===0?<p className="bvh-empty">Aucun crédit hippique enregistré.</p>:filtered.map(c=><div className="bvh-row" key={c.id} style={{gridTemplateColumns:'1.2fr 1.2fr 100px 95px 250px'}}>
+        <b>{c.dossier_id}</b>
+        <span>{c.client_prenom} {c.client_nom}</span>
+        <span>{fCur(c.montant_total)}</span>
+        <span>{badgeStatus(c.statut)}</span>
+        <span style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+          <Btn color="#555" onClick={()=>show(c)}>Voir</Btn>
+          <Btn color="#8b642c" onClick={()=>edit(c)}>Modifier</Btn>
+          <Btn color={C.red} onClick={()=>remove(c)}>Supprimer</Btn>
+        </span>
+      </div>)}
+    </div>
+  </div>
+}
+
+function appointmentTouchesDate(event,date){
+  const start=agendaDateTime(event.appointment_date,event.start_time);
+  const end=agendaDateTime(event.end_date||event.appointment_date,event.end_time);
+  const dayStart=agendaDateTime(date,'00:00');
+  const dayEnd=agendaDateTime(plusDaysFrom(date,1),'00:00');
+  return start<dayEnd && end>dayStart;
+}
+function dashboardAppointmentTime(event,date){
+  const begins=String(event.appointment_date)===String(date)?event.start_time:'00:00';
+  const ends=String(event.end_date||event.appointment_date)===String(date)?event.end_time:'00:00';
+  return `${begins} — ${ends}`;
+}
+function TodayAppointments({appointments=[],onOpenAgenda,onOpenClient}){
+  const currentDate=today();
+  const events=(appointments||[])
+    .filter(e=>appointmentTouchesDate(e,currentDate))
+    .sort((a,b)=>agendaInterval(a).start-agendaInterval(b).start);
+  return <div className="bvh-ledger" style={{marginBottom:14}}>
+    <div className="bvh-today-agenda-head">
+      <div><b>Rendez-vous du jour</b><span className="bvh-today-agenda-count">{events.length} prévu{events.length===1?'':'s'} · {fDate(currentDate)}</span></div>
+      <Btn color="#5f4725" onClick={onOpenAgenda}>Ouvrir l’agenda</Btn>
+    </div>
+    {events.length===0?<p className="bvh-empty">Aucun rendez-vous prévu aujourd’hui.</p>:events.map(event=>{
+      const color=AGENDA_COLORS[event.appointment_type]||'#8b642c';
+      const type=AGENDA_TYPES[event.appointment_type]||event.appointment_type||'Rendez-vous';
+      return <div className="bvh-today-agenda-row" key={event.id} style={{'--agenda-color':color}}>
+        <div className="bvh-today-agenda-time">{dashboardAppointmentTime(event,currentDate)}</div>
+        <div><span className="bvh-today-agenda-client">{event.client_prenom} {event.client_nom}</span><span className="bvh-today-agenda-sub">{type}{event.title?` · ${event.title}`:''}</span></div>
+        <div className="bvh-today-agenda-responsable"><AgendaStatus status={event.status}/><span>Responsable : {event.responsable_username||'—'}</span></div>
+        <div className="bvh-today-agenda-actions"><Btn color="#5f4725" onClick={()=>onOpenClient(event.client_id)}>Dossier</Btn><Btn color={color} onClick={onOpenAgenda}>Agenda</Btn></div>
+      </div>
+    })}
+  </div>
+}
+function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan,notify}){
+  const[reminderTarget,setReminderTarget]=useState(null);
+  const upcoming=[];
+  loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date);if(d<=7)upcoming.push({...e,loan:l,i,d});}}));
+  upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const total7=upcoming.reduce((s,e)=>s+Number(e.montant),0);
+  const capitalPrete=loans.reduce((s,l)=>s+Number(l.somme||0),0);
+  const totalAttendu=loans.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);
+  const encaisse=loans.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);
+  const restant=Math.max(totalAttendu-encaisse,0);
+  const recouvrements=loans.filter(l=>isLoanInRecouvrement(l)).length;
+  const retards=upcoming.filter(e=>e.d<0&&!isLoanInRecouvrement(e.loan)).length;
+  const derniers=(logs||[]).slice(0,5);
+  function savedReminder(updatedLoan){onLoanUpdate?.(updatedLoan);notify?.('Rappel enregistré dans le registre');}
+  return <div>
+    <div className="bvh-topbar"><div><small>Registre central des opérations bancaires</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div>
+    <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Hors dossiers en recouvrement"/></div>
+    <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="⚖️" title="Recouvrement" value={recouvrements} note="Dossiers suivis séparément"/></div>
+    <div className="bvh-ledger" style={{marginBottom:14}}><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div>
+    <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
+    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=>{const last=latestReminder(e);return <div className="bvh-row bvh-due-row bvh-due-row-reminder" key={i}>
+      <button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt{last?` · ${reminderSummary(last)}`:' · Aucun rappel noté'}</small></button>
+      <span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><span className="bvh-due-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(e)}>Rappel</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></span>
+    </div>})}</div>
+    <ReminderModal open={!!reminderTarget} loan={reminderTarget?.loan} echeance={reminderTarget} echeanceIndex={reminderTarget?.i} onClose={()=>setReminderTarget(null)} onSaved={savedReminder} me={me}/>
+  </div>
+}
+function InfoCard({icon,title,value,note}){return <div className="bvh-card"><div className="icon">{icon}</div><p>{title}</p><h2>{value}</h2><small style={{color:'#8f7547'}}>{note}</small></div>}
+function Card({title,value,icon,color}){return <InfoCard icon={icon} title={title} value={value} note=""/>}
+function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{items.length===0?<p className="bvh-empty">Aucune échéance.</p>:items.map((e,i)=><div key={i} className="bvh-row"><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div>}
+function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
+
+
+const footerInfoPages={
+  about:{
+    title:'À propos',
+    intro:'Présentation du registre',
+    body:[
+      'Le Registre bancaire de Reckless est une plateforme RP destinée à centraliser les opérations bancaires du serveur : prêts, dossiers clients, échéances, agenda et suivi des banques consultées.',
+      'L’objectif est d’avoir un outil clair, propre et cohérent pour les joueurs et l’équipe, sans limiter la plateforme à une seule banque.'
+    ],
+    list:[
+      'Registre multi-banques : Van Horn, Saint-Denis, Rhodes et autres évolutions possibles.',
+      'Interface pensée pour un usage RP simple et rapide.',
+      'Plateforme conçue et développée par Pandore Studio.'
+    ]
+  },
+  help:{
+    title:'Aide',
+    intro:'Utilisation rapide',
+    body:[
+      'Le tableau de bord donne une vue générale des opérations : capital prêté, montants à récupérer, échéances, retards et dernières activités.',
+      'Les sections du menu permettent de gérer les prêts, les clients, l’agenda, le crédit hippique, les comptes autorisés et le journal d’activité selon les droits de l’utilisateur connecté.'
+    ],
+    list:[
+      'Utilise « Banque consultée » pour filtrer les informations par banque.',
+      'La page « Prêts » sert à créer, consulter et suivre les remboursements.',
+      'La page « Clients » centralise les dossiers et raccourcis utiles.',
+      'La page « Agenda » sert au suivi des rendez-vous et échéances RP.'
+    ]
+  },
+  privacy:{
+    title:'Confidentialité',
+    intro:'Données utilisées',
+    body:[
+      'La plateforme est prévue pour un usage RP. Les informations enregistrées doivent rester liées au jeu, au serveur et à l’organisation interne du registre.',
+      'Les données utilisées servent au fonctionnement du site : comptes d’accès, rôles, dossiers clients RP, prêts RP, échéances, agenda et journal d’activité.'
+    ],
+    list:[
+      'Évite d’entrer des données personnelles réelles si elles ne sont pas nécessaires au RP.',
+      'Les accès sont réservés aux personnes autorisées.',
+      'Pour une correction ou une suppression d’information, il faut contacter un administrateur du registre.'
+    ],
+    note:'Cette page est une note de fonctionnement interne et ne remplace pas un document juridique rédigé par un professionnel.'
+  },
+  terms:{
+    title:'CGU',
+    intro:'Règles d’utilisation',
+    body:[
+      'L’utilisation du Registre bancaire de Reckless est réservée aux membres autorisés dans le cadre du serveur RP.',
+      'Chaque utilisateur doit respecter les accès qui lui sont attribués et utiliser la plateforme uniquement pour les besoins du jeu et de l’organisation du registre.'
+    ],
+    list:[
+      'Ne pas partager ses accès.',
+      'Ne pas modifier ou supprimer des informations sans raison RP ou administrative valable.',
+      'Ne pas utiliser la plateforme pour stocker des informations hors sujet.',
+      'Signaler tout bug, problème d’affichage ou erreur de données à l’équipe.'
+    ]
+  },
+  legal:{
+    title:'Mentions légales',
+    intro:'Informations du projet',
+    body:[
+      'Le Registre bancaire de Reckless est un outil communautaire RP. Il ne s’agit pas d’un service bancaire réel et aucun montant affiché ne représente une opération financière réelle.',
+      'La plateforme est conçue et développée par Pandore Studio pour l’usage du serveur Reckless RP.'
+    ],
+    list:[
+      'Nom du projet : Registre bancaire de Reckless.',
+      'Usage : outil RP de gestion bancaire fictive.',
+      'Conception et développement : Pandore Studio.',
+      'Contact : via l’équipe administrative du serveur ou Lathanor.'
+    ],
+    note:'Les éléments visuels, textes et fonctionnalités sont destinés à un usage RP et communautaire.'
+  }
+};
+
+function FooterInfoModal({active,onClose}){
+  if(!active)return null;
+  const page=footerInfoPages[active];
+  if(!page)return null;
+  return <div className="bvh-info-backdrop" onClick={onClose}>
+    <section className="bvh-info-modal" onClick={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-label={page.title}>
+      <div className="bvh-info-modal-header">
+        <div>
+          <small>{page.intro}</small>
+          <h2>{page.title}</h2>
+        </div>
+        <button className="bvh-info-close" onClick={onClose} aria-label="Fermer">×</button>
+      </div>
+      {page.body.map((p,i)=><p key={'p'+i}>{p}</p>)}
+      {page.list&&<ul>{page.list.map((item,i)=><li key={'li'+i}>{item}</li>)}</ul>}
+      {page.note&&<div className="bvh-info-note">{page.note}</div>}
+    </section>
+  </div>
+}
+
+function SiteFooter({onOpen}){
+  return <footer className="bvh-site-footer">
+    <div className="bvh-footer-brand">
+      <span>© 2026</span>
+      <strong>Pandore Studio</strong>
+      <span>·</span>
+      <span>Registre bancaire de Reckless</span>
+    </div>
+    <nav className="bvh-footer-links" aria-label="Informations du site">
+      <button type="button" onClick={()=>onOpen('about')}>À propos</button>
+      <button type="button" onClick={()=>onOpen('help')}>Aide</button>
+      <button type="button" onClick={()=>onOpen('legal')}>Mentions légales</button>
+      <button type="button" onClick={()=>onOpen('privacy')}>Confidentialité</button>
+      <button type="button" onClick={()=>onOpen('terms')}>CGU</button>
+    </nav>
+  </footer>
+}
+
+function App(){
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[footerPage,setFooterPage]=useState(null),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null),[activeAgence,setActiveAgence]=useState('toutes');
+  const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
+  async function loadAll(user){
+    const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications()];
+    if(roleRank[user.role]>=2) req.push(api.users());
+    if(roleRank[user.role]>=2) req.push(api.logs());
+    const r=await Promise.allSettled(req);
+    setLoans(r[0].status==='fulfilled'?r[0].value:[]);
+    setClients(r[1].status==='fulfilled'?r[1].value:[]);
+    setAppointments(r[2].status==='fulfilled'?r[2].value:[]);
+    setApplications(r[3].status==='fulfilled'?r[3].value:[]);
+    let i=4;
+    if(roleRank[user.role]>=2 && r[i]?.status==='fulfilled')setUsers(r[i].value);
+    if(roleRank[user.role]>=2 && r[i+1]?.status==='fulfilled')setLogs(r[i+1].value);
+  }
+  useEffect(()=>{(async()=>{try{const r=await api.me();setMe(r.user);await loadAll(r.user);}catch{}finally{setLoading(false)}})()},[]);
+
+  useEffect(()=>{
+    if(!me || !['dashboard','prets'].includes(page) || loanDraftActive) return;
+    let active=true;
+    const syncLoans=async()=>{
+      if(document.visibilityState!=='visible') return;
+      try{
+        const latest=await api.loans();
+        if(active) setLoans(latest||[]);
+      }catch{}
+    };
+    syncLoans();
+    const timer=window.setInterval(syncLoans,8000);
+    const onVisibility=()=>{if(document.visibilityState==='visible')syncLoans();};
+    document.addEventListener('visibilitychange',onVisibility);
+    return ()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+  },[me,page,loanDraftActive]);
+
+
+
+  useEffect(()=>{
+    if(!me || page!=='dashboard') return;
+    let active=true;
+    const syncAppointments=async()=>{
+      if(document.visibilityState!=='visible')return;
+      try{const latest=await api.agenda();if(active)setAppointments(latest||[]);}catch{}
+    };
+    syncAppointments();
+    const timer=window.setInterval(syncAppointments,10000);
+    const onVisibility=()=>{if(document.visibilityState==='visible')syncAppointments();};
+    document.addEventListener('visibilitychange',onVisibility);
+    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+  },[me,page]);
+
+  async function onLogin(user){setMe(user);await loadAll(user)}
+  async function logout(){await api.logout();setMe(null)}
+  async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});setLoans(loans.map(x=>x.id===u.id?u:x));notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}
+  if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>Chargement…</div>;
+  if(!me)return <Login onLogin={onLogin}/>;
+  const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['clients','👤','Clients'],['agenda','🗓️','Agenda'],['hippique','🏇','Crédit hippique']];
+  if(roleRank[me.role]>=2) menu.push(['users','🔐','Comptes'],['logs','📖','Journal']);
+  async function refreshSharedData(){
+    if(!me) return;
+    setRefreshing(true);
+    try{
+      await loadAll(me);
+    }finally{
+      setRefreshing(false);
+    }
+  }
+  function choosePage(target){
+    setPage(target);
+    setMenuOpen(false);
+    refreshSharedData();
+  }
+  function openClientDossier(clientId){
+    if(!clientId)return;
+    setClientFocus(clientId);
+    choosePage('clients');
+  }
+  function openQuickLoan(client){
+    setLoanPrefill(client);
+    choosePage('prets');
+  }
+  function openLoanDetails(loanId){
+    if(!loanId)return;
+    setLoanFocus(loanId);
+    choosePage('prets');
+  }
+  function openQuickAppointment(client){
+    setAgendaPrefill(client);
+    choosePage('agenda');
+  }
+  const loansForActiveBank=loans.filter(l=>activeAgence==='toutes'||loanAgence(l)===activeAgence);
+  return <div className="bvh-shell"><Toast msg={toast}/><FooterInfoModal active={footerPage} onClose={()=>setFooterPage(null)}/>
+    <div className="bvh-mobile-top">
+      <button className="bvh-mobile-menu-button" aria-label="Ouvrir le menu" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?'✕':'☰'}</button>
+      <div className="bvh-mobile-title"><b>Registre bancaire de Reckless</b><span>Institution établie en 1904 · {roles[me.role]}</span></div>
+    </div>
+    <div className={'bvh-menu-backdrop '+(menuOpen?'open':'')} onClick={()=>setMenuOpen(false)}></div>
+    <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
+      <div className="bvh-brand bvh-brand-stable">
+        <div className="bvh-brand-card">
+          <img
+            className="bvh-brand-logo-stable"
+            src="/logo-registre-reckless.png"
+            alt="Registre bancaire de Reckless — Institution établie en 1904"
+          />
+        </div>
+      </div>
+      <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
+      <div className="bvh-bank-context">
+        <span className="bvh-bank-context-title">Périmètre du registre</span>
+        <Select label="Banque consultée" value={activeAgence} onChange={e=>setActiveAgence(e.target.value)}>
+          <option value="toutes">Toutes les banques</option>
+          <option value="van_horn">Van Horn</option>
+          <option value="saint_denis">Saint-Denis</option>
+          <option value="rhodes">Rhodes</option>
+        </Select>
+      </div>
+      <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Conception &amp; développement</span></div></div>
+      <div className="bvh-user"><small style={{color:'#9f8550',textTransform:'uppercase',letterSpacing:'.12em'}}>Connecté</small><br/><b>{me.username}</b><p style={{color:'#d0b272',fontSize:13}}>{roles[me.role]}</p><Btn full color="#5f4725" onClick={logout} style={{marginTop:12}}>Déconnexion</Btn></div>
+    </aside>
+    <main className="bvh-main">
+      {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
+      {page==='dashboard'&&<Dashboard loans={loansForActiveBank} clients={clients} logs={logs} me={me} onMark={mark} onLoanUpdate={u=>setLoans(loans.map(x=>x.id===u.id?u:x))} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} me={me} activeAgence={activeAgence} onActiveAgenceChange={setActiveAgence}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+    <SiteFooter onOpen={setFooterPage}/>
+    </main>
+  </div>
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script></body></html>
