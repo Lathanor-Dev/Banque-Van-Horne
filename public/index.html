@@ -536,13 +536,14 @@ body{
 
 
 
-/* ===== Intégration finale du logo — version professionnelle V9 ===== */
-.bvh-shell{
-  min-width:0;
-}
+
+/* ===== Sidebar finale stable et professionnelle V10 ===== */
+.bvh-shell{min-width:0}
+.bvh-main{min-width:0}
+
 .bvh-sidebar{
-  flex:0 0 292px;
-  width:292px;
+  flex:0 0 300px;
+  width:300px;
   height:100vh;
   min-height:100vh;
   overflow-y:auto!important;
@@ -557,27 +558,38 @@ body{
   background:rgba(215,166,77,.28);
   border-radius:999px;
 }
-.bvh-brand-final{
+
+.bvh-brand-stable{
+  padding:0 0 14px!important;
+  margin:0 0 14px!important;
+  border-bottom:1px solid rgba(215,166,77,.18);
+}
+.bvh-brand-card{
   display:flex;
   align-items:center;
   justify-content:center;
-  min-height:0;
-  padding:4px 0 16px!important;
-  margin:0 0 16px!important;
-  border-bottom:1px solid rgba(215,166,77,.22);
+  min-height:172px;
+  padding:14px 10px;
+  border-radius:18px;
+  border:1px solid rgba(215,166,77,.22);
+  background:
+    radial-gradient(circle at top, rgba(18,64,56,.14), transparent 46%),
+    linear-gradient(180deg, rgba(18,18,18,.92), rgba(8,8,8,.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.02),
+    0 12px 26px rgba(0,0,0,.28);
 }
-.bvh-brand-final .bvh-brand-full-logo{
-  display:block!important;
-  width:238px!important;
+.bvh-brand-logo-stable{
+  display:block;
+  width:182px!important;
   max-width:100%!important;
+  max-height:142px!important;
   height:auto!important;
-  margin:0 auto!important;
   object-fit:contain;
-  filter:drop-shadow(0 14px 26px rgba(0,0,0,.62));
+  margin:0 auto!important;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.55));
 }
-.bvh-main{
-  min-width:0;
-}
+
 .bvh-nav{
   flex:none!important;
   gap:9px!important;
@@ -586,84 +598,96 @@ body{
   min-height:0!important;
   padding:12px 14px!important;
 }
+
 .bvh-bank-context{
-  margin-top:13px!important;
+  margin-top:12px!important;
   padding-top:12px!important;
 }
-.bvh-pandore-panel,
-.bvh-user{
-  flex-shrink:0;
+.bvh-bank-context-title{
+  font-size:9px!important;
+  letter-spacing:.14em!important;
 }
 .bvh-pandore-panel{
   margin-top:12px!important;
+  padding:9px 10px!important;
+  flex-shrink:0;
 }
-.bvh-login-final-logo{
+.bvh-pandore-panel b{font-size:10px!important}
+.bvh-pandore-panel span{font-size:8px!important}
+.bvh-user{
+  margin-top:12px!important;
+  flex-shrink:0;
+}
+
+.bvh-login-stable-logo{
   display:block;
-  width:310px;
-  max-width:92%;
+  width:290px;
+  max-width:90%;
   height:auto;
   margin:0 auto 14px;
   object-fit:contain;
-  filter:drop-shadow(0 18px 36px rgba(0,0,0,.68));
+  filter:drop-shadow(0 18px 36px rgba(0,0,0,.66));
 }
 
-/* Écrans portables et fenêtres moins hautes */
-@media(max-height:900px) and (min-width:761px){
+/* Laptop heights */
+@media(max-height:940px) and (min-width:761px){
   .bvh-sidebar{
     padding-top:10px!important;
     padding-bottom:12px!important;
   }
-  .bvh-brand-final{
-    padding-bottom:10px!important;
-    margin-bottom:12px!important;
+  .bvh-brand-card{
+    min-height:150px;
+    padding:10px 8px;
   }
-  .bvh-brand-final .bvh-brand-full-logo{
-    width:196px!important;
+  .bvh-brand-logo-stable{
+    width:164px!important;
+    max-height:126px!important;
   }
-  .bvh-nav{
-    gap:7px!important;
-  }
-  .bvh-nav button{
-    padding:10px 12px!important;
-  }
+  .bvh-nav{gap:7px!important}
+  .bvh-nav button{padding:10px 12px!important}
   .bvh-bank-context{
-    margin-top:9px!important;
-    padding-top:9px!important;
+    margin-top:10px!important;
+    padding-top:10px!important;
   }
   .bvh-pandore-panel{
-    margin-top:9px!important;
-    padding:8px 9px!important;
-  }
-  .bvh-user{
     margin-top:10px!important;
+    padding:8px 9px!important;
   }
 }
 
-/* Tablettes */
-@media(max-width:1100px) and (min-width:761px){
+/* Narrow desktops / tablets */
+@media(max-width:1120px) and (min-width:761px){
   .bvh-sidebar{
-    flex-basis:250px;
-    width:250px;
+    flex-basis:272px;
+    width:272px;
     padding-left:14px!important;
     padding-right:14px!important;
   }
-  .bvh-brand-final .bvh-brand-full-logo{
-    width:205px!important;
+  .bvh-brand-card{
+    min-height:150px;
+  }
+  .bvh-brand-logo-stable{
+    width:158px!important;
+    max-height:122px!important;
   }
 }
 
-/* Mobile */
+/* Mobile drawer */
 @media(max-width:760px){
   .bvh-sidebar{
     width:min(86vw,320px)!important;
     height:100dvh;
     min-height:100dvh;
   }
-  .bvh-brand-final .bvh-brand-full-logo{
-    width:230px!important;
+  .bvh-brand-card{
+    min-height:164px;
   }
-  .bvh-login-final-logo{
-    width:260px;
+  .bvh-brand-logo-stable{
+    width:176px!important;
+    max-height:136px!important;
+  }
+  .bvh-login-stable-logo{
+    width:250px;
   }
 }
 
@@ -808,7 +832,7 @@ function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
   </div>
 }
 
-function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-final-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès sécurisé au registre</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
+function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-stable-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès sécurisé au registre</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
 
 function UserPanel({me,users,setUsers,notify}){const[f,setF]=useState({username:'',password:'',role:'employe'}); const canCreate=['admin','directeur','co_directeur'].includes(me.role); async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF({username:'',password:'',role:'employe'});notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}} async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}} async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}return <div><h1 style={{marginBottom:18}}>Utilisateurs</h1>{canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 180px auto',gap:10,alignItems:'end'}}><Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/><Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/><Select label="Rôle" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="employe">Employé</option>{roleRank[me.role]>=2&&<option value="co_directeur">Co-directeur</option>}{roleRank[me.role]>=3&&<option value="directeur">Directeur</option>}</Select><Btn onClick={add}>Créer</Btn></div>}<div style={{display:'grid',gap:10}}>{users.map(u=><div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'flex',alignItems:'center',gap:12}}><b style={{flex:1}}>{u.username} {u.protected?'🔒':''}</b><span style={{color:C.muted}}>{roles[u.role]||u.role}</span><Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn><Btn color={C.red} onClick={()=>del(u)}>Supprimer</Btn></div>)}</div></div>}
 
@@ -1790,12 +1814,14 @@ function App(){
     </div>
     <div className={'bvh-menu-backdrop '+(menuOpen?'open':'')} onClick={()=>setMenuOpen(false)}></div>
     <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
-      <div className="bvh-brand bvh-brand-final">
-        <img
-          className="bvh-brand-full-logo"
-          src="/logo-registre-reckless.png"
-          alt="Registre bancaire de Reckless — Institution établie en 1904"
-        />
+      <div className="bvh-brand bvh-brand-stable">
+        <div className="bvh-brand-card">
+          <img
+            className="bvh-brand-logo-stable"
+            src="/logo-registre-reckless.png"
+            alt="Registre bancaire de Reckless — Institution établie en 1904"
+          />
+        </div>
       </div>
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
       <div className="bvh-bank-context">
