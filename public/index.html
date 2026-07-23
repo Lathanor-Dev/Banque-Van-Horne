@@ -489,9 +489,25 @@ body{
 }
 .bvh-brand-seal:before,.bvh-brand-seal:after{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid rgba(215,166,77,.32)}
 .bvh-brand-seal:after{inset:17px;border-style:dashed;opacity:.72}
-.bvh-brand-title{font-size:21px!important;line-height:1.08!important;color:#f7f2e7!important;text-transform:uppercase;letter-spacing:.07em!important;max-width:205px;margin:0 auto}
-.bvh-brand-title strong{display:block;color:#f1c96f;font-size:24px;margin-top:3px}
-.bvh-brand-date{margin-top:10px!important;color:#bfa66e!important;font-size:10px!important;letter-spacing:.17em!important;line-height:1.45}
+.bvh-brand-title{
+  max-width:220px;margin:0 auto;text-align:center;text-transform:uppercase;
+  font-family:Georgia,"Times New Roman",serif;
+}
+.bvh-brand-title span{
+  display:block;color:#f7f2e7;font-size:20px;line-height:1.12;
+  font-weight:900;letter-spacing:.075em;
+}
+.bvh-brand-title strong{
+  display:inline-block;margin-top:8px;padding:4px 14px 5px;
+  color:#f1c96f;font-size:22px;line-height:1;
+  font-weight:900;letter-spacing:.15em;
+  border-top:1px solid rgba(215,166,77,.44);
+  border-bottom:1px solid rgba(215,166,77,.44);
+}
+.bvh-brand-date{
+  margin-top:11px!important;color:#bfa66e!important;
+  font-size:9px!important;letter-spacing:.15em!important;line-height:1.45;
+}
 .bvh-pandore-panel{margin:14px 0 0!important;padding:10px 11px!important;opacity:.82}
 .bvh-pandore-panel b{font-size:11px!important}
 .bvh-pandore-panel span{font-size:9px!important}
@@ -499,7 +515,7 @@ body{
 .bvh-bank-context{margin-top:14px;padding-top:13px;border-top:1px solid rgba(215,166,77,.24)}
 .bvh-bank-context-title{display:block;margin-bottom:7px;color:#9f8550;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.16em}
 .bvh-footer{font-size:13px}
-@media(max-width:760px){.bvh-brand-seal{width:78px;height:78px;font-size:36px}.bvh-brand-title{font-size:19px!important}.bvh-brand-title strong{font-size:22px}}
+@media(max-width:760px){.bvh-brand-seal{width:78px;height:78px;font-size:36px}.bvh-brand-title span{font-size:18px}.bvh-brand-title strong{font-size:20px}}
 
 </style>
 </head>
@@ -1626,7 +1642,10 @@ function App(){
     <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
       <div className="bvh-brand">
         <div className="bvh-brand-seal">R</div>
-        <div className="bvh-brand-title">Registre bancaire<strong>de Reckless</strong></div>
+        <div className="bvh-brand-title">
+          <span>Registre bancaire</span>
+          <strong>Reckless</strong>
+        </div>
         <div className="bvh-brand-date">Institution établie en 1904</div>
       </div>
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
@@ -1639,13 +1658,13 @@ function App(){
           <option value="rhodes">Rhodes</option>
         </Select>
       </div>
-      <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Développement &amp; hébergement</span></div></div>
+      <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Développement de la plateforme</span></div></div>
       <div className="bvh-user"><small style={{color:'#9f8550',textTransform:'uppercase',letterSpacing:'.12em'}}>Connecté</small><br/><b>{me.username}</b><p style={{color:'#d0b272',fontSize:13}}>{roles[me.role]}</p><Btn full color="#5f4725" onClick={logout} style={{marginTop:12}}>Déconnexion</Btn></div>
     </aside>
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
       {page==='dashboard'&&<Dashboard loans={loansForActiveBank} clients={clients} logs={logs} me={me} onMark={mark} onLoanUpdate={u=>setLoans(loans.map(x=>x.id===u.id?u:x))} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} me={me} activeAgence={activeAgence} onActiveAgenceChange={setActiveAgence}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
-    <footer className="bvh-footer"><b>Registre bancaire de Reckless — <span>Institution établie en 1904</span></b><small>Développé et hébergé par Pandore Studio · © 2026 Lathanor</small></footer>
+    <footer className="bvh-footer"><b>Registre bancaire de Reckless — <span>Institution établie en 1904</span></b><small>Développé par Pandore Studio · © 2026 Lathanor</small></footer>
     </main>
   </div>
 }
