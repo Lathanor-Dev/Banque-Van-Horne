@@ -558,6 +558,85 @@ body{
   .bvh-login-official-logo{width:220px}
 }
 
+
+/* ===== Correctif d'affichage du logo et de la barre latérale V7 ===== */
+.bvh-sidebar{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+}
+.bvh-main{min-width:0}
+.bvh-brand-compact{
+  padding:10px 0 14px!important;
+  margin-bottom:14px!important;
+}
+.bvh-brand-emblem{
+  width:118px;
+  max-width:72%;
+  height:auto;
+  display:block;
+  margin:0 auto 9px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 20px rgba(0,0,0,.62));
+}
+.bvh-brand-readable{
+  max-width:220px;
+  margin:0 auto;
+  text-align:center;
+  text-transform:uppercase;
+  font-family:Georgia,"Times New Roman",serif;
+}
+.bvh-brand-readable span{
+  display:block;
+  color:#f7f2e7;
+  font-size:18px;
+  line-height:1.08;
+  font-weight:900;
+  letter-spacing:.065em;
+}
+.bvh-brand-readable strong{
+  display:block;
+  margin-top:4px;
+  color:#f1c96f;
+  font-size:23px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+.bvh-brand-readable small{
+  display:block;
+  margin-top:8px;
+  color:#bfa66e;
+  font-size:8px;
+  line-height:1.35;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+.bvh-nav{
+  flex:none!important;
+}
+.bvh-pandore-panel{
+  flex-shrink:0;
+}
+.bvh-user{
+  flex-shrink:0;
+}
+@media(max-height:820px) and (min-width:761px){
+  .bvh-sidebar{padding-top:10px!important;padding-bottom:12px!important}
+  .bvh-brand-emblem{width:96px;margin-bottom:6px}
+  .bvh-brand-readable span{font-size:16px}
+  .bvh-brand-readable strong{font-size:20px}
+  .bvh-brand-readable small{font-size:7px;margin-top:6px}
+  .bvh-nav{gap:7px!important}
+  .bvh-nav button{padding:10px 12px!important;min-height:0!important}
+  .bvh-bank-context{margin-top:10px!important;padding-top:10px!important}
+  .bvh-pandore-panel{margin-top:10px!important}
+}
+@media(max-width:900px){
+  .bvh-brand-emblem{width:105px}
+  .bvh-brand-readable span{font-size:16px}
+  .bvh-brand-readable strong{font-size:20px}
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -1681,12 +1760,17 @@ function App(){
     </div>
     <div className={'bvh-menu-backdrop '+(menuOpen?'open':'')} onClick={()=>setMenuOpen(false)}></div>
     <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
-      <div className="bvh-brand">
+      <div className="bvh-brand bvh-brand-compact">
         <img
-          className="bvh-brand-logo"
-          src="/logo-registre-reckless.png"
-          alt="Registre bancaire de Reckless — Institution établie en 1904"
+          className="bvh-brand-emblem"
+          src="/logo-registre-reckless-compact.png"
+          alt="Emblème du Registre bancaire de Reckless"
         />
+        <div className="bvh-brand-readable">
+          <span>Registre bancaire</span>
+          <strong>Reckless</strong>
+          <small>Institution établie en 1904</small>
+        </div>
       </div>
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
       <div className="bvh-bank-context">
