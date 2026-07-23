@@ -533,6 +533,31 @@ body{
 .bvh-footer{font-size:13px}
 @media(max-width:760px){.bvh-brand-seal{width:78px;height:78px;font-size:36px}.bvh-brand-title span{font-size:18px}.bvh-brand-title strong{font-size:20px}.bvh-brand-date{font-size:10px!important}}
 
+
+/* ===== Logo officiel du Registre bancaire de Reckless ===== */
+.bvh-brand-logo{
+  width:230px;
+  max-width:94%;
+  height:auto;
+  display:block;
+  margin:0 auto;
+  object-fit:contain;
+  filter:drop-shadow(0 12px 24px rgba(0,0,0,.58));
+}
+.bvh-login-official-logo{
+  width:250px;
+  max-width:88%;
+  height:auto;
+  display:block;
+  margin:0 auto 18px;
+  object-fit:contain;
+  filter:drop-shadow(0 16px 34px rgba(0,0,0,.62));
+}
+@media(max-width:760px){
+  .bvh-brand-logo{width:215px}
+  .bvh-login-official-logo{width:220px}
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -674,7 +699,7 @@ function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
   </div>
 }
 
-function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><div className="bvh-brand-seal" style={{marginBottom:16}}>R</div><h1 style={{color:'#f6d27b',fontSize:30}}>Registre bancaire de Reckless</h1><p style={{color:'#d3b574',fontSize:13,letterSpacing:'.12em',textTransform:'uppercase'}}>Institution établie en 1904</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
+function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-official-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><h1 style={{color:'#f6d27b',fontSize:30}}>Registre bancaire de Reckless</h1><p style={{color:'#d3b574',fontSize:13,letterSpacing:'.12em',textTransform:'uppercase'}}>Accès sécurisé au registre</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
 
 function UserPanel({me,users,setUsers,notify}){const[f,setF]=useState({username:'',password:'',role:'employe'}); const canCreate=['admin','directeur','co_directeur'].includes(me.role); async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF({username:'',password:'',role:'employe'});notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}} async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}} async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}return <div><h1 style={{marginBottom:18}}>Utilisateurs</h1>{canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 180px auto',gap:10,alignItems:'end'}}><Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/><Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/><Select label="Rôle" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="employe">Employé</option>{roleRank[me.role]>=2&&<option value="co_directeur">Co-directeur</option>}{roleRank[me.role]>=3&&<option value="directeur">Directeur</option>}</Select><Btn onClick={add}>Créer</Btn></div>}<div style={{display:'grid',gap:10}}>{users.map(u=><div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'flex',alignItems:'center',gap:12}}><b style={{flex:1}}>{u.username} {u.protected?'🔒':''}</b><span style={{color:C.muted}}>{roles[u.role]||u.role}</span><Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn><Btn color={C.red} onClick={()=>del(u)}>Supprimer</Btn></div>)}</div></div>}
 
@@ -1657,15 +1682,11 @@ function App(){
     <div className={'bvh-menu-backdrop '+(menuOpen?'open':'')} onClick={()=>setMenuOpen(false)}></div>
     <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
       <div className="bvh-brand">
-        <div className="bvh-brand-seal">R</div>
-        <div className="bvh-brand-title">
-          <span>Registre bancaire</span>
-          <strong>Reckless</strong>
-        </div>
-        <div className="bvh-brand-date">
-          <span>Institution établie en</span>
-          <strong className="bvh-brand-year">1904</strong>
-        </div>
+        <img
+          className="bvh-brand-logo"
+          src="/logo-registre-reckless.png"
+          alt="Registre bancaire de Reckless — Institution établie en 1904"
+        />
       </div>
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
       <div className="bvh-bank-context">
