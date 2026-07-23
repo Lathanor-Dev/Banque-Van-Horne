@@ -1,4 +1,4 @@
-const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
+﻿const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
 
 function safeClientId(v){
   if(v === undefined || v === null || v === '') return null;
@@ -84,7 +84,7 @@ function rowMatchesBank(row, bank_code){
   return bankCodeFrom(agence) === bank_code;
 }
 async function generateLoanId(bank_code, offset = 0){
-  const prefix = bank_code === 'SD' ? 'SD' : 'VH';
+  const prefix = bank_code === 'SD' ? 'SD' : bank_code === 'RH' ? 'RH' : 'VH';
 
   const { data, error } = await sb
     .from('pret_loans')
@@ -193,7 +193,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
     }
 
     const agence = safeAgence(b.agence || b.bank_code);
-    const bank_code = String(b.bank_code || bankCodeFrom(agence)).trim() === 'SD' ? 'SD' : 'VH';
+    const bank_code = bankCodeFrom(agence);
 
     const payload={
       bank_code,
@@ -252,7 +252,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
     if(b.agence !== undefined || b.bank_code !== undefined){
       const agence = safeAgence(b.agence || b.bank_code);
       patch.agence = agence;
-      patch.bank_code = String(b.bank_code || bankCodeFrom(agence)).trim() === 'SD' ? 'SD' : 'VH';
+      patch.bank_code = bankCodeFrom(agence);
     }
     // La référence d'un prêt existant reste stable. Elle n'est pas modifiée depuis le navigateur,
     // pour éviter les collisions ou les erreurs de double dossier.

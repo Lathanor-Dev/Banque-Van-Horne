@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Banque Van Horn</title>
+<title>Banque de Reckless RP</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -404,6 +404,77 @@ button:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .bvh-loan-tab.active.toutes-agences{border-color:#4d8fbd}
 @media(max-width:900px){.bvh-recovery-grid{grid-template-columns:1fr}.bvh-recovery-grid button{width:100%;justify-content:center}}
 
+
+/* ===== Pandore Studio x Banque de Reckless RP ===== */
+:root{
+  --pandore-black:#030303;
+  --pandore-gray:#1d1d1f;
+  --pandore-white:#f7f7f2;
+  --pandore-gold:#d7a64d;
+  --pandore-gold-soft:#f2cf7a;
+  --pandore-green:#37c886;
+  --pandore-line:rgba(215,166,77,.42);
+}
+body{
+  background:
+    radial-gradient(circle at 20% 0%,rgba(215,166,77,.14),transparent 28%),
+    radial-gradient(circle at 78% 8%,rgba(55,200,134,.08),transparent 24%),
+    linear-gradient(135deg,#050505 0%,#120b06 42%,#020202 100%);
+}
+.bvh-main{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 28%),
+    radial-gradient(circle at top right,rgba(55,200,134,.055),transparent 32%),
+    linear-gradient(180deg,#100b07cc,#050505ee)!important;
+}
+.bvh-sidebar{
+  background:linear-gradient(180deg,#050505,#11100f 45%,#070504)!important;
+  border-right:1px solid var(--pandore-line)!important;
+}
+.bvh-sidebar:after{background:linear-gradient(180deg,transparent,var(--pandore-gold),transparent)!important;opacity:.78}
+.bvh-brand-title{color:var(--pandore-white)!important;letter-spacing:.07em}
+.bvh-brand-date{color:var(--pandore-gold)!important}
+.bvh-card,.bvh-ledger,.bvh-calendar-panel,.bvh-recovery-panel,.bvh-loans-head,.bvh-loan-filter-panel,.bvh-topbar{
+  border-color:var(--pandore-line)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 14px 30px rgba(0,0,0,.42)!important;
+}
+.bvh-card:before{height:2px;background:linear-gradient(90deg,var(--pandore-gold),var(--pandore-green),transparent)!important}
+.bvh-nav button{
+  background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(215,166,77,.035))!important;
+  border-color:rgba(215,166,77,.22)!important;
+  color:#d9c79b!important;
+}
+.bvh-nav button.active{
+  color:var(--pandore-white)!important;
+  background:linear-gradient(90deg,rgba(55,200,134,.20),rgba(215,166,77,.16))!important;
+  border-color:rgba(55,200,134,.62)!important;
+  box-shadow:0 0 22px rgba(55,200,134,.13),inset 0 0 0 1px rgba(255,255,255,.05)!important;
+}
+.bvh-pandore-panel{
+  display:flex;gap:12px;align-items:center;margin:0 0 16px;padding:13px 12px;
+  border:1px solid rgba(215,166,77,.42);border-radius:12px;
+  background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(215,166,77,.09) 48%,rgba(55,200,134,.08));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03),0 8px 18px rgba(0,0,0,.35);
+}
+.bvh-pandore-mark{
+  width:42px;height:42px;border-radius:11px;border:1px solid rgba(215,166,77,.65);
+  display:flex;align-items:center;justify-content:center;color:var(--pandore-gold-soft);
+  font-family:Arial,sans-serif;font-weight:900;font-size:25px;letter-spacing:-.08em;
+  background:linear-gradient(135deg,#111,#050505);box-shadow:0 0 18px rgba(215,166,77,.12);
+}
+.bvh-pandore-panel b{display:block;color:var(--pandore-white);letter-spacing:.05em;text-transform:uppercase;font-size:13px}
+.bvh-pandore-panel span{display:block;color:var(--pandore-gold);font-size:11px;margin-top:3px;text-transform:uppercase;letter-spacing:.12em}
+.bvh-footer{
+  margin-top:22px;padding:15px 18px;border:1px solid rgba(215,166,77,.32);border-radius:12px;
+  background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(55,200,134,.055),rgba(215,166,77,.045));
+  color:#cdbb90;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+}
+.bvh-footer b{color:var(--pandore-white)}
+.bvh-footer span{color:var(--pandore-gold)}
+.bvh-mini-badge.agence{background:linear-gradient(90deg,#24374c,#315b45)!important;border:1px solid rgba(55,200,134,.36)}
+.bvh-login-card{border-color:rgba(215,166,77,.66)!important;border-top-color:var(--pandore-green)!important}
+@media(max-width:760px){.bvh-footer{font-size:13px}.bvh-pandore-panel{margin-top:4px}}
 </style>
 </head>
 <body><div id="root"></div>
@@ -451,15 +522,15 @@ function schedule({capital,rate,n,start}){const p=payment(capital,rate,n); const
 function st(e){if(e.statut==='paye')return 'paye'; const d=daysDiff(e.date); return d<0?'retard':d===0?'aujourdhui':'avenir';}
 const ST={retard:['#ff4444','#fff','En retard'],aujourdhui:['#ff8800','#fff',"Aujourd'hui"],avenir:['#e6b800','#111','À venir'],paye:['#2ecc71','#fff','Payé']};
 function Badge({s}){const a=ST[s]||ST.avenir;return <span style={{padding:'3px 10px',borderRadius:20,fontSize:12,fontWeight:700,background:a[0],color:a[1]}}>{a[2]}</span>}
-const AGENCIES={van_horn:'Van Horn',saint_denis:'Saint-Denis'};
-const BANKS={toutes:'Toutes les banques',van_horn:'Van Horn',saint_denis:'Saint-Denis'};
+const AGENCIES={van_horn:'Van Horn',saint_denis:'Saint-Denis',rhodes:'Rhodes'};
+const BANKS={toutes:'Toutes les banques',van_horn:'Van Horn',saint_denis:'Saint-Denis',rhodes:'Rhodes'};
 function normalizeAgence(value){
   const v=String(value||'').trim();
   if(v==='SD'||v==='saint_denis')return 'saint_denis';
   if(v==='VH'||v==='van_horn')return 'van_horn';
   return 'van_horn';
 }
-function agenceCode(value){return normalizeAgence(value)==='saint_denis'?'SD':'VH';}
+function agenceCode(value){const a=normalizeAgence(value);return a==='saint_denis'?'SD':a==='rhodes'?'RH':'VH';}
 function loanAgence(loan){return normalizeAgence(loan?.agence||loan?.bank_code||'van_horn');}
 function bankDisplay(value){return BANKS[value]||agenceLabel(value);}
 const RECOUVREMENT_STATES={
@@ -544,7 +615,7 @@ function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
   </div>
 }
 
-function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-logo" src="/logo-vh.png" alt="Banque Van Horn"/><h1 style={{color:'#f6d27b',fontSize:30}}>Banque Van Horn</h1><p style={{color:'#d3b574',fontSize:13,letterSpacing:'.12em',textTransform:'uppercase'}}>Système interne sécurisé • 1904</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
+function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-logo" src="/logo-vh.png" alt="Banque Van Horn"/><h1 style={{color:'#f6d27b',fontSize:30}}>Banque de Reckless RP</h1><p style={{color:'#d3b574',fontSize:13,letterSpacing:'.12em',textTransform:'uppercase'}}>Système interne sécurisé • 1904</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
 
 function UserPanel({me,users,setUsers,notify}){const[f,setF]=useState({username:'',password:'',role:'employe'}); const canCreate=['admin','directeur','co_directeur'].includes(me.role); async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF({username:'',password:'',role:'employe'});notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}} async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}} async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}return <div><h1 style={{marginBottom:18}}>Utilisateurs</h1>{canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 180px auto',gap:10,alignItems:'end'}}><Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/><Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/><Select label="Rôle" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="employe">Employé</option>{roleRank[me.role]>=2&&<option value="co_directeur">Co-directeur</option>}{roleRank[me.role]>=3&&<option value="directeur">Directeur</option>}</Select><Btn onClick={add}>Créer</Btn></div>}<div style={{display:'grid',gap:10}}>{users.map(u=><div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'flex',alignItems:'center',gap:12}}><b style={{flex:1}}>{u.username} {u.protected?'🔒':''}</b><span style={{color:C.muted}}>{roles[u.role]||u.role}</span><Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn><Btn color={C.red} onClick={()=>del(u)}>Supprimer</Btn></div>)}</div></div>}
 
@@ -671,7 +742,7 @@ function LoanModal({open,onClose,onSave,loan,clients,prefill,defaultAgence='van_
     }
   }
   const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:680,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Select label="Banque" value={normalizeAgence(f.agence)} onChange={e=>setF({...f,agence:e.target.value})}><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option></Select></div><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/>{loan&&<><Sec>Suivi de recouvrement</Sec><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Select label="Statut recouvrement" value={f.recouvrement_status||'aucun'} onChange={e=>setF({...f,recouvrement_status:e.target.value})}>{Object.entries(RECOUVREMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select><Inp label="Ouvert depuis" value={f.recouvrement_started_at?new Date(f.recouvrement_started_at).toLocaleString('fr-FR'):'—'} readOnly/></div><Txt label="Notes recouvrement" value={f.recouvrement_notes||''} onChange={e=>setF({...f,recouvrement_notes:e.target.value})}/></>}<div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" disabled={saving} onClick={onClose}>Annuler</Btn><Btn disabled={saving} onClick={save}>{saving?'Enregistrement…':'Enregistrer'}</Btn></div></div></div>
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:680,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Select label="Banque" value={normalizeAgence(f.agence)} onChange={e=>setF({...f,agence:e.target.value})}><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option><option value="rhodes">Rhodes</option><option value="rhodes">Rhodes</option></Select></div><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/>{loan&&<><Sec>Suivi de recouvrement</Sec><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Select label="Statut recouvrement" value={f.recouvrement_status||'aucun'} onChange={e=>setF({...f,recouvrement_status:e.target.value})}>{Object.entries(RECOUVREMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select><Inp label="Ouvert depuis" value={f.recouvrement_started_at?new Date(f.recouvrement_started_at).toLocaleString('fr-FR'):'—'} readOnly/></div><Txt label="Notes recouvrement" value={f.recouvrement_notes||''} onChange={e=>setF({...f,recouvrement_notes:e.target.value})}/></>}<div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" disabled={saving} onClick={onClose}>Annuler</Btn><Btn disabled={saving} onClick={save}>{saving?'Enregistrement…':'Enregistrer'}</Btn></div></div></div>
 }
 
 function LoanDetail({loan,onBack,onUpdate,onDelete,notify,me}){
@@ -777,7 +848,7 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
     </div>
     <div className="bvh-loan-filter-panel">
       <div className="bvh-loan-tabs">{categories.map(([key,label])=><button key={key} className={'bvh-loan-tab '+(category===key?'active ':'')+key} onClick={()=>setCategory(key)}><span>{label}</span><b>{counts[key]}</b></button>)}</div>
-      <div style={{display:'flex',gap:10,alignItems:'end',flexWrap:'wrap'}}><div style={{minWidth:180}}><Select label="Banque" value={agency} onChange={e=>{setAgency(e.target.value);onActiveAgenceChange?.(e.target.value)}}><option value="toutes">Toutes les banques</option><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option></Select></div><div className="bvh-loan-search"><Inp label="Recherche" placeholder="Client, référence, télégramme…" value={query} onChange={e=>setQuery(e.target.value)}/></div></div>
+      <div style={{display:'flex',gap:10,alignItems:'end',flexWrap:'wrap'}}><div style={{minWidth:180}}><Select label="Banque" value={agency} onChange={e=>{setAgency(e.target.value);onActiveAgenceChange?.(e.target.value)}}><option value="toutes">Toutes les banques</option><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option><option value="rhodes">Rhodes</option><option value="rhodes">Rhodes</option><option value="rhodes">Rhodes</option><option value="rhodes">Rhodes</option></Select></div><div className="bvh-loan-search"><Inp label="Recherche" placeholder="Client, référence, télégramme…" value={query} onChange={e=>setQuery(e.target.value)}/></div></div>
     </div>
     <div className="bvh-loan-filter-summary">
       <span>{category==='tous'?'Tous les prêts':categories.find(x=>x[0]===category)?.[1]} · {agency==='toutes'?'Toutes banques':agenceLabel(agency)}</span>
@@ -1527,6 +1598,7 @@ function App(){
     <div className={'bvh-menu-backdrop '+(menuOpen?'open':'')} onClick={()=>setMenuOpen(false)}></div>
     <aside className={'bvh-sidebar '+(menuOpen?'open':'')}>
       <div className="bvh-brand"><img src="/logo-vh.png" alt="Banque Van Horn"/><div className="bvh-brand-title">Banque Van Horn</div><div className="bvh-brand-date">Établie en 1904</div></div>
+      <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Plateforme bancaire RP</span></div></div>
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
       <div style={{borderTop:'1px solid #6d4b2266',paddingTop:12,marginTop:14}}>
         <Select label="Banque active" value={activeAgence} onChange={e=>setActiveAgence(e.target.value)}>
@@ -1540,6 +1612,7 @@ function App(){
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
       {page==='dashboard'&&<Dashboard loans={loansForActiveBank} clients={clients} logs={logs} me={me} onMark={mark} onLoanUpdate={u=>setLoans(loans.map(x=>x.id===u.id?u:x))} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} me={me} activeAgence={activeAgence} onActiveAgenceChange={setActiveAgence}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
+    <footer className="bvh-footer"><b>Banque de Reckless RP â€” <span>Une plateforme Pandore Studio</span></b><small>Â© 2026 Lathanor. Tous droits rÃ©servÃ©s.</small></footer>
     </main>
   </div>
 }
