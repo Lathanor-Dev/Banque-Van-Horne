@@ -750,6 +750,152 @@ body{
   }
 }
 
+
+/* ===== Footer institutionnel + pages d'information V13 ===== */
+.bvh-site-footer{
+  margin-top:28px;
+  padding:22px 20px 24px;
+  border-top:1px solid rgba(215,166,77,.24);
+  color:#8f8775;
+  text-align:center;
+}
+.bvh-footer-brand{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+  color:#d7c8a0;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.bvh-footer-brand strong{
+  color:#f4d27f;
+}
+.bvh-footer-brand span{
+  color:#8d826a;
+}
+.bvh-footer-links{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.bvh-footer-links button{
+  border:0;
+  background:transparent;
+  padding:5px 2px;
+  color:#9f9685;
+  font:inherit;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  transition:color .15s ease, transform .15s ease;
+}
+.bvh-footer-links button:hover{
+  color:#f4d27f;
+  transform:translateY(-1px);
+}
+.bvh-info-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  background:rgba(0,0,0,.72);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  backdrop-filter:blur(4px);
+}
+.bvh-info-modal{
+  width:min(760px,100%);
+  max-height:min(82vh,760px);
+  overflow:auto;
+  border:1px solid rgba(215,166,77,.42);
+  border-top-color:rgba(55,200,134,.55);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at top right,rgba(55,200,134,.08),transparent 30%),
+    linear-gradient(180deg,#18100b,#080604 82%);
+  box-shadow:0 28px 70px rgba(0,0,0,.62), inset 0 0 0 1px rgba(255,255,255,.025);
+  padding:24px;
+  color:#d8c79c;
+}
+.bvh-info-modal-header{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+  border-bottom:1px solid rgba(215,166,77,.22);
+  padding-bottom:14px;
+  margin-bottom:16px;
+}
+.bvh-info-modal small{
+  display:block;
+  color:#9d8555;
+  text-transform:uppercase;
+  letter-spacing:.16em;
+  font-weight:900;
+  margin-bottom:5px;
+}
+.bvh-info-modal h2{
+  color:#f6d27b;
+  margin:0;
+  font-size:28px;
+  line-height:1.1;
+}
+.bvh-info-close{
+  border:1px solid rgba(215,166,77,.34);
+  background:rgba(255,255,255,.035);
+  color:#f4d27f;
+  border-radius:10px;
+  min-width:38px;
+  height:38px;
+  font-weight:900;
+  cursor:pointer;
+}
+.bvh-info-modal p{
+  line-height:1.62;
+  margin:0 0 12px;
+}
+.bvh-info-modal ul{
+  margin:8px 0 0;
+  padding-left:20px;
+}
+.bvh-info-modal li{
+  margin:8px 0;
+  line-height:1.5;
+}
+.bvh-info-note{
+  margin-top:16px;
+  padding:12px 14px;
+  border:1px solid rgba(55,200,134,.22);
+  border-radius:12px;
+  background:rgba(55,200,134,.055);
+  color:#b9cdb9;
+  font-size:14px;
+}
+@media(max-width:760px){
+  .bvh-site-footer{
+    padding:18px 12px 20px;
+    font-size:13px;
+  }
+  .bvh-footer-links{
+    gap:11px;
+  }
+  .bvh-footer-links button{
+    font-size:13px;
+  }
+  .bvh-info-modal{
+    padding:18px;
+  }
+  .bvh-info-modal h2{
+    font-size:23px;
+  }
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -1775,8 +1921,120 @@ function Card({title,value,icon,color}){return <InfoCard icon={icon} title={titl
 function EcheancesTable({items,onMark}){return <div className="bvh-ledger">{items.length===0?<p className="bvh-empty">Aucune échéance.</p>:items.map((e,i)=><div key={i} className="bvh-row"><b>{e.loan.prenom} {e.loan.nom}</b><span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></div>)}</div>}
 function LogsPage({logs}){return <div><h1 style={{marginBottom:18}}>Logs</h1><div style={{display:'grid',gap:8}}>{logs.map(l=><div key={l.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:12}}><b>{new Date(l.created_at).toLocaleString('fr-FR')} — {l.username}</b><p style={{color:C.gold}}>{l.action}</p><pre style={{whiteSpace:'pre-wrap',color:C.muted,fontSize:12}}>{JSON.stringify(l.details||{},null,2)}</pre></div>)}</div></div>}
 
+
+const footerInfoPages={
+  about:{
+    title:'À propos',
+    intro:'Présentation du registre',
+    body:[
+      'Le Registre bancaire de Reckless est une plateforme RP destinée à centraliser les opérations bancaires du serveur : prêts, dossiers clients, échéances, agenda et suivi des banques consultées.',
+      'L’objectif est d’avoir un outil clair, propre et cohérent pour les joueurs et l’équipe, sans limiter la plateforme à une seule banque.'
+    ],
+    list:[
+      'Registre multi-banques : Van Horn, Saint-Denis, Rhodes et autres évolutions possibles.',
+      'Interface pensée pour un usage RP simple et rapide.',
+      'Plateforme conçue et développée par Pandore Studio.'
+    ]
+  },
+  help:{
+    title:'Aide',
+    intro:'Utilisation rapide',
+    body:[
+      'Le tableau de bord donne une vue générale des opérations : capital prêté, montants à récupérer, échéances, retards et dernières activités.',
+      'Les sections du menu permettent de gérer les prêts, les clients, l’agenda, le crédit hippique, les comptes autorisés et le journal d’activité selon les droits de l’utilisateur connecté.'
+    ],
+    list:[
+      'Utilise « Banque consultée » pour filtrer les informations par banque.',
+      'La page « Prêts » sert à créer, consulter et suivre les remboursements.',
+      'La page « Clients » centralise les dossiers et raccourcis utiles.',
+      'La page « Agenda » sert au suivi des rendez-vous et échéances RP.'
+    ]
+  },
+  privacy:{
+    title:'Confidentialité',
+    intro:'Données utilisées',
+    body:[
+      'La plateforme est prévue pour un usage RP. Les informations enregistrées doivent rester liées au jeu, au serveur et à l’organisation interne du registre.',
+      'Les données utilisées servent au fonctionnement du site : comptes d’accès, rôles, dossiers clients RP, prêts RP, échéances, agenda et journal d’activité.'
+    ],
+    list:[
+      'Évite d’entrer des données personnelles réelles si elles ne sont pas nécessaires au RP.',
+      'Les accès sont réservés aux personnes autorisées.',
+      'Pour une correction ou une suppression d’information, il faut contacter un administrateur du registre.'
+    ],
+    note:'Cette page est une note de fonctionnement interne et ne remplace pas un document juridique rédigé par un professionnel.'
+  },
+  terms:{
+    title:'CGU',
+    intro:'Règles d’utilisation',
+    body:[
+      'L’utilisation du Registre bancaire de Reckless est réservée aux membres autorisés dans le cadre du serveur RP.',
+      'Chaque utilisateur doit respecter les accès qui lui sont attribués et utiliser la plateforme uniquement pour les besoins du jeu et de l’organisation du registre.'
+    ],
+    list:[
+      'Ne pas partager ses accès.',
+      'Ne pas modifier ou supprimer des informations sans raison RP ou administrative valable.',
+      'Ne pas utiliser la plateforme pour stocker des informations hors sujet.',
+      'Signaler tout bug, problème d’affichage ou erreur de données à l’équipe.'
+    ]
+  },
+  legal:{
+    title:'Mentions légales',
+    intro:'Informations du projet',
+    body:[
+      'Le Registre bancaire de Reckless est un outil communautaire RP. Il ne s’agit pas d’un service bancaire réel et aucun montant affiché ne représente une opération financière réelle.',
+      'La plateforme est conçue et développée par Pandore Studio pour l’usage du serveur Reckless RP.'
+    ],
+    list:[
+      'Nom du projet : Registre bancaire de Reckless.',
+      'Usage : outil RP de gestion bancaire fictive.',
+      'Conception et développement : Pandore Studio.',
+      'Contact : via l’équipe administrative du serveur ou Lathanor.'
+    ],
+    note:'Les éléments visuels, textes et fonctionnalités sont destinés à un usage RP et communautaire.'
+  }
+};
+
+function FooterInfoModal({active,onClose}){
+  if(!active)return null;
+  const page=footerInfoPages[active];
+  if(!page)return null;
+  return <div className="bvh-info-backdrop" onClick={onClose}>
+    <section className="bvh-info-modal" onClick={e=>e.stopPropagation()} role="dialog" aria-modal="true" aria-label={page.title}>
+      <div className="bvh-info-modal-header">
+        <div>
+          <small>{page.intro}</small>
+          <h2>{page.title}</h2>
+        </div>
+        <button className="bvh-info-close" onClick={onClose} aria-label="Fermer">×</button>
+      </div>
+      {page.body.map((p,i)=><p key={'p'+i}>{p}</p>)}
+      {page.list&&<ul>{page.list.map((item,i)=><li key={'li'+i}>{item}</li>)}</ul>}
+      {page.note&&<div className="bvh-info-note">{page.note}</div>}
+    </section>
+  </div>
+}
+
+function SiteFooter({onOpen}){
+  return <footer className="bvh-site-footer">
+    <div className="bvh-footer-brand">
+      <span>© 2026</span>
+      <strong>Pandore Studio</strong>
+      <span>·</span>
+      <span>Registre bancaire de Reckless</span>
+    </div>
+    <nav className="bvh-footer-links" aria-label="Informations du site">
+      <button type="button" onClick={()=>onOpen('about')}>À propos</button>
+      <button type="button" onClick={()=>onOpen('help')}>Aide</button>
+      <button type="button" onClick={()=>onOpen('legal')}>Mentions légales</button>
+      <button type="button" onClick={()=>onOpen('privacy')}>Confidentialité</button>
+      <button type="button" onClick={()=>onOpen('terms')}>CGU</button>
+    </nav>
+  </footer>
+}
+
 function App(){
-  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null),[activeAgence,setActiveAgence]=useState('toutes');
+  const[me,setMe]=useState(null),[loading,setLoading]=useState(true),[page,setPage]=useState('dashboard'),[footerPage,setFooterPage]=useState(null),[toast,setToast]=useState(''),[loans,setLoans]=useState([]),[clients,setClients]=useState([]),[appointments,setAppointments]=useState([]),[applications,setApplications]=useState([]),[users,setUsers]=useState([]),[logs,setLogs]=useState([]),[menuOpen,setMenuOpen]=useState(false),[refreshing,setRefreshing]=useState(false),[loanDraftActive,setLoanDraftActive]=useState(false),[clientFocus,setClientFocus]=useState(null),[loanPrefill,setLoanPrefill]=useState(null),[loanFocus,setLoanFocus]=useState(null),[agendaPrefill,setAgendaPrefill]=useState(null),[activeAgence,setActiveAgence]=useState('toutes');
   const notify=m=>{setToast(m);setTimeout(()=>setToast(''),3000)};
   async function loadAll(user){
     const req=[api.loans(),api.clients(),api.agenda(),api.creditApplications()];
@@ -1866,7 +2124,7 @@ function App(){
     choosePage('agenda');
   }
   const loansForActiveBank=loans.filter(l=>activeAgence==='toutes'||loanAgence(l)===activeAgence);
-  return <div className="bvh-shell"><Toast msg={toast}/>
+  return <div className="bvh-shell"><Toast msg={toast}/><FooterInfoModal active={footerPage} onClose={()=>setFooterPage(null)}/>
     <div className="bvh-mobile-top">
       <button className="bvh-mobile-menu-button" aria-label="Ouvrir le menu" onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?'✕':'☰'}</button>
       <div className="bvh-mobile-title"><b>Registre bancaire de Reckless</b><span>Institution établie en 1904 · {roles[me.role]}</span></div>
@@ -1898,7 +2156,7 @@ function App(){
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
       {page==='dashboard'&&<Dashboard loans={loansForActiveBank} clients={clients} logs={logs} me={me} onMark={mark} onLoanUpdate={u=>setLoans(loans.map(x=>x.id===u.id?u:x))} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} me={me} activeAgence={activeAgence} onActiveAgenceChange={setActiveAgence}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
-    <footer className="bvh-footer"><b>Registre bancaire de Reckless — <span>Institution établie en 1904</span></b><small>Conçu et développé par Pandore Studio · © 2026 Lathanor</small></footer>
+    <SiteFooter onOpen={setFooterPage}/>
     </main>
   </div>
 }
