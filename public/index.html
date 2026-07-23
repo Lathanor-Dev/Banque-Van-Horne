@@ -1658,13 +1658,13 @@ function App(){
           <option value="rhodes">Rhodes</option>
         </Select>
       </div>
-      <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Développement de la plateforme</span></div></div>
+      <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Conception &amp; développement</span></div></div>
       <div className="bvh-user"><small style={{color:'#9f8550',textTransform:'uppercase',letterSpacing:'.12em'}}>Connecté</small><br/><b>{me.username}</b><p style={{color:'#d0b272',fontSize:13}}>{roles[me.role]}</p><Btn full color="#5f4725" onClick={logout} style={{marginTop:12}}>Déconnexion</Btn></div>
     </aside>
     <main className="bvh-main">
       {refreshing&&<div style={{position:'fixed',right:18,top:18,zIndex:998,background:'#25170c',border:'1px solid #c9943c',color:'#f3d58a',borderRadius:8,padding:'8px 12px',fontWeight:800,fontSize:13,boxShadow:'0 8px 24px #0008'}}>Actualisation des données…</div>}
       {page==='dashboard'&&<Dashboard loans={loansForActiveBank} clients={clients} logs={logs} me={me} onMark={mark} onLoanUpdate={u=>setLoans(loans.map(x=>x.id===u.id?u:x))} appointments={appointments} onOpenAgenda={()=>choosePage('agenda')} onOpenClient={openClientDossier} onOpenLoan={openLoanDetails} notify={notify}/>} {page==='prets'&&<LoansPage loans={loans} clients={clients} setLoans={setLoans} notify={notify} onLoanDraftChange={setLoanDraftActive} openForClient={loanPrefill} onQuickLoanHandled={()=>setLoanPrefill(null)} openLoanId={loanFocus} onOpenLoanHandled={()=>setLoanFocus(null)} me={me} activeAgence={activeAgence} onActiveAgenceChange={setActiveAgence}/>} {page==='clients'&&<ClientsPage clients={clients} setClients={setClients} loans={loans} appointments={appointments} applications={applications} setApplications={setApplications} notify={notify} openClientId={clientFocus} onOpenClientHandled={()=>setClientFocus(null)} onQuickLoan={openQuickLoan} onQuickAppointment={openQuickAppointment}/>} {page==='agenda'&&<AgendaPage appointments={appointments} setAppointments={setAppointments} clients={clients} me={me} notify={notify} openForClient={agendaPrefill} onQuickAppointmentHandled={()=>setAgendaPrefill(null)}/>} {page==='hippique'&&<HorseCreditPage clients={clients} notify={notify}/>} {page==='users'&&<UserPanel me={me} users={users} setUsers={setUsers} notify={notify}/>} {page==='logs'&&<LogsPage logs={logs}/>}
-    <footer className="bvh-footer"><b>Registre bancaire de Reckless — <span>Institution établie en 1904</span></b><small>Développé par Pandore Studio · © 2026 Lathanor</small></footer>
+    <footer className="bvh-footer"><b>Registre bancaire de Reckless — <span>Institution établie en 1904</span></b><small>Conçu et développé par Pandore Studio · © 2026 Lathanor</small></footer>
     </main>
   </div>
 }
