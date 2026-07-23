@@ -505,8 +505,15 @@ body{
   border-bottom:1px solid rgba(215,166,77,.44);
 }
 .bvh-brand-date{
-  margin-top:11px!important;color:#bfa66e!important;
-  font-size:9px!important;letter-spacing:.15em!important;line-height:1.45;
+  margin-top:12px!important;color:#bfa66e!important;
+  font-size:9px!important;letter-spacing:.14em!important;line-height:1.35;
+  text-transform:uppercase;
+}
+.bvh-brand-date span{display:block}
+.bvh-brand-year{
+  display:block;margin-top:5px;color:#f1c96f;
+  font-size:15px;line-height:1;font-weight:900;
+  letter-spacing:.18em;
 }
 .bvh-pandore-panel{margin:14px 0 0!important;padding:10px 11px!important;opacity:.82}
 .bvh-pandore-panel b{font-size:11px!important}
@@ -515,7 +522,7 @@ body{
 .bvh-bank-context{margin-top:14px;padding-top:13px;border-top:1px solid rgba(215,166,77,.24)}
 .bvh-bank-context-title{display:block;margin-bottom:7px;color:#9f8550;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.16em}
 .bvh-footer{font-size:13px}
-@media(max-width:760px){.bvh-brand-seal{width:78px;height:78px;font-size:36px}.bvh-brand-title span{font-size:18px}.bvh-brand-title strong{font-size:20px}}
+@media(max-width:760px){.bvh-brand-seal{width:78px;height:78px;font-size:36px}.bvh-brand-title span{font-size:18px}.bvh-brand-title strong{font-size:20px}.bvh-brand-year{font-size:14px}}
 
 </style>
 </head>
@@ -1646,7 +1653,10 @@ function App(){
           <span>Registre bancaire</span>
           <strong>Reckless</strong>
         </div>
-        <div className="bvh-brand-date">Institution établie en 1904</div>
+        <div className="bvh-brand-date">
+          <span>Institution établie en</span>
+          <strong className="bvh-brand-year">1904</strong>
+        </div>
       </div>
       <nav className="bvh-nav">{menu.map(m=><button key={m[0]} className={page===m[0]?'active':''} onClick={()=>choosePage(m[0])}>{m[1]} {m[2]}</button>)}</nav>
       <div className="bvh-bank-context">
