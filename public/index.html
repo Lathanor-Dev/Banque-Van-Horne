@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
@@ -896,6 +896,49 @@ body{
   }
 }
 
+/* ===== Recouvrement clôturé : noir visible + bas de liste ===== */
+.bvh-loan-card.recouvrement-cloture{
+  background:
+    linear-gradient(180deg,#090909 0%,#010101 100%)!important;
+  border-color:#000!important;
+  border-left-color:#000!important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.12),
+    0 0 0 2px rgba(0,0,0,.95),
+    inset 0 0 0 1px rgba(255,255,255,.04),
+    0 8px 20px rgba(0,0,0,.55)!important;
+  opacity:.88;
+  filter:saturate(.62);
+}
+.bvh-loan-card.recouvrement-cloture:hover{
+  border-color:#222!important;
+  border-left-color:#000!important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.18),
+    0 0 22px rgba(0,0,0,.85),
+    inset 0 0 0 1px rgba(255,255,255,.05)!important;
+}
+.bvh-loan-card.recouvrement-cloture .bvh-loan-status,
+.bvh-loan-card.recouvrement-cloture .bvh-mini-badge.recouvrement{
+  background:#000!important;
+  color:#f6f6f6!important;
+  border:1px solid rgba(255,255,255,.28)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)!important;
+}
+.bvh-loan-card.recouvrement-cloture .bvh-loan-reference,
+.bvh-loan-card.recouvrement-cloture .bvh-loan-client,
+.bvh-loan-card.recouvrement-cloture .bvh-loan-amounts span,
+.bvh-loan-card.recouvrement-cloture .bvh-loan-next b{
+  color:#e5e7eb!important;
+}
+.bvh-loan-card.recouvrement-cloture .bvh-loan-telegram,
+.bvh-loan-card.recouvrement-cloture .bvh-loan-amounts i,
+.bvh-loan-card.recouvrement-cloture .bvh-loan-next span{
+  color:#9ca3af!important;
+}
+.bvh-loan-card.recouvrement-cloture .bvh-loan-next.complete b{
+  color:#d1d5db!important;
+}
 </style>
 </head>
 <body><div id="root"></div>
@@ -961,12 +1004,19 @@ const RECOUVREMENT_STATES={
   mise_en_demeure:['Mise en demeure','#d97706'],
   recouvrement_actif:['Recouvrement actif','#b94735'],
   saisie_garantie:['Saisie / garantie','#7f1d1d'],
-  cloture:['Clôturé','#3f9b67']
+  cloture:['Cl\u00f4tur\u00e9','#050505']
 };
 function agenceLabel(v){return AGENCIES[normalizeAgence(v)]||'Van Horn';}
 function recouvrementLabel(v){return (RECOUVREMENT_STATES[v||'aucun']||RECOUVREMENT_STATES.aucun)[0];}
 function recouvrementColor(v){return (RECOUVREMENT_STATES[v||'aucun']||RECOUVREMENT_STATES.aucun)[1];}
-function isLoanInRecouvrement(l){const s=l?.recouvrement_status||'aucun';return s!=='aucun'&&s!=='cloture';}
+function normalizeRecouvrementStatus(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+function isLoanInRecouvrement(l){const s=normalizeRecouvrementStatus(l?.recouvrement_status||'aucun');return s!==''&&s!=='aucun';}
+function isLoanFullyPaid(l){const es=Array.isArray(l?.echeances)?l.echeances:[];return es.length>0&&es.every(e=>e?.statut==='paye');}
+function isLoanRecouvrementCloture(l){
+  const s=normalizeRecouvrementStatus(l?.recouvrement_status);
+  const closedStatuses=['cloture','cloturee','clos','ferme','fermee','termine','terminee','solde','soldee'];
+  return closedStatuses.includes(s)||(isLoanInRecouvrement(l)&&isLoanFullyPaid(l));
+}
 function RecoveryBadge({status}){const color=recouvrementColor(status);return <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',background:color,color:'#fff',borderRadius:20,padding:'4px 10px',fontWeight:900,fontSize:12,whiteSpace:'nowrap'}}>{recouvrementLabel(status)}</span>}
 function AgencyBadge({agence}){return <span className="bvh-mini-badge agence">🏦 {agenceLabel(agence)}</span>}
 
@@ -1229,15 +1279,17 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
   function nextDue(l){return unpaid(l)[0]||null;}
   function paidAmount(l){return (l.echeances||[]).filter(e=>e.statut==='paye').reduce((sum,e)=>sum+Number(e.montant||0),0);}
   function sortLoans(a,b){
+    const aClosed=isLoanRecouvrementCloture(a),bClosed=isLoanRecouvrementCloture(b);
+    if(aClosed!==bClosed)return aClosed?1:-1;
     const order={recouvrement:0,retard:1,aujourdhui:2,avenir:3,rembourses:4};
     const aCat=loanCategory(a),bCat=loanCategory(b);
     if(order[aCat]!==order[bCat])return order[aCat]-order[bCat];
-    if(aCat==='rembourses'){
+    if(aCat==='rembourses'||(aClosed&&bClosed)){
       const aLast=[...(a.echeances||[])].map(e=>e.date||'').sort().pop()||'';
       const bLast=[...(b.echeances||[])].map(e=>e.date||'').sort().pop()||'';
       return bLast.localeCompare(aLast);
     }
-    return String(nextDue(a)?.date||'').localeCompare(String(nextDue(b)?.date||''));
+    return String(nextDue(a)?.date||'9999-12-31').localeCompare(String(nextDue(b)?.date||'9999-12-31'));
   }
 
   const allLoans=[...(loans||[])].sort(sortLoans);
@@ -1279,15 +1331,16 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
     {visibleLoans.length===0?<div className="bvh-empty bvh-loan-empty">Aucun prêt dans cette catégorie{query?' pour cette recherche':''}.</div>:<div className="bvh-loan-grid">{visibleLoans.map(l=>{
       const kind=loanCategory(l);
       const next=nextDue(l);
-      const border={recouvrement:recouvrementColor(l.recouvrement_status),retard:C.red,aujourdhui:C.orange,avenir:C.blue,rembourses:C.green}[kind];
-      const label={recouvrement:'Recouvrement',retard:'En retard',aujourdhui:"Aujourd’hui",avenir:'À venir',rembourses:'Remboursé'}[kind];
+      const recouvrementClosed=isLoanRecouvrementCloture(l);
+      const border=recouvrementClosed?'#000000':{recouvrement:recouvrementColor(l.recouvrement_status),retard:C.red,aujourdhui:C.orange,avenir:C.blue,rembourses:C.green}[kind];
+      const label=recouvrementClosed?'Clôturé':{recouvrement:'Recouvrement',retard:'En retard',aujourdhui:"Aujourd’hui",avenir:'À venir',rembourses:'Remboursé'}[kind];
       const paid=paidAmount(l);
       const remaining=Math.max(Number(l.total_a_rembourser||0)-paid,0);
-      return <button key={l.id} className={'bvh-loan-card '+kind} onClick={()=>setSel(l)} style={{'--loan-color':border}}>
+      return <button key={l.id} className={'bvh-loan-card '+kind+(recouvrementClosed?' recouvrement-cloture':'')} onClick={()=>setSel(l)} style={{'--loan-color':border}}>
         <div className="bvh-loan-card-top"><span className="bvh-loan-reference">{l.loan_id}</span><span className="bvh-loan-status" style={{background:border}}>{label}</span></div>
         <b className="bvh-loan-client">{l.prenom} {l.nom}</b>
         <span className="bvh-loan-telegram">{l.telegram||'Télégramme non indiqué'}</span>
-        <div className="bvh-mini-badges"><AgencyBadge agence={loanAgence(l)}/>{isLoanInRecouvrement(l)&&<span className="bvh-mini-badge recouvrement">⚖️ {recouvrementLabel(l.recouvrement_status)}</span>}</div>
+        <div className="bvh-mini-badges"><AgencyBadge agence={loanAgence(l)}/>{isLoanInRecouvrement(l)&&<span className="bvh-mini-badge recouvrement">⚖️ {recouvrementClosed?'Clôturé':recouvrementLabel(l.recouvrement_status)}</span>}</div>
         <div className="bvh-loan-amounts"><span>{fCur(l.somme)} <i>prêté</i></span><span>{kind==='rembourses'?fCur(Number(l.total_a_rembourser||0)):<>{fCur(remaining)} <i>restant</i></>}</span></div>
         {next?<div className="bvh-loan-next"><span>{kind==='recouvrement'?'Échéance concernée':'Prochaine échéance'}</span><b>{fDate(next.date)} · {fCur(next.montant)}</b></div>:<div className="bvh-loan-next complete"><span>Prêt intégralement remboursé</span><b>✓ Dossier soldé</b></div>}
       </button>
@@ -2164,5 +2217,6 @@ function App(){
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
 </body></html>
+
 
 
