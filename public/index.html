@@ -939,6 +939,25 @@ body{
 .bvh-loan-card.recouvrement-cloture .bvh-loan-next.complete b{
   color:#d1d5db!important;
 }
+
+/* ===== Clôture automatique des prêts soldés ===== */
+.bvh-loan-card.recouvrement-cloture{
+  background:linear-gradient(180deg,#070707,#010101)!important;
+  border-color:#000!important;
+  border-left-color:#000!important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.10), inset 0 0 0 1px rgba(0,0,0,.95)!important;
+  opacity:.88;
+}
+.bvh-loan-card.recouvrement-cloture .bvh-loan-status,
+.bvh-loan-card.recouvrement-cloture .bvh-mini-badge.recouvrement{
+  background:#000!important;
+  color:#f4f4f5!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+}
+.bvh-loan-card.recouvrement-cloture .bvh-loan-next.complete b{
+  color:#d1d5db!important;
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -1015,7 +1034,7 @@ function isLoanFullyPaid(l){const es=Array.isArray(l?.echeances)?l.echeances:[];
 function isLoanRecouvrementCloture(l){
   const s=normalizeRecouvrementStatus(l?.recouvrement_status);
   const closedStatuses=['cloture','cloturee','clos','ferme','fermee','termine','terminee','solde','soldee'];
-  return closedStatuses.includes(s)||(isLoanInRecouvrement(l)&&isLoanFullyPaid(l));
+  return closedStatuses.includes(s)||isLoanFullyPaid(l);
 }
 function RecoveryBadge({status}){const color=recouvrementColor(status);return <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',background:color,color:'#fff',borderRadius:20,padding:'4px 10px',fontWeight:900,fontSize:12,whiteSpace:'nowrap'}}>{recouvrementLabel(status)}</span>}
 function AgencyBadge({agence}){return <span className="bvh-mini-badge agence">🏦 {agenceLabel(agence)}</span>}
@@ -1226,7 +1245,15 @@ function LoanDetail({loan,onBack,onUpdate,onDelete,notify,me}){
   async function mark(i,val){
     const es=[...(loan.echeances||[])];
     es[i]={...es[i],statut:val?'paye':'attente'};
-    try{const u=await api.updateLoan({id:loan.id,echeances:es});onUpdate(u);notify(val?'Paiement validé':'Paiement annulé');}catch(e){notify('⚠ '+e.message)}
+    const allPaid=es.length>0&&es.every(e=>e.statut==='paye');
+    const patch={id:loan.id,echeances:es};
+    if(allPaid)patch.recouvrement_status='cloture';
+    else if((loan.recouvrement_status||'')==='cloture')patch.recouvrement_status='aucun';
+    try{
+      const u=await api.updateLoan(patch);
+      onUpdate(u);
+      notify(allPaid?'Paiement validé · prêt clôturé automatiquement':val?'Paiement validé':'Paiement annulé');
+    }catch(e){notify('⚠ '+e.message)}
   }
   async function saveRecovery(status=recoveryStatus){
     try{
@@ -2139,7 +2166,7 @@ function App(){
 
   async function onLogin(user){setMe(user);await loadAll(user)}
   async function logout(){await api.logout();setMe(null)}
-  async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};try{const u=await api.updateLoan({id:loan.id,echeances:es});setLoans(loans.map(x=>x.id===u.id?u:x));notify(val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}
+  async function mark(loan,i,val){const es=[...(loan.echeances||[])];es[i]={...es[i],statut:val?'paye':'attente'};const allPaid=es.length>0&&es.every(e=>e.statut==='paye');const patch={id:loan.id,echeances:es};if(allPaid)patch.recouvrement_status='cloture';else if((loan.recouvrement_status||'')==='cloture')patch.recouvrement_status='aucun';try{const u=await api.updateLoan(patch);setLoans(loans.map(x=>x.id===u.id?u:x));notify(allPaid?'Paiement validé · prêt clôturé automatiquement':val?'Paiement validé':'Paiement annulé')}catch(e){notify('⚠ '+e.message)}}
   if(loading)return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>Chargement…</div>;
   if(!me)return <Login onLogin={onLogin}/>;
   const menu=[['dashboard','🏛️','Tableau'],['prets','📜','Prêts'],['clients','👤','Clients'],['agenda','🗓️','Agenda'],['hippique','🏇','Crédit hippique']];
