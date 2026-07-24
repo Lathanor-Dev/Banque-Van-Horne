@@ -2196,6 +2196,79 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
     return String(unpaidForLoan(a)[0]?.date||'9999-12-31').localeCompare(String(unpaidForLoan(b)[0]?.date||'9999-12-31'));
   }).slice(0,6);
 
+  function csvCell(value){
+    const text=String(value??'').replaceAll('"','""');
+    return `"${text}"`;
+  }
+  function downloadTextFile(filename,content,type='text/plain;charset=utf-8'){
+    const blob=new Blob([content],{type});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),700);
+  }
+  function exportBankData(){
+    const rows=[
+      ['Dossier','Client','Agence','Capital prêté','Total à rembourser','Déjà payé','Restant','Statut','Prochaine échéance','Statut recouvrement','Notes recouvrement']
+    ];
+    [...loans].sort((a,b)=>String(a.loan_id||'').localeCompare(String(b.loan_id||''))).forEach(l=>{
+      const status=loanStatus(l);
+      const next=unpaidForLoan(l)[0];
+      rows.push([
+        l.loan_id||'',
+        `${l.prenom||''} ${l.nom||''}`.trim(),
+        agenceLabel(loanAgence(l)),
+        Number(l.somme||0).toFixed(2),
+        Number(l.total_a_rembourser||0).toFixed(2),
+        paidAmountForLoan(l).toFixed(2),
+        remainingForLoan(l).toFixed(2),
+        statusMeta[status]?.label||status,
+        next?fDate(next.date):'',
+        recouvrementLabel(l.recouvrement_status),
+        l.recouvrement_notes||''
+      ]);
+    });
+    const csv='\ufeff'+rows.map(r=>r.map(csvCell).join(';')).join('\r\n');
+    downloadTextFile(`registre-bancaire-${today()}.csv`,csv,'text/csv;charset=utf-8');
+    notify?.('Export des données téléchargé');
+  }
+  function generateBankReport(){
+    const ranking=[...agencyStats].sort((a,b)=>b.score-a.score);
+    const lines=[
+      'RAPPORT BANCAIRE — REGISTRE DE RECKLESS',
+      `Date : ${new Date().toLocaleString('fr-FR')}`,
+      '',
+      'SYNTHÈSE',
+      `- Capital prêté : ${fCur(capitalPrete)}`,
+      `- Capital à récupérer : ${fCur(restant)}`,
+      `- Encaissements validés : ${fCur(encaisse)}`,
+      `- Prêts actifs : ${totalLoans-statusCounts.clotures}`,
+      `- Dossiers clôturés : ${statusCounts.clotures}`,
+      `- Retards : ${statusCounts.retards}`,
+      `- Recouvrement : ${statusCounts.recouvrement}`,
+      `- Taux de clôture : ${formatPercent(tauxCloture)}`,
+      `- Taux de remboursement : ${formatPercent(tauxRemboursement)}`,
+      '',
+      'RÉPARTITION DES DOSSIERS',
+      ...donutSegments.map(s=>`- ${s.label} : ${s.count}${totalLoans?` (${formatPercent((s.count/totalLoans)*100)})`:''}`),
+      '',
+      'SANTÉ DES AGENCES',
+      ...ranking.map((b,i)=>`${i+1}. ${b.label} — Score ${b.score} — Encaissements ${fCur(b.paid)} — Actifs ${b.active} — Retards ${b.late} — Recouvrement ${b.recovery} — Clôturés ${b.closed}`),
+      '',
+      'ALERTES PRIORITAIRES',
+      ...(alerts.length?alerts.map(a=>`- ${a.title} — ${a.tag} — ${a.right} — ${a.sub}`):['- Aucune alerte prioritaire.']),
+      '',
+      'DOSSIERS À SURVEILLER',
+      ...(dossierPreview.length?dossierPreview.map(l=>`- ${l.loan_id} — ${l.prenom||''} ${l.nom||''} — ${agenceLabel(loanAgence(l))} — ${statusMeta[loanStatus(l)]?.label||loanStatus(l)} — Restant ${fCur(remainingForLoan(l))}`):['- Aucun dossier à afficher.'])
+    ];
+    downloadTextFile(`rapport-bancaire-${today()}.txt`,lines.join('\r\n'));
+    notify?.('Rapport bancaire généré');
+  }
+
   function savedReminder(updatedLoan){onLoanUpdate?.(updatedLoan);notify?.('Rappel enregistré dans le registre');}
 
   return <div className="bvh-bank-dashboard">
@@ -2306,8 +2379,8 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
           </div>
           <div className="bvh-bank-actions" style={{marginTop:16}}>
             <button className="bvh-bank-action primary" onClick={()=>onOpenAgenda?.()}>🗓️ Ouvrir l’agenda</button>
-            <button className="bvh-bank-action" onClick={()=>notify?.('Export à prévoir dans une prochaine version')}>⬇️ Exporter les données</button>
-            <button className="bvh-bank-action" onClick={()=>notify?.('Génération de rapport à prévoir')}>📄 Générer un rapport</button>
+            <button className="bvh-bank-action" onClick={exportBankData}>⬇️ Exporter les données</button>
+            <button className="bvh-bank-action" onClick={generateBankReport}>📄 Générer un rapport</button>
           </div>
         </div>
       </section>
