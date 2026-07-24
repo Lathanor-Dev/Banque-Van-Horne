@@ -958,6 +958,18 @@ body{
   color:#d1d5db!important;
 }
 
+
+/* ===== Compteur dossiers clôturés ===== */
+.bvh-loan-tab.active.rembourses{
+  border-color:#111!important;
+  background:linear-gradient(90deg,#202020,#050505)!important;
+  box-shadow:0 0 16px rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.06)!important;
+}
+.bvh-loan-tab.rembourses b{
+  background:#141414!important;
+  color:#f5f5f5!important;
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -1297,6 +1309,7 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
 
   function unpaid(l){return [...(l.echeances||[])].filter(e=>e.statut!=='paye').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));}
   function loanCategory(l){
+    if(isLoanRecouvrementCloture(l))return 'rembourses';
     if(isLoanInRecouvrement(l))return 'recouvrement';
     const open=unpaid(l);
     if(open.length===0)return 'rembourses';
@@ -1329,7 +1342,7 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
     avenir:agencyLoans.filter(l=>loanCategory(l)==='avenir').length,
     rembourses:agencyLoans.filter(l=>loanCategory(l)==='rembourses').length
   };
-  const categories=[['tous','Tous'],['recouvrement','Recouvrement'],['retard','Retards'],['aujourdhui',"Aujourd’hui"],['avenir','À venir'],['rembourses','Remboursés']];
+  const categories=[['tous','Tous'],['recouvrement','Recouvrement'],['retard','Retards'],['aujourdhui',"Aujourd’hui"],['avenir','À venir'],['rembourses','Clôturés']];
   const visibleLoans=agencyLoans
     .filter(l=>category==='tous'||loanCategory(l)===category)
     .filter(l=>`${l.prenom||''} ${l.nom||''} ${l.telegram||''} ${l.loan_id||''} ${agenceLabel(loanAgence(l))} ${recouvrementLabel(l.recouvrement_status)}`.toLowerCase().includes(query.toLowerCase()));
