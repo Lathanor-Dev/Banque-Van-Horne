@@ -970,6 +970,127 @@ body{
   color:#f5f5f5!important;
 }
 
+
+/* ===== Tableau de bord bancaire avancé ===== */
+.bvh-bank-dashboard{display:grid;gap:16px}
+.bvh-bank-top{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  border:1px solid rgba(215,166,77,.42);border-radius:14px;padding:18px 20px;
+  background:
+    radial-gradient(circle at top right,rgba(55,200,134,.07),transparent 30%),
+    linear-gradient(90deg,#25170c,#100a06);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025),0 12px 28px rgba(0,0,0,.42);
+}
+.bvh-bank-top small{display:block;color:#c9a567;letter-spacing:.13em;text-transform:uppercase;font-weight:900}
+.bvh-bank-top h1{font-size:36px;line-height:1.05;color:#f5e4b8}
+.bvh-bank-top p{color:#b69b68;margin-top:5px}
+.bvh-bank-date{
+  min-width:230px;border:1px solid rgba(215,166,77,.32);border-radius:12px;padding:12px 14px;
+  background:rgba(255,255,255,.035);color:#d8bf82;text-align:right;
+}
+.bvh-bank-date b{display:block;color:#f3d58a}
+.bvh-bank-date span{color:#9f8550;font-size:13px}
+.bvh-bank-kpis{display:grid;grid-template-columns:repeat(6,minmax(150px,1fr));gap:12px}
+.bvh-bank-kpi{
+  position:relative;overflow:hidden;min-height:126px;border:1px solid rgba(215,166,77,.32);border-radius:14px;
+  padding:14px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.22));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.018),0 10px 24px rgba(0,0,0,.30);
+}
+.bvh-bank-kpi:before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,var(--kpi-color,#d7a64d),transparent)}
+.bvh-bank-kpi-icon{font-size:24px;margin-bottom:7px}
+.bvh-bank-kpi label{display:block;color:#d7bd7e;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.bvh-bank-kpi strong{display:block;color:#f6d27b;font-size:27px;line-height:1.05;margin-top:8px}
+.bvh-bank-kpi span{display:block;color:#b69b68;font-size:12px;margin-top:6px}
+.bvh-bank-kpi em{display:block;color:#45c47d;font-style:normal;font-size:12px;font-weight:900;margin-top:10px}
+.bvh-bank-grid{display:grid;grid-template-columns:1.05fr 1.2fr .95fr;gap:14px;align-items:stretch}
+.bvh-bank-grid-2{display:grid;grid-template-columns:1.05fr 1fr;gap:14px}
+.bvh-bank-panel{
+  border:1px solid rgba(215,166,77,.32);border-radius:14px;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(0,0,0,.20));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.018),0 12px 26px rgba(0,0,0,.30);
+  overflow:hidden;
+}
+.bvh-bank-panel-title{
+  padding:14px 16px;border-bottom:1px solid rgba(215,166,77,.18);
+  color:#f0ce80;font-weight:900;text-transform:uppercase;letter-spacing:.06em;
+  display:flex;justify-content:space-between;gap:10px;align-items:center;
+}
+.bvh-bank-panel-title small{color:#9f8550;text-transform:none;letter-spacing:0;font-size:12px}
+.bvh-bank-panel-body{padding:16px}
+.bvh-bank-donut-wrap{display:grid;grid-template-columns:190px 1fr;gap:16px;align-items:center}
+.bvh-bank-donut{
+  width:170px;height:170px;border-radius:50%;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 10px 24px rgba(0,0,0,.38);
+}
+.bvh-bank-donut-inner{
+  width:98px;height:98px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:#100a06;border:1px solid rgba(215,166,77,.24);color:#d8bf82;
+}
+.bvh-bank-donut-inner strong{display:block;color:#f6d27b;font-size:27px;line-height:1}
+.bvh-bank-donut-inner span{font-size:12px}
+.bvh-bank-legend{display:grid;gap:9px}
+.bvh-bank-legend-row{display:grid;grid-template-columns:14px 1fr auto;gap:8px;align-items:center;color:#d8bf82;font-size:13px}
+.bvh-bank-dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--dot)}
+.bvh-bank-legend-row b{color:#f3d58a}
+.bvh-bank-bars{height:220px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:end;padding:8px 8px 0}
+.bvh-bank-bar-group{height:190px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;align-items:end;text-align:center;border-bottom:1px solid rgba(215,166,77,.18);position:relative}
+.bvh-bank-bar{
+  border-radius:7px 7px 0 0;min-height:8px;box-shadow:0 0 16px rgba(0,0,0,.22),inset 0 0 0 1px rgba(255,255,255,.10);
+}
+.bvh-bank-bar.paid{background:linear-gradient(180deg,#5bd081,#24613e)}
+.bvh-bank-bar.closed{background:linear-gradient(180deg,#f1c768,#80601e)}
+.bvh-bank-bar.score{background:linear-gradient(180deg,#a56acd,#5b3476)}
+.bvh-bank-bar-label{grid-column:1/-1;color:#d8bf82;font-weight:900;font-size:13px;margin-top:8px;white-space:nowrap}
+.bvh-bank-chart-legend{display:flex;gap:14px;flex-wrap:wrap;color:#c7ab71;font-size:12px;margin-bottom:8px}
+.bvh-bank-chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.bvh-bank-gauge-row{display:grid;grid-template-columns:130px 1fr;gap:14px;align-items:center}
+.bvh-bank-gauge{
+  width:118px;height:118px;border-radius:50%;display:grid;place-items:center;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 8px 18px rgba(0,0,0,.35);
+}
+.bvh-bank-gauge-inner{
+  width:78px;height:78px;border-radius:50%;background:#100a06;border:1px solid rgba(215,166,77,.24);
+  display:grid;place-items:center;text-align:center;color:#f6d27b;font-size:22px;font-weight:900;
+}
+.bvh-bank-gauge-info{display:grid;gap:9px;color:#d8bf82;font-size:13px}
+.bvh-bank-gauge-info div{display:flex;justify-content:space-between;border-bottom:1px solid rgba(215,166,77,.12);padding-bottom:7px}
+.bvh-bank-gauge-info b{color:#f3d58a}
+.bvh-bank-activity{display:grid;gap:9px}
+.bvh-bank-activity-row{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center;color:#d8bf82;font-size:13px}
+.bvh-bank-activity-row i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:#21150c;border:1px solid rgba(215,166,77,.28)}
+.bvh-bank-activity-row b{display:block;color:#f5e4b8}
+.bvh-bank-activity-row small{display:block;color:#9f8550;margin-top:2px}
+.bvh-bank-health-table,.bvh-bank-dossier-table{width:100%;border-collapse:collapse;color:#d8bf82;font-size:13px}
+.bvh-bank-health-table th,.bvh-bank-health-table td,.bvh-bank-dossier-table th,.bvh-bank-dossier-table td{
+  border-bottom:1px solid rgba(215,166,77,.13);padding:10px 8px;text-align:left;
+}
+.bvh-bank-health-table th,.bvh-bank-dossier-table th{color:#c9a567;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.bvh-bank-health-table b{color:#f5e4b8}
+.bvh-bank-score{font-weight:900;color:#f6d27b}
+.bvh-bank-spark{height:24px;display:flex;align-items:end;gap:3px}
+.bvh-bank-spark span{display:block;width:6px;border-radius:6px 6px 0 0;background:var(--spark,#45c47d);opacity:.9}
+.bvh-bank-pill{display:inline-flex;align-items:center;justify-content:center;border-radius:20px;padding:4px 9px;font-size:11px;font-weight:900;color:#fff;white-space:nowrap;background:var(--pill,#555)}
+.bvh-bank-actions{display:grid;gap:10px}
+.bvh-bank-action{
+  border:1px solid rgba(215,166,77,.26);border-radius:10px;padding:10px 12px;
+  background:rgba(255,255,255,.025);color:#f3d58a;font-weight:900;text-align:left;cursor:pointer;
+}
+.bvh-bank-action.primary{background:linear-gradient(90deg,rgba(55,200,134,.22),rgba(215,166,77,.12));border-color:rgba(55,200,134,.52)}
+.bvh-bank-due-panel{margin-top:14px}
+@media(max-width:1380px){
+  .bvh-bank-kpis{grid-template-columns:repeat(3,1fr)}
+  .bvh-bank-grid{grid-template-columns:1fr}
+  .bvh-bank-grid-2{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .bvh-bank-top h1{font-size:29px}
+  .bvh-bank-date{text-align:left;min-width:100%}
+  .bvh-bank-kpis{grid-template-columns:1fr}
+  .bvh-bank-donut-wrap{grid-template-columns:1fr;justify-items:center}
+  .bvh-bank-bars{gap:10px;overflow:auto}
+  .bvh-bank-panel-body{padding:13px}
+}
+
 </style>
 </head>
 <body><div id="root"></div>
@@ -1984,25 +2105,239 @@ function TodayAppointments({appointments=[],onOpenAgenda,onOpenClient}){
 }
 function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],onOpenAgenda,onOpenClient,onOpenLoan,notify}){
   const[reminderTarget,setReminderTarget]=useState(null);
-  const upcoming=[];
-  loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{if(e.statut!=='paye'){const d=daysDiff(e.date);if(d<=7)upcoming.push({...e,loan:l,i,d});}}));
-  upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const total7=upcoming.reduce((s,e)=>s+Number(e.montant),0);
+
+  const paidAmountForLoan=l=>(l.echeances||[]).filter(e=>e.statut==='paye').reduce((sum,e)=>sum+Number(e.montant||0),0);
+  const remainingForLoan=l=>Math.max(Number(l.total_a_rembourser||0)-paidAmountForLoan(l),0);
+  const unpaidForLoan=l=>(l.echeances||[]).filter(e=>e.statut!=='paye').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+  const loanStatus=l=>{
+    if(isLoanRecouvrementCloture(l))return 'clotures';
+    if(isLoanInRecouvrement(l))return 'recouvrement';
+    const open=unpaidForLoan(l);
+    if(open.length===0)return 'clotures';
+    if(open.some(e=>st(e)==='retard'))return 'retards';
+    if(st(open[0])==='aujourdhui')return 'aujourdhui';
+    return 'avenir';
+  };
+  const statusMeta={
+    avenir:{label:'À venir',color:'#4d8fbd',icon:'📅'},
+    aujourdhui:{label:"Aujourd’hui",color:'#d99a35',icon:'⏱️'},
+    retards:{label:'Retards',color:'#d95343',icon:'⚠️'},
+    recouvrement:{label:'Recouvrement',color:'#8f58b3',icon:'⚖️'},
+    clotures:{label:'Clôturés',color:'#5d6169',icon:'✅'}
+  };
+  const formatPercent=n=>`${Number(n||0).toFixed(1)}%`;
+  const totalLoans=loans.length;
   const capitalPrete=loans.reduce((s,l)=>s+Number(l.somme||0),0);
   const totalAttendu=loans.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);
-  const encaisse=loans.reduce((s,l)=>s+(l.echeances||[]).filter(e=>e.statut==='paye').reduce((a,e)=>a+Number(e.montant||0),0),0);
+  const encaisse=loans.reduce((s,l)=>s+paidAmountForLoan(l),0);
   const restant=Math.max(totalAttendu-encaisse,0);
-  const recouvrements=loans.filter(l=>isLoanInRecouvrement(l)).length;
-  const retards=upcoming.filter(e=>e.d<0&&!isLoanInRecouvrement(e.loan)).length;
-  const derniers=(logs||[]).slice(0,5);
+  const statusCounts=Object.keys(statusMeta).reduce((acc,k)=>({...acc,[k]:loans.filter(l=>loanStatus(l)===k).length}),{});
+  const tauxCloture=totalLoans?(statusCounts.clotures/totalLoans)*100:0;
+  const tauxRemboursement=totalAttendu?(encaisse/totalAttendu)*100:0;
+
+  const donutSegments=['avenir','aujourdhui','retards','recouvrement','clotures'].map(k=>({...statusMeta[k],key:k,count:statusCounts[k]||0}));
+  let cursor=0;
+  const donutGradient=totalLoans
+    ? `conic-gradient(${donutSegments.map(s=>{const start=cursor;cursor+=(s.count/totalLoans)*100;return `${s.color} ${start}% ${cursor}%`;}).join(',')})`
+    : 'conic-gradient(#333 0% 100%)';
+
+  const agencyKeys=['van_horn','saint_denis','rhodes'];
+  const agencyStats=agencyKeys.map(key=>{
+    const list=loans.filter(l=>loanAgence(l)===key);
+    const total=list.length;
+    const paid=list.reduce((s,l)=>s+paidAmountForLoan(l),0);
+    const expected=list.reduce((s,l)=>s+Number(l.total_a_rembourser||0),0);
+    const closed=list.filter(l=>loanStatus(l)==='clotures').length;
+    const late=list.filter(l=>loanStatus(l)==='retards').length;
+    const recovery=list.filter(l=>loanStatus(l)==='recouvrement').length;
+    const active=list.filter(l=>!['clotures'].includes(loanStatus(l))).length;
+    const recoveryRate=expected?(paid/expected)*100:0;
+    const closeRate=total?(closed/total)*100:0;
+    const score=Math.max(0,Math.min(100,Math.round((recoveryRate*.55+closeRate*.45)-(late*4)-(recovery*5)+10)));
+    return {key,label:agenceLabel(key),list,total,paid,expected,closed,late,recovery,active,recoveryRate,closeRate,score};
+  }).filter(b=>b.total>0||loans.length===0);
+
+  const maxPaid=Math.max(1,...agencyStats.map(b=>b.paid));
+  const maxClosed=Math.max(1,...agencyStats.map(b=>b.closed));
+
+  const now=new Date();
+  const days30=Array.from({length:8},(_,i)=>{
+    const d=new Date();d.setDate(d.getDate()-(7-i)*4);d.setHours(12,0,0,0);
+    const iso=d.toISOString().slice(0,10);
+    const amount=loans.reduce((sum,l)=>sum+(l.echeances||[]).filter(e=>e.statut==='paye'&&String(e.date||'')<=iso).reduce((a,e)=>a+Number(e.montant||0),0),0);
+    return {iso,amount};
+  });
+  const maxLine=Math.max(1,...days30.map(d=>d.amount));
+  const linePoints=days30.map((d,i)=>{
+    const x=(i/(days30.length-1))*100;
+    const y=100-(d.amount/maxLine)*86-7;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const upcoming=[];
+  loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{
+    if(e.statut!=='paye'){
+      const d=daysDiff(e.date);
+      if(d<=7)upcoming.push({...e,loan:l,i,d});
+    }
+  }));
+  upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
+
+  const alerts=[
+    ...upcoming.filter(e=>e.d<0).slice(0,3).map(e=>({icon:'⚠️',title:`${e.loan.prenom} ${e.loan.nom}`,sub:`Échéance du ${fDate(e.date)}`,tag:'Retard',color:'#b94735',right:`${Math.abs(e.d)} j`})),
+    ...loans.filter(l=>loanStatus(l)==='recouvrement').slice(0,3).map(l=>({icon:'⚖️',title:l.loan_id,sub:`${l.prenom} ${l.nom}`,tag:'Recouvrement',color:'#8f58b3',right:'En cours'})),
+    ...upcoming.filter(e=>e.d>=0).slice(0,3).map(e=>({icon:'⏱️',title:`${e.loan.prenom} ${e.loan.nom}`,sub:`Échéance ${fDate(e.date)}`,tag:'À traiter',color:'#8b642c',right:e.d===0?"Aujourd’hui":`${e.d} j`}))
+  ].slice(0,5);
+
+  const dossierPreview=[...loans].sort((a,b)=>{
+    const order={retards:0,recouvrement:1,aujourdhui:2,avenir:3,clotures:4};
+    const ak=loanStatus(a),bk=loanStatus(b);
+    if(order[ak]!==order[bk])return order[ak]-order[bk];
+    return String(unpaidForLoan(a)[0]?.date||'9999-12-31').localeCompare(String(unpaidForLoan(b)[0]?.date||'9999-12-31'));
+  }).slice(0,6);
+
   function savedReminder(updatedLoan){onLoanUpdate?.(updatedLoan);notify?.('Rappel enregistré dans le registre');}
-  return <div>
-    <div className="bvh-topbar"><div><small>Registre central des opérations bancaires</small><h1>Tableau de bord</h1></div><div style={{textAlign:'right',color:'#d8bc78'}}><b>{date1904()}</b><br/><span>{me?.username} — {roles[me?.role]}</span></div></div>
-    <div className="bvh-grid-4"><InfoCard icon="🏛️" title="Capital prêté" value={fCur(capitalPrete)} note="Montant nominal accordé"/><InfoCard icon="💰" title="Capital à récupérer" value={fCur(restant)} note="Reste à encaisser"/><InfoCard icon="📜" title="Prêts actifs" value={loans.length} note={`${clients.length} clients enregistrés`}/><InfoCard icon="⚠️" title="Retards" value={retards} note="Hors dossiers en recouvrement"/></div>
-    <div className="bvh-grid-4"><InfoCard icon="📆" title="À encaisser 7 jours" value={fCur(total7)} note="Prochaines échéances"/><InfoCard icon="✅" title="Déjà encaissé" value={fCur(encaisse)} note="Paiements validés"/><InfoCard icon="📚" title="Dossiers clients" value={clients.length} note="Registre clientèle"/><InfoCard icon="⚖️" title="Recouvrement" value={recouvrements} note="Dossiers suivis séparément"/></div>
-    <div className="bvh-ledger" style={{marginBottom:14}}><div className="bvh-ledger-title">Dernières opérations</div>{derniers.length===0?<p className="bvh-empty">Aucune opération récente.</p>:derniers.map(l=><div className="bvh-activity" key={l.id}><b>{l.username}</b><br/><span>{l.action}</span><br/><small style={{color:'#9f8550'}}>{new Date(l.created_at).toLocaleString('fr-FR')}</small></div>)}</div>
+
+  return <div className="bvh-bank-dashboard">
+    <div className="bvh-bank-top">
+      <div>
+        <small>Registre central des opérations bancaires</small>
+        <h1>Tableau de bord</h1>
+        <p>Analyse bancaire, santé des agences, dossiers à surveiller et rentabilité opérationnelle.</p>
+      </div>
+      <div className="bvh-bank-date">
+        <b>{date1904()}</b>
+        <span>{me?.username} — {roles[me?.role]}</span>
+      </div>
+    </div>
+
+    <div className="bvh-bank-kpis">
+      <div className="bvh-bank-kpi" style={{'--kpi-color':'#d7a64d'}}><div className="bvh-bank-kpi-icon">🏛️</div><label>Capital prêté</label><strong>{fCur(capitalPrete)}</strong><span>Montant nominal accordé</span><em>↗ Portefeuille total</em></div>
+      <div className="bvh-bank-kpi" style={{'--kpi-color':'#45c47d'}}><div className="bvh-bank-kpi-icon">💰</div><label>Capital à récupérer</label><strong>{fCur(restant)}</strong><span>Reste à encaisser</span><em>{formatPercent(tauxRemboursement)} remboursé</em></div>
+      <div className="bvh-bank-kpi" style={{'--kpi-color':'#4d8fbd'}}><div className="bvh-bank-kpi-icon">📜</div><label>Prêts actifs</label><strong>{totalLoans-statusCounts.clotures}</strong><span>{clients.length} clients enregistrés</span><em>↗ Suivi opérationnel</em></div>
+      <div className="bvh-bank-kpi" style={{'--kpi-color':'#d95343'}}><div className="bvh-bank-kpi-icon">⚠️</div><label>Retards</label><strong>{statusCounts.retards}</strong><span>Hors dossiers clôturés</span><em style={{color:statusCounts.retards?'#ffb0a6':'#45c47d'}}>{statusCounts.retards?'À surveiller':'Aucun retard'}</em></div>
+      <div className="bvh-bank-kpi" style={{'--kpi-color':'#5d6169'}}><div className="bvh-bank-kpi-icon">✅</div><label>Dossiers clôturés</label><strong>{statusCounts.clotures}</strong><span>Prêts soldés ou clôturés</span><em>{formatPercent(tauxCloture)} du registre</em></div>
+      <div className="bvh-bank-kpi" style={{'--kpi-color':'#8f58b3'}}><div className="bvh-bank-kpi-icon">⚖️</div><label>Recouvrement</label><strong>{statusCounts.recouvrement}</strong><span>Dossiers en procédure</span><em style={{color:statusCounts.recouvrement?'#f3d58a':'#45c47d'}}>{statusCounts.recouvrement?'Action requise':'Stable'}</em></div>
+    </div>
+
+    <div className="bvh-bank-grid">
+      <section className="bvh-bank-panel">
+        <div className="bvh-bank-panel-title">Répartition des dossiers <small>{totalLoans} dossiers</small></div>
+        <div className="bvh-bank-panel-body">
+          <div className="bvh-bank-donut-wrap">
+            <div className="bvh-bank-donut" style={{background:donutGradient}}>
+              <div className="bvh-bank-donut-inner"><div><span>Total</span><strong>{totalLoans}</strong><span>dossiers</span></div></div>
+            </div>
+            <div className="bvh-bank-legend">
+              {donutSegments.map(s=><div className="bvh-bank-legend-row" key={s.key}><i className="bvh-bank-dot" style={{'--dot':s.color}}></i><span>{s.label}</span><b>{s.count} {totalLoans?`(${formatPercent((s.count/totalLoans)*100)})`:''}</b></div>)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bvh-bank-panel">
+        <div className="bvh-bank-panel-title">Performance par agence <small>Encaissements · clôtures · score</small></div>
+        <div className="bvh-bank-panel-body">
+          <div className="bvh-bank-chart-legend"><span><i className="bvh-bank-dot" style={{'--dot':'#45c47d'}}></i>Encaissements</span><span><i className="bvh-bank-dot" style={{'--dot':'#d7a64d'}}></i>Dossiers clôturés</span><span><i className="bvh-bank-dot" style={{'--dot':'#8f58b3'}}></i>Score</span></div>
+          <div className="bvh-bank-bars">
+            {agencyStats.map(b=><div key={b.key} className="bvh-bank-bar-group" title={`${b.label} · score ${b.score}`}>
+              <div className="bvh-bank-bar paid" style={{height:Math.max(8,(b.paid/maxPaid)*145)}}></div>
+              <div className="bvh-bank-bar closed" style={{height:Math.max(8,(b.closed/maxClosed)*145)}}></div>
+              <div className="bvh-bank-bar score" style={{height:Math.max(8,(b.score/100)*145)}}></div>
+              <div className="bvh-bank-bar-label">{b.label}</div>
+            </div>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="bvh-bank-panel">
+        <div className="bvh-bank-panel-title">Rentabilité globale <small>Remboursement</small></div>
+        <div className="bvh-bank-panel-body">
+          <div className="bvh-bank-gauge-row">
+            <div className="bvh-bank-gauge" style={{background:`conic-gradient(#45c47d 0 ${Math.min(100,tauxRemboursement)}%,#343434 ${Math.min(100,tauxRemboursement)}% 100%)`}}>
+              <div className="bvh-bank-gauge-inner">{formatPercent(tauxRemboursement)}</div>
+            </div>
+            <div className="bvh-bank-gauge-info">
+              <div><span>Encaissements</span><b>{fCur(encaisse)}</b></div>
+              <div><span>Objectif</span><b>70.0%</b></div>
+              <div><span>Écart</span><b style={{color:tauxRemboursement>=70?'#45c47d':'#ffb0a6'}}>{formatPercent(tauxRemboursement-70)}</b></div>
+              <div><span>Clôture</span><b>{formatPercent(tauxCloture)}</b></div>
+            </div>
+          </div>
+          <div style={{marginTop:16}}>
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{width:'100%',height:95,display:'block'}}>
+              <polyline points={linePoints} fill="none" stroke="#45c47d" strokeWidth="2.5" vectorEffect="non-scaling-stroke"/>
+              <polyline points={`0,100 ${linePoints} 100,100`} fill="rgba(69,196,125,.18)" stroke="none"/>
+            </svg>
+            <p style={{color:'#9f8550',fontSize:12,marginTop:6}}>Encaissements cumulés sur les dernières échéances payées</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div className="bvh-bank-grid-2">
+      <section className="bvh-bank-panel">
+        <div className="bvh-bank-panel-title">Santé des agences <small>Classement opérationnel</small></div>
+        <div className="bvh-bank-panel-body" style={{overflowX:'auto'}}>
+          <table className="bvh-bank-health-table">
+            <thead><tr><th>Agence</th><th>Score</th><th>Encaissements</th><th>Actifs</th><th>Retards</th><th>Recouv.</th><th>Tendance</th></tr></thead>
+            <tbody>{agencyStats.sort((a,b)=>b.score-a.score).map((b,idx)=><tr key={b.key}>
+              <td><b>{idx===0?'🥇 ':idx===1?'🥈 ':'🥉 '}{b.label}</b></td>
+              <td><span className="bvh-bank-score">{b.score}</span></td>
+              <td>{fCur(b.paid)}</td>
+              <td>{b.active}</td>
+              <td>{b.late}</td>
+              <td>{b.recovery}</td>
+              <td><div className="bvh-bank-spark" style={{'--spark':b.score>=75?'#45c47d':b.score>=55?'#d7a64d':'#d95343'}}>{[30,44,38,58,64,78].map((h,i)=><span key={i} style={{height:Math.max(5,h*(b.score/100)/1.4)}}></span>)}</div></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="bvh-bank-panel">
+        <div className="bvh-bank-panel-title">Alertes prioritaires <small>{alerts.length} à traiter</small></div>
+        <div className="bvh-bank-panel-body">
+          <div className="bvh-bank-activity">
+            {alerts.length===0?<p style={{color:'#b69b68'}}>Aucune alerte prioritaire pour le moment.</p>:alerts.map((a,i)=><div className="bvh-bank-activity-row" key={i}>
+              <i>{a.icon}</i>
+              <div><b>{a.title}</b><small>{a.sub}</small></div>
+              <span className="bvh-bank-pill" style={{'--pill':a.color}}>{a.tag} · {a.right}</span>
+            </div>)}
+          </div>
+          <div className="bvh-bank-actions" style={{marginTop:16}}>
+            <button className="bvh-bank-action primary" onClick={()=>onOpenAgenda?.()}>🗓️ Ouvrir l’agenda</button>
+            <button className="bvh-bank-action" onClick={()=>notify?.('Export à prévoir dans une prochaine version')}>⬇️ Exporter les données</button>
+            <button className="bvh-bank-action" onClick={()=>notify?.('Génération de rapport à prévoir')}>📄 Générer un rapport</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <section className="bvh-bank-panel">
+      <div className="bvh-bank-panel-title">Aperçu des dossiers <small>Priorité automatique</small></div>
+      <div className="bvh-bank-panel-body" style={{overflowX:'auto'}}>
+        <table className="bvh-bank-dossier-table">
+          <thead><tr><th>Dossier</th><th>Client</th><th>Agence</th><th>Montant</th><th>Restant</th><th>Échéance</th><th>Statut</th></tr></thead>
+          <tbody>{dossierPreview.map(l=>{
+            const status=loanStatus(l);
+            const next=unpaidForLoan(l)[0];
+            return <tr key={l.id} onClick={()=>onOpenLoan?.(l.id)} style={{cursor:'pointer'}}>
+              <td>{l.loan_id}</td>
+              <td>{l.prenom} {l.nom}</td>
+              <td>{agenceLabel(loanAgence(l))}</td>
+              <td>{fCur(l.somme)}</td>
+              <td>{fCur(remainingForLoan(l))}</td>
+              <td>{next?fDate(next.date):'—'}</td>
+              <td><span className="bvh-bank-pill" style={{'--pill':statusMeta[status].color}}>{statusMeta[status].label}</span></td>
+            </tr>
+          })}</tbody>
+        </table>
+      </div>
+    </section>
+
     <TodayAppointments appointments={appointments} onOpenAgenda={onOpenAgenda} onOpenClient={onOpenClient}/>
-    <div className="bvh-ledger"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=>{const last=latestReminder(e);return <div className="bvh-row bvh-due-row bvh-due-row-reminder" key={i}>
+
+    <div className="bvh-ledger bvh-bank-due-panel"><div className="bvh-ledger-title">Échéances à traiter</div>{upcoming.length===0?<p className="bvh-empty">Aucune échéance.</p>:upcoming.map((e,i)=>{const last=latestReminder(e);return <div className="bvh-row bvh-due-row bvh-due-row-reminder" key={i}>
       <button className="bvh-due-loan-link" onClick={()=>onOpenLoan?.(e.loan.id)} title="Ouvrir la fiche détaillée du prêt">{e.loan.prenom} {e.loan.nom}<small>↗ Voir le prêt{last?` · ${reminderSummary(last)}`:' · Aucun rappel noté'}</small></button>
       <span>{fCur(e.montant)}</span><span>{fDate(e.date)}</span><Badge s={st(e)}/><span className="bvh-due-actions"><Btn color="#8b642c" onClick={()=>setReminderTarget(e)}>Rappel</Btn><Btn color={C.green} onClick={()=>onMark(e.loan,e.i,true)}>Valider paiement</Btn></span>
     </div>})}</div>
