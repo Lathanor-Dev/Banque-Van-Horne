@@ -896,6 +896,11 @@ body{
   }
 }
 
+/* ===== Statut Jamais remboursé ===== */
+.bvh-loan-card.jamais-rembourse{border-color:#9b59b6!important;background:linear-gradient(145deg,rgba(80,35,100,.92),rgba(31,18,38,.97))!important}
+.bvh-loan-tab.active.jamais_rembourse{border-color:#b56bd2;background:linear-gradient(90deg,#5b286f,#2b1634)}
+.bvh-mini-badge.jamais-rembourse{background:#7e3f98;border:1px solid #c987e5;color:#fff}
+
 /* ===== Recouvrement clôturé : noir visible + bas de liste ===== */
 .bvh-loan-card.recouvrement-cloture{
   background:
@@ -1158,11 +1163,14 @@ const RECOUVREMENT_STATES={
   saisie_garantie:['Saisie / garantie','#7f1d1d'],
   cloture:['Cl\u00f4tur\u00e9','#050505']
 };
+const REPAYMENT_STATES={normal:['Suivi normal','#6b7280'],jamais_rembourse:['Jamais remboursé','#9b59b6']};
+const AGENCY_GRADES={directeur_agence:'Directeur d’agence',directeur_adjoint:'Directeur adjoint',responsable_clientele:'Responsable clientèle',conseiller_bancaire:'Conseiller bancaire',caissier:'Caissier',secretaire_direction:'Secrétaire / Assistante de direction',stagiaire:'Stagiaire',attente_affectation:'En attente d’affectation'};
 function agenceLabel(v){return AGENCIES[normalizeAgence(v)]||'Van Horn';}
 function recouvrementLabel(v){return (RECOUVREMENT_STATES[v||'aucun']||RECOUVREMENT_STATES.aucun)[0];}
 function recouvrementColor(v){return (RECOUVREMENT_STATES[v||'aucun']||RECOUVREMENT_STATES.aucun)[1];}
 function normalizeRecouvrementStatus(v){return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
 function isLoanInRecouvrement(l){const s=normalizeRecouvrementStatus(l?.recouvrement_status||'aucun');return s!==''&&s!=='aucun';}
+function isNeverReimbursed(l){return String(l?.repayment_status||'normal')==='jamais_rembourse';}
 function isLoanFullyPaid(l){const es=Array.isArray(l?.echeances)?l.echeances:[];return es.length>0&&es.every(e=>e?.statut==='paye');}
 function isLoanRecouvrementCloture(l){
   const s=normalizeRecouvrementStatus(l?.recouvrement_status);
@@ -1239,9 +1247,9 @@ function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
   </div>
 }
 
-function Login({onLogin}){const[u,setU]=useState(''),[p,setP]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);async function go(){try{setBusy(true);setErr('');const r=await api.login(u,p);onLogin(r.user);}catch(e){setErr(e.message)}finally{setBusy(false)}}return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-stable-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès sécurisé au registre</p></div>{err&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {err}</div>}<div style={{display:'flex',flexDirection:'column',gap:14}}><Inp label="Identifiant" value={u} onChange={e=>setU(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()} autoFocus/><Inp label="Mot de passe" type="password" value={p} onChange={e=>setP(e.target.value)} onKeyDown={e=>e.key==='Enter'&&go()}/><Btn full color="#8b642c" onClick={go} disabled={busy}>{busy?'Connexion…':'Se connecter'}</Btn></div></div></div>}
+function Login({onLogin}){const params=new URLSearchParams(location.search);const reason=params.get('discord');const msg=reason==='not_member'?'Vous devez rejoindre le serveur Discord officiel avant de pouvoir accéder au Registre.':reason==='waiting'?"Votre compte Discord est reconnu, mais vous êtes encore en attente d’affectation.":'';return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-stable-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès réservé aux membres du Discord</p></div>{msg&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {msg}</div>}<Btn full color="#5865F2" onClick={()=>location.href='/api/discord_login'}>Se connecter avec Discord</Btn><p style={{color:C.muted,fontSize:12,textAlign:'center',marginTop:14}}>Votre présence sur le serveur et vos rôles sont vérifiés à chaque connexion.</p></div></div>}
 
-function UserPanel({me,users,setUsers,notify}){const[f,setF]=useState({username:'',password:'',role:'employe'}); const canCreate=['admin','directeur','co_directeur'].includes(me.role); async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF({username:'',password:'',role:'employe'});notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}} async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}} async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}return <div><h1 style={{marginBottom:18}}>Utilisateurs</h1>{canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 180px auto',gap:10,alignItems:'end'}}><Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/><Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/><Select label="Rôle" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="employe">Employé</option>{roleRank[me.role]>=2&&<option value="co_directeur">Co-directeur</option>}{roleRank[me.role]>=3&&<option value="directeur">Directeur</option>}</Select><Btn onClick={add}>Créer</Btn></div>}<div style={{display:'grid',gap:10}}>{users.map(u=><div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'flex',alignItems:'center',gap:12}}><b style={{flex:1}}>{u.username} {u.protected?'🔒':''}</b><span style={{color:C.muted}}>{roles[u.role]||u.role}</span><Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn><Btn color={C.red} onClick={()=>del(u)}>Supprimer</Btn></div>)}</div></div>}
+function UserPanel({me,users,setUsers,notify}){const empty={username:'',password:'',role:'employe',agency:'van_horn',agency_grade:'conseiller_bancaire'};const[f,setF]=useState(empty);const canCreate=['admin','directeur','co_directeur'].includes(me.role);async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF(empty);notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}}async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}}async function assign(u,patch){try{const nu=await api.updateUser({id:u.id,...patch});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Affectation mise à jour')}catch(e){notify('⚠ '+e.message)}}async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}return <div><h1 style={{marginBottom:18}}>Utilisateurs et grades d’agence</h1>{canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 150px 160px 230px auto',gap:10,alignItems:'end'}}><Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/><Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/><Select label="Rôle système" value={f.role} onChange={e=>setF({...f,role:e.target.value})}><option value="employe">Employé</option>{roleRank[me.role]>=2&&<option value="co_directeur">Co-directeur</option>}{roleRank[me.role]>=3&&<option value="directeur">Directeur</option>}</Select><Select label="Agence" value={f.agency} onChange={e=>setF({...f,agency:e.target.value})}>{Object.entries(AGENCIES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select><Select label="Grade d’agence" value={f.agency_grade} onChange={e=>setF({...f,agency_grade:e.target.value})}>{Object.entries(AGENCY_GRADES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select><Btn onClick={add}>Créer</Btn></div>}<div style={{display:'grid',gap:10}}>{users.map(u=><div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'grid',gridTemplateColumns:'minmax(150px,1fr) 165px 230px auto auto',alignItems:'end',gap:12}}><div><b>{u.username} {u.protected?'🔒':''}</b><div style={{color:C.muted,fontSize:12}}>{roles[u.role]||u.role}</div></div><Select label="Agence" value={u.agency||'van_horn'} onChange={e=>assign(u,{agency:e.target.value})}>{Object.entries(AGENCIES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select><Select label="Grade" value={u.agency_grade||'conseiller_bancaire'} onChange={e=>assign(u,{agency_grade:e.target.value})}>{Object.entries(AGENCY_GRADES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select><Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn><Btn color={C.red} onClick={()=>del(u)}>Supprimer</Btn></div>)}</div></div>}
 
 
 function fileToBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]||'');reader.onerror=reject;reader.readAsDataURL(file);});}
@@ -1346,10 +1354,10 @@ function ClientsPage({clients,setClients,loans=[],appointments=[],applications=[
 }
 
 function LoanModal({open,onClose,onSave,loan,clients,prefill,defaultAgence='van_horn'}){
-  const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:'',agence:normalizeAgence(defaultAgence),recouvrement_status:'aucun',recouvrement_notes:'',recouvrement_started_at:null};
+  const empty={client_id:'',nom:'',prenom:'',telegram:'',somme:'500',taux:'10',nb:'3',date1:plusDays(7),garanties:'',agence:normalizeAgence(defaultAgence),recouvrement_status:'aucun',recouvrement_notes:'',recouvrement_started_at:null,repayment_status:'normal'};
   const[f,setF]=useState(empty);
   const[saving,setSaving]=useState(false);
-  useEffect(()=>{if(open){setSaving(false);const base=loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7),agence:loanAgence(loan),recouvrement_status:loan.recouvrement_status||'aucun',recouvrement_notes:loan.recouvrement_notes||'',recouvrement_started_at:loan.recouvrement_started_at||null}:prefill?{...empty,client_id:prefill.id||'',nom:prefill.nom||'',prenom:prefill.prenom||'',telegram:prefill.telegram||'',agence:normalizeAgence(defaultAgence)}:{...empty,agence:normalizeAgence(defaultAgence)};setF(base)}},[open,loan,prefill,defaultAgence]);
+  useEffect(()=>{if(open){setSaving(false);const base=loan?{...empty,...loan,client_id:loan.client_id||'',somme:String(loan.somme),taux:String(loan.taux),nb:String(loan.echeances?.length||3),date1:loan.echeances?.[0]?.date||plusDays(7),agence:loanAgence(loan),recouvrement_status:loan.recouvrement_status||'aucun',recouvrement_notes:loan.recouvrement_notes||'',recouvrement_started_at:loan.recouvrement_started_at||null,repayment_status:loan.repayment_status||'normal'}:prefill?{...empty,client_id:prefill.id||'',nom:prefill.nom||'',prenom:prefill.prenom||'',telegram:prefill.telegram||'',agence:normalizeAgence(defaultAgence)}:{...empty,agence:normalizeAgence(defaultAgence)};setF(base)}},[open,loan,prefill,defaultAgence]);
   if(!open)return null;
   const sched=schedule({capital:f.somme,rate:f.taux,n:f.nb,start:f.date1});
   function pick(id){const c=clients.find(x=>String(x.id)===String(id));setF({...f,client_id:id,nom:c?.nom||'',prenom:c?.prenom||'',telegram:c?.telegram||''});}
@@ -1366,7 +1374,7 @@ function LoanModal({open,onClose,onSave,loan,clients,prefill,defaultAgence='van_
     }
   }
   const row=(...a)=><div style={{display:'grid',gridTemplateColumns:`repeat(${a.length},1fr)`,gap:12,marginBottom:12}}>{a}</div>;
-  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:680,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Select label="Banque" value={normalizeAgence(f.agence)} onChange={e=>setF({...f,agence:e.target.value})}><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option><option value="rhodes">Rhodes</option></Select></div><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/>{loan&&<><Sec>Suivi de recouvrement</Sec><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Select label="Statut recouvrement" value={f.recouvrement_status||'aucun'} onChange={e=>setF({...f,recouvrement_status:e.target.value})}>{Object.entries(RECOUVREMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select><Inp label="Ouvert depuis" value={f.recouvrement_started_at?new Date(f.recouvrement_started_at).toLocaleString('fr-FR'):'—'} readOnly/></div><Txt label="Notes recouvrement" value={f.recouvrement_notes||''} onChange={e=>setF({...f,recouvrement_notes:e.target.value})}/></>}<div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" disabled={saving} onClick={onClose}>Annuler</Btn><Btn disabled={saving} onClick={save}>{saving?'Enregistrement…':'Enregistrer'}</Btn></div></div></div>
+  return <div onClick={e=>e.target===e.currentTarget&&onClose()} style={{position:'fixed',inset:0,background:'#000b',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}><div style={{background:C.card,borderTop:'4px solid '+C.blue,borderRadius:14,padding:24,width:680,maxHeight:'92vh',overflow:'auto'}}><h2>{loan?'Modifier le prêt':'Nouveau prêt'}</h2><p style={{color:'#d8bf82',fontSize:13,margin:'6px 0 14px'}}>La synchronisation des prêts est suspendue pendant votre saisie.</p><Sec>Client</Sec><Select label="Client existant" value={f.client_id} onChange={e=>pick(e.target.value)}><option value="">— Sélectionner —</option>{clients.map(c=><option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>)}</Select>{row(<Inp label="Prénom" value={f.prenom} onChange={e=>setF({...f,prenom:e.target.value})}/>,<Inp label="Nom" value={f.nom} onChange={e=>setF({...f,nom:e.target.value})}/>)}<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Inp label="Télégramme" value={f.telegram} onChange={e=>setF({...f,telegram:e.target.value})}/><Select label="Banque" value={normalizeAgence(f.agence)} onChange={e=>setF({...f,agence:e.target.value})}><option value="van_horn">Van Horn</option><option value="saint_denis">Saint-Denis</option><option value="rhodes">Rhodes</option></Select></div><Sec>Détails financiers</Sec>{row(<Inp label="Somme prêtée ($)" type="number" value={f.somme} onChange={e=>setF({...f,somme:e.target.value})}/>,<Inp label="Taux par échéance (%)" type="number" value={f.taux} onChange={e=>setF({...f,taux:e.target.value})}/>)}{row(<Inp label="Total à rembourser ($)" value={sched.total.toFixed(2)} readOnly/>,<Inp label="Nombre d'échéances" type="number" value={f.nb} onChange={e=>setF({...f,nb:e.target.value})}/>)}<Inp label="Date 1ère échéance" type="date" value={f.date1} onChange={e=>setF({...f,date1:e.target.value})}/><div style={{background:'#4a9eff12',border:'1px solid #4a9eff44',borderRadius:8,padding:10,margin:'12px 0'}}>Montant fixe chaque semaine : <b>{fCur(sched.montant)}</b></div><Sec>Garanties</Sec><textarea value={f.garanties||''} onChange={e=>setF({...f,garanties:e.target.value})} rows={3} style={{width:'100%',background:'#13151f',border:'1px solid '+C.bord,borderRadius:8,color:C.txt,padding:10}}/>{loan&&<><Sec>Statut du prêt</Sec><Select label="Historique de remboursement" value={f.repayment_status||'normal'} onChange={e=>setF({...f,repayment_status:e.target.value})}>{Object.entries(REPAYMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select><Sec>Suivi de recouvrement</Sec><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:12}}><Select label="Statut recouvrement" value={f.recouvrement_status||'aucun'} onChange={e=>setF({...f,recouvrement_status:e.target.value})}>{Object.entries(RECOUVREMENT_STATES).map(([k,v])=><option key={k} value={k}>{v[0]}</option>)}</Select><Inp label="Ouvert depuis" value={f.recouvrement_started_at?new Date(f.recouvrement_started_at).toLocaleString('fr-FR'):'—'} readOnly/></div><Txt label="Notes recouvrement" value={f.recouvrement_notes||''} onChange={e=>setF({...f,recouvrement_notes:e.target.value})}/></>}<div style={{display:'flex',justifyContent:'flex-end',gap:10,marginTop:16}}><Btn color="#555" disabled={saving} onClick={onClose}>Annuler</Btn><Btn disabled={saving} onClick={save}>{saving?'Enregistrement…':'Enregistrer'}</Btn></div></div></div>
 }
 
 function LoanDetail({loan,onBack,onUpdate,onDelete,notify,me}){
@@ -1430,6 +1438,7 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
 
   function unpaid(l){return [...(l.echeances||[])].filter(e=>e.statut!=='paye').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));}
   function loanCategory(l){
+    if(isNeverReimbursed(l))return 'jamais_rembourse';
     if(isLoanRecouvrementCloture(l))return 'rembourses';
     if(isLoanInRecouvrement(l))return 'recouvrement';
     const open=unpaid(l);
@@ -1442,7 +1451,7 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
   function sortLoans(a,b){
     const aClosed=isLoanRecouvrementCloture(a),bClosed=isLoanRecouvrementCloture(b);
     if(aClosed!==bClosed)return aClosed?1:-1;
-    const order={recouvrement:0,retard:1,aujourdhui:2,avenir:3,rembourses:4};
+    const order={recouvrement:0,retard:1,aujourdhui:2,avenir:3,rembourses:4,jamais_rembourse:5};
     const aCat=loanCategory(a),bCat=loanCategory(b);
     if(order[aCat]!==order[bCat])return order[aCat]-order[bCat];
     if(aCat==='rembourses'||(aClosed&&bClosed)){
@@ -1461,9 +1470,10 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
     retard:agencyLoans.filter(l=>loanCategory(l)==='retard').length,
     aujourdhui:agencyLoans.filter(l=>loanCategory(l)==='aujourdhui').length,
     avenir:agencyLoans.filter(l=>loanCategory(l)==='avenir').length,
-    rembourses:agencyLoans.filter(l=>loanCategory(l)==='rembourses').length
+    rembourses:agencyLoans.filter(l=>loanCategory(l)==='rembourses').length,
+    jamais_rembourse:agencyLoans.filter(l=>loanCategory(l)==='jamais_rembourse').length
   };
-  const categories=[['tous','Tous'],['recouvrement','Recouvrement'],['retard','Retards'],['aujourdhui',"Aujourd’hui"],['avenir','À venir'],['rembourses','Clôturés']];
+  const categories=[['tous','Tous'],['recouvrement','Recouvrement'],['retard','Retards'],['aujourdhui',"Aujourd’hui"],['avenir','À venir'],['rembourses','Clôturés'],['jamais_rembourse','Jamais remboursés']];
   const visibleLoans=agencyLoans
     .filter(l=>category==='tous'||loanCategory(l)===category)
     .filter(l=>`${l.prenom||''} ${l.nom||''} ${l.telegram||''} ${l.loan_id||''} ${agenceLabel(loanAgence(l))} ${recouvrementLabel(l.recouvrement_status)}`.toLowerCase().includes(query.toLowerCase()));
@@ -1493,15 +1503,15 @@ function LoansPage({loans,clients,setLoans,notify,onLoanDraftChange,openForClien
       const kind=loanCategory(l);
       const next=nextDue(l);
       const recouvrementClosed=isLoanRecouvrementCloture(l);
-      const border=recouvrementClosed?'#000000':{recouvrement:recouvrementColor(l.recouvrement_status),retard:C.red,aujourdhui:C.orange,avenir:C.blue,rembourses:C.green}[kind];
-      const label=recouvrementClosed?'Clôturé':{recouvrement:'Recouvrement',retard:'En retard',aujourdhui:"Aujourd’hui",avenir:'À venir',rembourses:'Remboursé'}[kind];
+      const border=recouvrementClosed?'#000000':{recouvrement:recouvrementColor(l.recouvrement_status),retard:C.red,aujourdhui:C.orange,avenir:C.blue,rembourses:C.green,jamais_rembourse:'#9b59b6'}[kind];
+      const label=recouvrementClosed?'Clôturé':{recouvrement:'Recouvrement',retard:'En retard',aujourdhui:"Aujourd’hui",avenir:'À venir',rembourses:'Remboursé',jamais_rembourse:'Jamais remboursé'}[kind];
       const paid=paidAmount(l);
       const remaining=Math.max(Number(l.total_a_rembourser||0)-paid,0);
-      return <button key={l.id} className={'bvh-loan-card '+kind+(recouvrementClosed?' recouvrement-cloture':'')} onClick={()=>setSel(l)} style={{'--loan-color':border}}>
+      return <button key={l.id} className={'bvh-loan-card '+kind+(recouvrementClosed?' recouvrement-cloture':'')+(kind==='jamais_rembourse'?' jamais-rembourse':'')} onClick={()=>setSel(l)} style={{'--loan-color':border}}>
         <div className="bvh-loan-card-top"><span className="bvh-loan-reference">{l.loan_id}</span><span className="bvh-loan-status" style={{background:border}}>{label}</span></div>
         <b className="bvh-loan-client">{l.prenom} {l.nom}</b>
         <span className="bvh-loan-telegram">{l.telegram||'Télégramme non indiqué'}</span>
-        <div className="bvh-mini-badges"><AgencyBadge agence={loanAgence(l)}/>{isLoanInRecouvrement(l)&&<span className="bvh-mini-badge recouvrement">⚖️ {recouvrementClosed?'Clôturé':recouvrementLabel(l.recouvrement_status)}</span>}</div>
+        <div className="bvh-mini-badges"><AgencyBadge agence={loanAgence(l)}/>{isLoanInRecouvrement(l)&&<span className="bvh-mini-badge recouvrement">⚖️ {recouvrementClosed?'Clôturé':recouvrementLabel(l.recouvrement_status)}</span>}{isNeverReimbursed(l)&&<span className="bvh-mini-badge jamais-rembourse">🟣 Jamais remboursé</span>}</div>
         <div className="bvh-loan-amounts"><span>{fCur(l.somme)} <i>prêté</i></span><span>{kind==='rembourses'?fCur(Number(l.total_a_rembourser||0)):<>{fCur(remaining)} <i>restant</i></>}</span></div>
         {next?<div className="bvh-loan-next"><span>{kind==='recouvrement'?'Échéance concernée':'Prochaine échéance'}</span><b>{fDate(next.date)} · {fCur(next.montant)}</b></div>:<div className="bvh-loan-next complete"><span>Prêt intégralement remboursé</span><b>✓ Dossier soldé</b></div>}
       </button>
@@ -2110,6 +2120,7 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
   const remainingForLoan=l=>Math.max(Number(l.total_a_rembourser||0)-paidAmountForLoan(l),0);
   const unpaidForLoan=l=>(l.echeances||[]).filter(e=>e.statut!=='paye').sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
   const loanStatus=l=>{
+    if(isNeverReimbursed(l))return 'jamais_rembourse';
     if(isLoanRecouvrementCloture(l))return 'clotures';
     if(isLoanInRecouvrement(l))return 'recouvrement';
     const open=unpaidForLoan(l);
@@ -2123,7 +2134,8 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
     aujourdhui:{label:"Aujourd’hui",color:'#d99a35',icon:'⏱️'},
     retards:{label:'Retards',color:'#d95343',icon:'⚠️'},
     recouvrement:{label:'Recouvrement',color:'#8f58b3',icon:'⚖️'},
-    clotures:{label:'Clôturés',color:'#5d6169',icon:'✅'}
+    clotures:{label:'Clôturés',color:'#5d6169',icon:'✅'},
+    jamais_rembourse:{label:'Jamais remboursés',color:'#9b59b6',icon:'🟣'}
   };
   const formatPercent=n=>`${Number(n||0).toFixed(1)}%`;
   const totalLoans=loans.length;
@@ -2135,7 +2147,7 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
   const tauxCloture=totalLoans?(statusCounts.clotures/totalLoans)*100:0;
   const tauxRemboursement=totalAttendu?(encaisse/totalAttendu)*100:0;
 
-  const donutSegments=['avenir','aujourdhui','retards','recouvrement','clotures'].map(k=>({...statusMeta[k],key:k,count:statusCounts[k]||0}));
+  const donutSegments=['avenir','aujourdhui','retards','recouvrement','clotures','jamais_rembourse'].map(k=>({...statusMeta[k],key:k,count:statusCounts[k]||0}));
   let cursor=0;
   const donutGradient=totalLoans
     ? `conic-gradient(${donutSegments.map(s=>{const start=cursor;cursor+=(s.count/totalLoans)*100;return `${s.color} ${start}% ${cursor}%`;}).join(',')})`
@@ -2175,12 +2187,16 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
   }).join(' ');
 
   const upcoming=[];
-  loans.forEach(l=>(l.echeances||[]).forEach((e,i)=>{
-    if(e.statut!=='paye'){
-      const d=daysDiff(e.date);
-      if(d<=7)upcoming.push({...e,loan:l,i,d});
-    }
-  }));
+  loans.forEach(l=>{
+    const status=loanStatus(l);
+    if(status==='clotures'||status==='recouvrement')return;
+    (l.echeances||[]).forEach((e,i)=>{
+      if(e.statut!=='paye'){
+        const d=daysDiff(e.date);
+        if(d<=7)upcoming.push({...e,loan:l,i,d});
+      }
+    });
+  });
   upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
 
   const alerts=[
@@ -2190,7 +2206,7 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
   ].slice(0,5);
 
   const dossierPreview=[...loans].sort((a,b)=>{
-    const order={retards:0,recouvrement:1,aujourdhui:2,avenir:3,clotures:4};
+    const order={retards:0,recouvrement:1,aujourdhui:2,avenir:3,clotures:4,jamais_rembourse:5};
     const ak=loanStatus(a),bk=loanStatus(b);
     if(order[ak]!==order[bk])return order[ak]-order[bk];
     return String(unpaidForLoan(a)[0]?.date||'9999-12-31').localeCompare(String(unpaidForLoan(b)[0]?.date||'9999-12-31'));

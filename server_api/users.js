@@ -1,7 +1,11 @@
 const bcrypt = require('bcryptjs');
 const { sb, json, readBody, currentUser, canManageUsers, canModifyTarget, allowedCreateRole, logAction, handler } = require('./_lib');
 
-const SELECT='id,username,role,is_active,protected,created_at';
+const SELECT='id,username,role,agency,agency_grade,is_active,protected,created_at';
+const AGENCIES=['van_horn','saint_denis','rhodes'];
+const GRADES=['directeur_agence','directeur_adjoint','responsable_clientele','conseiller_bancaire','caissier','secretaire_direction','stagiaire','attente_affectation'];
+function safeAgency(v){return AGENCIES.includes(String(v||''))?String(v):'van_horn';}
+function safeGrade(v){return GRADES.includes(String(v||''))?String(v):'conseiller_bancaire';}
 
 module.exports = (req,res)=>handler(req,res, async()=>{
   const actor = await currentUser(req);
@@ -19,10 +23,12 @@ module.exports = (req,res)=>handler(req,res, async()=>{
     const username = String(body.username||'').trim();
     const password = String(body.password||'');
     const role = String(body.role||'employe');
+    const agency=safeAgency(body.agency);
+    const agency_grade=safeGrade(body.agency_grade);
     if(!username || password.length < 10) return json(res,400,{error:'Nom requis et mot de passe min. 10 caractères'});
     if(!allowedCreateRole(actor, role)) return json(res,403,{error:'Vous ne pouvez pas créer ce rôle'});
     const password_hash = await bcrypt.hash(password, 12);
-    const { data, error } = await sb.from('pret_users').insert({ username, password_hash, role, is_active:true, protected:false }).select(SELECT).single();
+    const { data, error } = await sb.from('pret_users').insert({ username, password_hash, role, agency, agency_grade, is_active:true, protected:false }).select(SELECT).single();
     if(error) return json(res,500,{error:error.message});
     await logAction(actor,'creation_utilisateur',{target:data.username,role:data.role});
     return json(res,200,data);
@@ -43,6 +49,8 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       if(!allowedCreateRole(actor,newRole)) return json(res,403,{error:'Rôle refusé'});
       patch.role=newRole;
     }
+    if(body.agency!==undefined) patch.agency=safeAgency(body.agency);
+    if(body.agency_grade!==undefined) patch.agency_grade=safeGrade(body.agency_grade);
     if(body.password){
       if(String(body.password).length < 10) return json(res,400,{error:'Mot de passe min. 10 caractères'});
       patch.password_hash = await bcrypt.hash(String(body.password),12);

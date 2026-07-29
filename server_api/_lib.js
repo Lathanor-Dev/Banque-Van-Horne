@@ -62,7 +62,7 @@ async function currentUser(req){
   const cookies=parseCookies(req);
   const data=verifyToken(cookies[SESSION_COOKIE]);
   if(!data) return null;
-  const { data:user, error } = await sb.from('pret_users').select('id,username,role,is_active,protected').eq('id', data.id).maybeSingle();
+  const { data:user, error } = await sb.from('pret_users').select('id,username,role,is_active,protected,agency,agency_grade,discord_id,discord_display_name').eq('id', data.id).maybeSingle();
   if(error || !user || user.is_active===false) return null;
   return user;
 }

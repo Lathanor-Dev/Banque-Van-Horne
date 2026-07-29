@@ -1,4 +1,4 @@
-﻿const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
+const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
 
 function safeClientId(v){
   if(v === undefined || v === null || v === '') return null;
@@ -13,15 +13,20 @@ function safeApplicationId(v){
 function safeAgence(v){
   const value = String(v || 'van_horn').trim();
   if(value === 'SD' || value === 'saint_denis') return 'saint_denis';
+  if(value === 'RH' || value === 'rhodes') return 'rhodes';
   return 'van_horn';
 }
 function bankCodeFrom(value){
   const agence = safeAgence(value);
-  return agence === 'saint_denis' ? 'SD' : 'VH';
+  return agence === 'saint_denis' ? 'SD' : agence === 'rhodes' ? 'RH' : 'VH';
 }
 function agenceFromBankCode(value){
   const v = String(value || '').trim();
-  return v === 'SD' ? 'saint_denis' : 'van_horn';
+  return v === 'SD' ? 'saint_denis' : v === 'RH' ? 'rhodes' : 'van_horn';
+}
+function safeRepaymentStatus(v){
+  const value=String(v||'normal').trim();
+  return ['normal','jamais_rembourse'].includes(value)?value:'normal';
 }
 function safeRecouvrementStatus(v){
   const value = String(v || 'aucun').trim();
@@ -201,6 +206,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
       client_id:safeClientId(b.client_id),
       application_id:safeApplicationId(b.application_id),
       recouvrement_status:safeRecouvrementStatus(b.recouvrement_status),
+      repayment_status:safeRepaymentStatus(b.repayment_status),
       recouvrement_notes:safeText(b.recouvrement_notes),
       recouvrement_started_at:safeNullableDate(b.recouvrement_started_at),
       nom:String(b.nom||'').trim(),
@@ -257,6 +263,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
     // La référence d'un prêt existant reste stable. Elle n'est pas modifiée depuis le navigateur,
     // pour éviter les collisions ou les erreurs de double dossier.
     if(b.recouvrement_status !== undefined) patch.recouvrement_status=safeRecouvrementStatus(b.recouvrement_status);
+    if(b.repayment_status !== undefined) patch.repayment_status=safeRepaymentStatus(b.repayment_status);
     if(b.recouvrement_notes !== undefined) patch.recouvrement_notes=safeText(b.recouvrement_notes);
     if(b.recouvrement_started_at !== undefined) patch.recouvrement_started_at=safeNullableDate(b.recouvrement_started_at);
     if(b.echeances !== undefined) patch.echeances=safeEcheances(b.echeances);
