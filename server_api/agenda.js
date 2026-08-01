@@ -1,4 +1,4 @@
-const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
+const { sb, json, readBody, currentUser, hasPermission, logAction, handler } = require('./_lib');
 
 const TIME_RE = /^(?:[01]\d|2[0-3]):(?:00|30)$/;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -80,6 +80,8 @@ async function payloadFrom(body, actor){
 module.exports = (req,res)=>handler(req,res, async()=>{
   const actor = await currentUser(req);
   if(!actor) return json(res,401,{error:'Non connecté'});
+  if(req.method==='GET' && !hasPermission(actor,'agenda.read')) return json(res,403,{error:'Accès refusé'});
+  if(req.method!=='GET' && !hasPermission(actor,'agenda.write')) return json(res,403,{error:'Modification refusée'});
 
   if(req.method==='GET'){
     const url = new URL(req.url,'https://local');

@@ -1,4 +1,4 @@
-const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
+const { sb, json, readBody, currentUser, hasPermission, logAction, handler } = require('./_lib');
 
 const DEFAULT_BANK_DATE = '1904-06-26';
 const validDate = value => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
@@ -20,7 +20,7 @@ module.exports = (req,res)=>handler(req,res, async()=>{
   }
 
   if(req.method==='PUT'){
-    if(!['admin','directeur','co_directeur'].includes(actor.role)){
+    if(!hasPermission(actor,'settings.write')){
       return json(res,403,{error:'Seule la direction peut modifier la date bancaire.'});
     }
 

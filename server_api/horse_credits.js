@@ -1,4 +1,4 @@
-const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
+const { sb, json, readBody, currentUser, hasPermission, logAction, handler } = require('./_lib');
 function safeClientId(v){const n=Number(v); return Number.isFinite(n)&&n>0?n:null;}
 function normalize(b, actor){
   const coupons_count = Math.max(1, Number.parseInt(b.coupons_count || 1, 10));
@@ -44,6 +44,8 @@ function normalize(b, actor){
 module.exports = (req,res)=>handler(req,res, async()=>{
   const actor = await currentUser(req);
   if(!actor) return json(res,401,{error:'Non connecté'});
+  if(req.method==='GET' && !hasPermission(actor,'bank.read')) return json(res,403,{error:'Accès refusé'});
+  if(req.method!=='GET' && !hasPermission(actor,'bank.write')) return json(res,403,{error:'Modification refusée'});
   if(req.method==='GET'){
     const { data, error } = await sb.from('pret_horse_credits').select('*').order('created_at',{ascending:false});
     if(error) return json(res,500,{error:error.message});

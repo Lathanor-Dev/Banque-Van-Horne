@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
+const permissions = require('./permissions');
 
 const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY, {
   auth: { persistSession: false }
@@ -39,7 +40,7 @@ function secret(){
 function b64url(input){ return Buffer.from(input).toString('base64url'); }
 function signPayload(payload){ return crypto.createHmac('sha256', secret()).update(payload).digest('base64url'); }
 function createToken(user){
-  const payload = b64url(JSON.stringify({ id:user.id, username:user.username, role:user.role, iat:Date.now(), exp:Date.now()+7*DAY*1000 }));
+  const payload = b64url(JSON.stringify({ id:user.id, username:user.username, role:user.role, role_code:permissions.roleCodeOf(user), iat:Date.now(), exp:Date.now()+7*DAY*1000 }));
   return payload + '.' + signPayload(payload);
 }
 function verifyToken(token){
@@ -62,28 +63,19 @@ async function currentUser(req){
   const cookies=parseCookies(req);
   const data=verifyToken(cookies[SESSION_COOKIE]);
   if(!data) return null;
-  const { data:user, error } = await sb.from('pret_users').select('id,username,role,is_active,protected,agency,agency_grade,discord_id,discord_display_name').eq('id', data.id).maybeSingle();
+  const { data:user, error } = await sb.from('pret_users').select('id,username,role,role_code,is_active,protected,agency,agency_grade,discord_id,discord_display_name').eq('id', data.id).maybeSingle();
   if(error || !user || user.is_active===false) return null;
+  if(permissions.roleCodeOf(user)==='PENDING_ASSIGNMENT') return null;
   return user;
 }
 
-function roleRank(role){ return { employe:1, co_directeur:2, directeur:3, admin:4 }[role] || 0; }
-function requireRole(user, min){ return user && roleRank(user.role) >= roleRank(min); }
-function canManageUsers(user){ return user && ['admin','directeur','co_directeur'].includes(user.role); }
-function canModifyTarget(actor, target){
-  if(!actor || !target) return false;
-  if(target.protected && actor.role !== 'admin') return false;
-  if(actor.role === 'admin') return true;
-  if(actor.role === 'directeur') return ['co_directeur','employe'].includes(target.role);
-  if(actor.role === 'co_directeur') return target.role === 'employe';
-  return false;
-}
-function allowedCreateRole(actor, role){
-  if(actor.role==='admin') return ['directeur','co_directeur','employe'].includes(role);
-  if(actor.role==='directeur') return ['co_directeur','employe'].includes(role);
-  if(actor.role==='co_directeur') return role==='employe';
-  return false;
-}
+function roleRank(userOrRole){ return permissions.roleLevel(userOrRole); }
+function requireRole(user, min){ return user && permissions.roleLevel(user) >= permissions.roleLevel(min); }
+const canManageUsers = permissions.canManageUsers;
+const canModifyTarget = permissions.canModifyTarget;
+const allowedCreateRole = permissions.allowedCreateRole;
+const hasPermission = permissions.hasPermission;
+const roleCodeOf = permissions.roleCodeOf;
 
 async function logAction(user, action, details={}){
   try{
@@ -92,7 +84,7 @@ async function logAction(user, action, details={}){
       username: user?.username || 'system',
       role: user?.role || 'system',
       action,
-      details
+      details: { role_code: user ? permissions.roleCodeOf(user) : 'SYSTEM', ...details }
     });
   }catch(e){ /* never break business action because of logging */ }
 }
@@ -107,4 +99,11 @@ async function handler(req,res,fn){
   }
 }
 
-module.exports={sb,json,readBody,currentUser,setSessionCookie,clearSessionCookie,createToken,logAction,requireRole,canManageUsers,canModifyTarget,allowedCreateRole,roleRank,handler};
+module.exports={
+  sb,json,readBody,currentUser,setSessionCookie,clearSessionCookie,createToken,logAction,
+  requireRole,canManageUsers,canModifyTarget,allowedCreateRole,roleRank,hasPermission,roleCodeOf,
+  ROLE_DEFINITIONS:permissions.ROLE_DEFINITIONS,
+  legacyRoleForCode:permissions.legacyRoleForCode,
+  assignableRoleCodes:permissions.assignableRoleCodes,
+  handler
+};

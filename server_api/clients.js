@@ -1,4 +1,4 @@
-const { sb, json, readBody, currentUser, logAction, handler } = require('./_lib');
+const { sb, json, readBody, currentUser, hasPermission, logAction, handler } = require('./_lib');
 
 const TEXT_FIELDS = [
   'nom','prenom','telegram','adresse','notes','carte_identite_url',
@@ -22,6 +22,8 @@ function payloadFrom(body){
 module.exports = (req,res)=>handler(req,res, async()=>{
   const actor = await currentUser(req);
   if(!actor) return json(res,401,{error:'Non connecté'});
+  if(req.method==='GET' && !hasPermission(actor,'bank.read')) return json(res,403,{error:'Accès refusé'});
+  if(req.method!=='GET' && !hasPermission(actor,'bank.write')) return json(res,403,{error:'Modification refusée'});
 
   if(req.method==='GET'){
     const { data, error } = await sb
