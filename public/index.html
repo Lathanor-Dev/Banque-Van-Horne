@@ -1149,7 +1149,7 @@ async function call(url,opts={}){
   return data;
 }
 const api={
- login:(username,password)=>call('/api/login',{method:'POST',body:JSON.stringify({username,password})}), logout:()=>call('/api/logout',{method:'POST'}), me:()=>call('/api/me'),
+ logout:()=>call('/api/logout',{method:'POST'}), me:()=>call('/api/me'),
  users:()=>call('/api/users').then(r=>Array.isArray(r)?r:(r.users||[])), addUser:u=>call('/api/users',{method:'POST',body:JSON.stringify(u)}), updateUser:u=>call('/api/users',{method:'PUT',body:JSON.stringify(u)}), deleteUser:id=>call('/api/users',{method:'DELETE',body:JSON.stringify({id})}),
  clients:()=>call('/api/clients'), addClient:c=>call('/api/clients',{method:'POST',body:JSON.stringify(c)}), updateClient:c=>call('/api/clients',{method:'PUT',body:JSON.stringify(c)}), deleteClient:id=>call('/api/clients',{method:'DELETE',body:JSON.stringify({id})}),
  loans:()=>call('/api/loans?actualisation='+Date.now()), addLoan:l=>call('/api/loans',{method:'POST',body:JSON.stringify(l)}), updateLoan:l=>call('/api/loans',{method:'PUT',body:JSON.stringify(l)}), deleteLoan:id=>call('/api/loans',{method:'DELETE',body:JSON.stringify({id})}), logs:()=>call('/api/logs'),
@@ -1264,23 +1264,21 @@ function ReminderModal({open,onClose,loan,echeance,echeanceIndex,onSaved,me}){
   </div>
 }
 
-function Login({onLogin}){const params=new URLSearchParams(location.search);const reason=params.get('discord');const msg=reason==='not_member'?'Vous devez rejoindre le serveur Discord officiel avant de pouvoir accéder au Registre.':reason==='waiting'?"Votre compte Discord est reconnu, mais vous êtes encore en attente d’affectation.":'';return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-stable-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès réservé aux membres du Discord</p></div>{msg&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {msg}</div>}<Btn full color="#5865F2" onClick={()=>location.href='/api/discord_login'}>Se connecter avec Discord</Btn><p style={{color:C.muted,fontSize:12,textAlign:'center',marginTop:14}}>Votre présence sur le serveur et vos rôles sont vérifiés à chaque connexion.</p></div></div>}
+function Login({onLogin}){const params=new URLSearchParams(location.search);const reason=params.get('discord');const msg=reason==='not_member'?'Vous devez rejoindre le serveur Discord officiel avant de pouvoir accéder au Registre.':reason==='waiting'?"Votre compte Discord est reconnu, mais vous êtes encore en attente d’affectation.":reason==='reauth'?'Votre ancienne session a été fermée. Reconnectez-vous avec Discord pour continuer.':'';return <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'radial-gradient(circle at top,#3a250f,#0b0704 60%)',padding:20}}><div className="bvh-login-card"><div style={{textAlign:'center',marginBottom:24}}><img className="bvh-login-stable-logo" src="/logo-registre-reckless.png" alt="Registre bancaire de Reckless"/><p style={{color:'#d3b574',fontSize:12,letterSpacing:'.15em',textTransform:'uppercase',fontWeight:800}}>Accès réservé aux membres du Discord</p></div>{msg&&<div style={{background:'#6b1c1622',border:'1px solid '+C.red,color:'#ffb0a6',borderRadius:8,padding:10,marginBottom:12}}>⚠ {msg}</div>}<Btn full color="#5865F2" onClick={()=>location.href='/api/discord_login'}>Se connecter avec Discord</Btn><p style={{color:C.muted,fontSize:12,textAlign:'center',marginTop:14}}>Votre présence sur le serveur et vos rôles sont vérifiés à chaque connexion.</p></div></div>}
 
 function UserPanel({me,users,setUsers,notify}){
-  const empty={username:'',password:'',role_code:'BANKER',agency:'van_horn',agency_grade:'conseiller_bancaire'};
+  const empty={username:'',role_code:'BANKER',agency:'van_horn',agency_grade:'conseiller_bancaire'};
   const[f,setF]=useState(empty);
   const canCreate=hasPermission(me,'users.write');
   const assignable=ROLE_OPTIONS.filter(r=>r.code!=='TECHNICIAN'&&r.level<roleRank(me));
   async function add(){try{const u=await api.addUser(f);setUsers([u,...users]);setF(empty);notify('Utilisateur créé')}catch(e){notify('⚠ '+e.message)}}
-  async function reset(u){const password=prompt('Nouveau mot de passe min. 10 caractères');if(!password)return;try{const nu=await api.updateUser({id:u.id,password});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Mot de passe modifié')}catch(e){notify('⚠ '+e.message)}}
   async function assign(u,patch){try{const nu=await api.updateUser({id:u.id,...patch});setUsers(users.map(x=>x.id===nu.id?nu:x));notify('Affectation mise à jour')}catch(e){notify('⚠ '+e.message)}}
   async function del(u){if(!confirm('Supprimer '+u.username+' ?'))return;try{await api.deleteUser(u.id);setUsers(users.filter(x=>x.id!==u.id));notify('Utilisateur supprimé')}catch(e){notify('⚠ '+e.message)}}
   return <div>
     <h1 style={{marginBottom:8}}>Utilisateurs et hiérarchie V12</h1>
     <p style={{color:C.muted,marginBottom:18}}>Le rôle officiel du site contrôle désormais les autorisations et prépare la synchronisation Discord.</p>
-    {canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1fr 1fr 220px 160px 230px auto',gap:10,alignItems:'end'}}>
+    {canCreate&&<div style={{background:C.card,border:'1px solid '+C.bord,borderRadius:12,padding:16,marginBottom:18,display:'grid',gridTemplateColumns:'1.2fr 220px 160px 230px auto',gap:10,alignItems:'end'}}>
       <Inp label="Nom" value={f.username} onChange={e=>setF({...f,username:e.target.value})}/>
-      <Inp label="Mot de passe" type="password" value={f.password} onChange={e=>setF({...f,password:e.target.value})}/>
       <Select label="Rôle officiel" value={f.role_code} onChange={e=>setF({...f,role_code:e.target.value})}>{assignable.map(r=><option key={r.code} value={r.code}>{r.label}</option>)}</Select>
       <Select label="Agence" value={f.agency} onChange={e=>setF({...f,agency:e.target.value})}>{Object.entries(AGENCIES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select>
       <Select label="Grade d’agence" value={f.agency_grade} onChange={e=>setF({...f,agency_grade:e.target.value})}>{Object.entries(AGENCY_GRADES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select>
@@ -1288,7 +1286,7 @@ function UserPanel({me,users,setUsers,notify}){
     </div>}
     <div style={{display:'grid',gap:10}}>{users.map(u=>{
       const canEdit=!u.protected&&roleRank(me)>roleRank(u);
-      return <div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'grid',gridTemplateColumns:'minmax(170px,1fr) 230px 165px 230px auto auto',alignItems:'end',gap:12}}>
+      return <div key={u.id} style={{background:C.card,border:'1px solid '+C.bord,borderRadius:10,padding:14,display:'grid',gridTemplateColumns:'minmax(170px,1fr) 230px 165px 230px auto',alignItems:'end',gap:12}}>
         <div><b>{u.username} {u.protected?'🔒':''}</b><div style={{color:C.gold,fontSize:12,fontWeight:800}}>{roleLabel(u)}</div><div style={{color:C.muted,fontSize:11}}>{u.discord_display_name?`Discord : ${u.discord_display_name}`:'Discord non lié'}</div></div>
         <Select label="Rôle officiel" value={roleCode(u)} onChange={e=>assign(u,{role_code:e.target.value})}>
           <option value={roleCode(u)}>{roleLabel(u)}</option>
@@ -1296,7 +1294,6 @@ function UserPanel({me,users,setUsers,notify}){
         </Select>
         <Select label="Agence" value={u.agency||'van_horn'} onChange={e=>assign(u,{agency:e.target.value})}>{Object.entries(AGENCIES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select>
         <Select label="Grade" value={u.agency_grade||'conseiller_bancaire'} onChange={e=>assign(u,{agency_grade:e.target.value})}>{Object.entries(AGENCY_GRADES).map(([k,v])=><option key={k} value={k}>{v}</option>)}</Select>
-        <Btn color="#555" onClick={()=>reset(u)}>Mot de passe</Btn>
         <Btn color={C.red} disabled={!canEdit} onClick={()=>del(u)}>Supprimer</Btn>
       </div>})}</div>
   </div>

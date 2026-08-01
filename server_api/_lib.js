@@ -8,6 +8,9 @@ const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_K
 
 const SESSION_COOKIE = 'bvh_session';
 const DAY = 86400;
+const AUTH_CUTOFF_MS = Date.parse(
+  process.env.AUTH_CUTOFF_AT || '2026-08-01T13:20:00.000Z'
+);
 
 function json(res, status, body){
   res.statusCode = status;
@@ -50,6 +53,7 @@ function verifyToken(token){
   if(!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
   const data=JSON.parse(Buffer.from(payload,'base64url').toString('utf8'));
   if(!data.exp || Date.now()>data.exp) return null;
+  if(!data.iat || data.iat < AUTH_CUTOFF_MS) return null;
   return data;
 }
 function cookieOptions(maxAge=7*DAY){

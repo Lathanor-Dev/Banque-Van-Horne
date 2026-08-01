@@ -76,7 +76,6 @@ module.exports = (req, res) =>
     if (req.method === 'POST') {
       const body = await readBody(req);
       const username = String(body.username || '').trim();
-      const password = String(body.password || '');
       const role_code = roleCodeOf(
         String(body.role_code || body.role || 'BANKER')
       );
@@ -84,9 +83,9 @@ module.exports = (req, res) =>
       const agency = safeAgency(body.agency);
       const agency_grade = safeGrade(body.agency_grade);
 
-      if (!username || password.length < 10) {
+      if (!username) {
         return json(res, 400, {
-          error: 'Nom requis et mot de passe min. 10 caractères'
+          error: 'Nom requis'
         });
       }
 
@@ -96,7 +95,12 @@ module.exports = (req, res) =>
         });
       }
 
-      const password_hash = await bcrypt.hash(password, 12);
+      // Le mot de passe technique est aléatoire et n’est jamais communiqué.
+      // L’utilisateur doit lier son compte et se connecter avec Discord.
+      const password_hash = await bcrypt.hash(
+        require('crypto').randomBytes(48).toString('hex'),
+        12
+      );
 
       const { data, error } = await sb
         .from('pret_users')
