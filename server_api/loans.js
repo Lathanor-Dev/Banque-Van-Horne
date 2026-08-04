@@ -14,15 +14,16 @@ function safeAgence(v){
   const value = String(v || 'van_horn').trim();
   if(value === 'SD' || value === 'saint_denis') return 'saint_denis';
   if(value === 'RH' || value === 'rhodes') return 'rhodes';
+  if(value === 'VT' || value === 'valentine') return 'valentine';
   return 'van_horn';
 }
 function bankCodeFrom(value){
   const agence = safeAgence(value);
-  return agence === 'saint_denis' ? 'SD' : agence === 'rhodes' ? 'RH' : 'VH';
+  return agence === 'saint_denis' ? 'SD' : agence === 'rhodes' ? 'RH' : agence === 'valentine' ? 'VT' : 'VH';
 }
 function agenceFromBankCode(value){
   const v = String(value || '').trim();
-  return v === 'SD' ? 'saint_denis' : v === 'RH' ? 'rhodes' : 'van_horn';
+  return v === 'SD' ? 'saint_denis' : v === 'RH' ? 'rhodes' : v === 'VT' ? 'valentine' : 'van_horn';
 }
 function safeRepaymentStatus(v){
   const value=String(v||'normal').trim();
@@ -89,7 +90,7 @@ function rowMatchesBank(row, bank_code){
   return bankCodeFrom(agence) === bank_code;
 }
 async function generateLoanId(bank_code, offset = 0){
-  const prefix = bank_code === 'SD' ? 'SD' : bank_code === 'RH' ? 'RH' : 'VH';
+  const prefix = bank_code === 'SD' ? 'SD' : bank_code === 'RH' ? 'RH' : bank_code === 'VT' ? 'VT' : 'VH';
 
   const { data, error } = await sb
     .from('pret_loans')
