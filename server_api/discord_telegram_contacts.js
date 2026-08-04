@@ -58,15 +58,86 @@ async function update(req,res){
 }
 async function remove(req,res){ const b=await readBody(req); const contactId=id(b.id); if(!contactId)return json(res,400,{error:'Contact invalide.'}); const {data,error}=await sb.from('pret_telegram_contacts').delete().eq('id',contactId).select().maybeSingle(); if(error)return json(res,500,{error:error.message}); return json(res,200,{ok:true,contact:data}); }
 async function syncClients(req,res){
-  const b=await readBody(req); const {data:clients,error}=await sb.from('pret_clients').select('id,prenom,nom,telegram,profession').order('id'); if(error)return json(res,500,{error:error.message});
-  let created=0,updated=0,skipped=0;
-  for(const c of clients||[]){
-    const {data:existing}=await sb.from('pret_telegram_contacts').select('*').eq('client_id',c.id).maybeSingle();
-    const payload={client_id:c.id,prenom:text(c.prenom),nom:text(c.nom),telegram:text(c.telegram),telegram_normalized:norm(c.telegram),fonction:text(c.profession||'Client'),source:'client',updated_by:text(b.actor),updated_at:new Date().toISOString()};
-    if(existing){ const {error:e}=await sb.from('pret_telegram_contacts').update(payload).eq('id',existing.id); e?skipped++:updated++; }
-    else { const dup=await findDuplicate({telegram:payload.telegram,clientId:c.id,prenom:payload.prenom,nom:payload.nom}); if(dup){skipped++;continue;} const {error:e}=await sb.from('pret_telegram_contacts').insert({...payload,created_by:text(b.actor)}); e?skipped++:created++; }
+  const b=await readBody(req);
+  const actor=text(b.actor);
+
+  // Deux lectures seulement : tous les clients, puis tous les contacts.
+  const [{data:clients,error:clientsError},{data:contacts,error:contactsError}] = await Promise.all([
+    sb.from('pret_clients')
+      .select('id,prenom,nom,telegram,profession')
+      .order('id'),
+    sb.from('pret_telegram_contacts')
+      .select('*')
+      .order('id')
+  ]);
+
+  if(clientsError)return json(res,500,{error:clientsError.message});
+  if(contactsError)return json(res,500,{error:contactsError.message});
+
+  const existingByClient=new Map();
+  const telegramOwner=new Map();
+
+  for(const contact of contacts||[]){
+    if(contact.client_id)existingByClient.set(Number(contact.client_id),contact);
+    const normalized=norm(contact.telegram);
+    if(normalized)telegramOwner.set(normalized,contact);
   }
-  return json(res,200,{ok:true,created,updated,skipped,total:(clients||[]).length});
+
+  const rows=[];
+  let created=0,updated=0,skipped=0;
+
+  for(const client of clients||[]){
+    const existing=existingByClient.get(Number(client.id))||null;
+    const telegram=text(client.telegram);
+    const telegramNormalized=norm(telegram);
+    const owner=telegramNormalized ? telegramOwner.get(telegramNormalized) : null;
+
+    // Ne remplace pas une fiche manuelle ou liée à un autre client portant déjà ce numéro.
+    if(owner && Number(owner.client_id||0)!==Number(client.id)){
+      skipped++;
+      continue;
+    }
+
+    const row={
+      ...(existing?.id ? {id:existing.id} : {}),
+      client_id:client.id,
+      prenom:text(client.prenom),
+      nom:text(client.nom),
+      telegram,
+      telegram_normalized:telegramNormalized,
+      fonction:text(client.profession||'Client'),
+      agence:existing?.agence||null,
+      source:'client',
+      discord_message_id:existing?.discord_message_id||null,
+      created_by:existing?.created_by||actor,
+      created_at:existing?.created_at||new Date().toISOString(),
+      updated_by:actor,
+      updated_at:new Date().toISOString()
+    };
+
+    rows.push(row);
+    if(existing)updated++; else created++;
+
+    if(telegramNormalized)telegramOwner.set(telegramNormalized,row);
+  }
+
+  if(rows.length){
+    // Les lignes existantes portent leur id : elles sont mises à jour.
+    // Les nouvelles lignes sont insérées dans la même requête.
+    const {error:upsertError}=await sb
+      .from('pret_telegram_contacts')
+      .upsert(rows,{onConflict:'id'});
+
+    if(upsertError)return json(res,500,{error:upsertError.message});
+  }
+
+  return json(res,200,{
+    ok:true,
+    created,
+    updated,
+    skipped,
+    total:(clients||[]).length
+  });
 }
 module.exports=(req,res)=>handler(req,res,async()=>{
   if(!process.env.DISCORD_AGENDA_API_KEY)return json(res,503,{error:'Clé API Discord absente.'});
