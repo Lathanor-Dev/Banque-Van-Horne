@@ -2201,7 +2201,7 @@ function Dashboard({loans,clients,logs,me,onMark,onLoanUpdate,appointments=[],on
     ? `conic-gradient(${donutSegments.map(s=>{const start=cursor;cursor+=(s.count/totalLoans)*100;return `${s.color} ${start}% ${cursor}%`;}).join(',')})`
     : 'conic-gradient(#333 0% 100%)';
 
-  const agencyKeys=['van_horn','saint_denis','rhodes'];
+  const agencyKeys=['van_horn','saint_denis','rhodes','valentine'];
   const agencyStats=agencyKeys.map(key=>{
     const list=loans.filter(l=>loanAgence(l)===key);
     const total=list.length;
@@ -2713,6 +2713,7 @@ function App(){
           <option value="van_horn">Van Horn</option>
           <option value="saint_denis">Saint-Denis</option>
           <option value="rhodes">Rhodes</option>
+          <option value="valentine">Valentine</option>
         </Select>
       </div>
       <div className="bvh-pandore-panel"><div className="bvh-pandore-mark">P</div><div><b>Pandore Studio</b><span>Conception &amp; développement</span></div></div>
