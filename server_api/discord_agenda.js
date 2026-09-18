@@ -62,6 +62,7 @@ function normalizeSearch(value) {
 }
 
 async function listClients(req, res) {
+  const requestedId = safeId(req.query?.id);
   const search = normalizeSearch(req.query?.q);
   const { data, error } = await sb
     .from('pret_clients')
@@ -71,6 +72,7 @@ async function listClients(req, res) {
     .limit(250);
 
   if (error) return json(res, 500, { error: error.message });
+  if(requestedId) return json(res,200,(data||[]).filter(client=>Number(client.id)===requestedId));
   const clients = (data || []).filter((client) => {
     if (!search) return true;
     const haystack = `${client.prenom || ''} ${client.nom || ''} ${client.telegram || ''} ${client.adresse || ''}`

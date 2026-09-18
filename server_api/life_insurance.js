@@ -2,7 +2,7 @@ const { sb, json, readBody, currentUser, hasPermission, roleRank, logAction, han
 
 const CAPITALS = new Set([1000, 2500, 5000, 7500, 10000]);
 const ACTIVE = new Set(['active','payments_complete','placed']);
-const STATUSES = new Set([...ACTIVE,'closure_requested','closed','death_reported','under_review','paid_to_beneficiary']);
+const STATUSES = new Set([...ACTIVE,'closure_requested','closed','death_reported','under_review','paid_to_beneficiary','cancelled']);
 
 function clean(value, max = 500){ return String(value ?? '').trim().slice(0, max); }
 function safeId(value){ const n=Number(value); return Number.isSafeInteger(n)&&n>0?n:null; }
@@ -11,6 +11,9 @@ function safeAgency(value){
   if(v==='sd'||v==='saint_denis')return 'saint_denis';
   if(v==='rh'||v==='rhodes')return 'rhodes';
   if(v==='vt'||v==='valentine')return 'valentine';
+  if(v==='bw'||v==='blackwater')return 'blackwater';
+  if(v==='st'||v==='strawberry')return 'strawberry';
+  if(v==='ss'||v==='sunset')return 'sunset';
   return 'van_horn';
 }
 function realDate(value){
@@ -42,7 +45,7 @@ async function event(contractId,type,actor,details={}){
   await sb.from('pret_life_insurance_events').insert({contract_id:contractId,event_type:type,actor_username:actor,details});
 }
 async function nextNumber(agency){
-  const code={van_horn:'VH',saint_denis:'SD',rhodes:'RH',valentine:'VT'}[agency];
+  const code={van_horn:'VH',saint_denis:'SD',rhodes:'RH',valentine:'VT',blackwater:'BW',strawberry:'ST',sunset:'SS'}[agency];
   const {count,error}=await sb.from('pret_life_insurance_contracts').select('id',{count:'exact',head:true}).eq('agency',agency);
   if(error)throw new Error(error.message);
   return `AV-${code}-${String((count||0)+1).padStart(4,'0')}`;
@@ -87,8 +90,21 @@ module.exports=(req,res)=>handler(req,res,async()=>{
       return json(res,403,{error:'Cette validation est réservée à la direction.'});
     const {data:current,error:readError}=await sb.from('pret_life_insurance_contracts').select('*').eq('id',id).maybeSingle();
     if(readError)return json(res,500,{error:readError.message}); if(!current)return json(res,404,{error:'Contrat introuvable.'});
-    const patch={updated_at:new Date().toISOString()}; let details={};
-    if(action==='record_payment'){
+    const patch={updated_at:new Date().toISOString(),updated_by_username:actor.username}; let details={};
+    if(action==='edit'){
+      if((current.payments||[]).some(p=>p.status==='paid'))return json(res,409,{error:'Un contrat ayant reçu un versement ne peut plus être modifié.'});
+      if(!ACTIVE.has(current.status))return json(res,409,{error:'Ce contrat ne peut plus être modifié.'});
+      if(b.agency!==undefined)patch.agency=safeAgency(b.agency);
+      if(b.start_date!==undefined){const start=realDate(b.start_date);if(!start)return json(res,400,{error:'Date invalide.'});patch.start_date=start;patch.payments=schedule(Number(current.target_capital),start);}
+      if(b.subscriber_telegram!==undefined)patch.subscriber_telegram=clean(b.subscriber_telegram,120)||null;
+      if(b.beneficiary_telegram!==undefined)patch.beneficiary_telegram=clean(b.beneficiary_telegram,120)||null;
+      if(b.notes!==undefined)patch.notes=clean(b.notes,2000)||null;
+      details={fields:Object.keys(patch).filter(k=>!['updated_at','updated_by_username'].includes(k))};
+    }else if(action==='cancel'){
+      const reason=clean(b.reason,500);if(!reason)return json(res,400,{error:'Le motif d’annulation est obligatoire.'});
+      if(['closed','paid_to_beneficiary','cancelled'].includes(current.status))return json(res,409,{error:'Ce contrat est déjà soldé ou annulé.'});
+      patch.status='cancelled';patch.cancelled_at=new Date().toISOString();patch.cancellation_reason=reason;details={reason};
+    }else if(action==='record_payment'){
       if(!ACTIVE.has(current.status))return json(res,409,{error:'Les versements sont bloqués pour ce statut.'});
       const number=Number(b.installment_number),payments=[...(current.payments||[])],index=payments.findIndex(p=>Number(p.number)===number);
       if(index<0)return json(res,400,{error:'Échéance invalide.'}); if(payments[index].status==='paid')return json(res,409,{error:'Cette échéance est déjà payée.'});
@@ -114,6 +130,18 @@ module.exports=(req,res)=>handler(req,res,async()=>{
     if(error)return json(res,500,{error:error.message});
     await event(id,action,actor.username,details); await logAction(actor,`assurance_vie_${action}`,{contract_number:current.contract_number,...details});
     return json(res,200,normalize(data));
+  }
+
+  if(req.method==='DELETE'){
+    if(roleRank(actor)<roleRank('TECHNICIAN'))return json(res,403,{error:'Suppression définitive réservée au technicien.'});
+    const b=await readBody(req),id=safeId(b.id),reason=clean(b.reason,500);
+    if(!id||!reason||b.confirmation!=='SUPPRIMER')return json(res,400,{error:'Motif et confirmation SUPPRIMER obligatoires.'});
+    const {data:current}=await sb.from('pret_life_insurance_contracts').select('*').eq('id',id).maybeSingle();
+    if(!current)return json(res,404,{error:'Contrat introuvable.'});
+    if((current.payments||[]).some(p=>p.status==='paid'))return json(res,409,{error:'Impossible de supprimer un contrat ayant reçu un versement. Annulez-le.'});
+    await logAction(actor,'suppression_assurance_vie',{contract_number:current.contract_number,reason,snapshot:{subscriber:`${current.subscriber_first_name} ${current.subscriber_last_name}`,beneficiary:`${current.beneficiary_first_name} ${current.beneficiary_last_name}`,target_capital:current.target_capital}});
+    const {error}=await sb.from('pret_life_insurance_contracts').delete().eq('id',id);if(error)return json(res,500,{error:error.message});
+    return json(res,200,{ok:true});
   }
   return json(res,405,{error:'Méthode non autorisée'});
 });

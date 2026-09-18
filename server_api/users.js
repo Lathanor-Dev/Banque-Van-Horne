@@ -28,7 +28,7 @@ const SELECT = [
   'created_at'
 ].join(',');
 
-const AGENCIES = ['van_horn', 'saint_denis', 'rhodes', 'valentine'];
+const AGENCIES = ['van_horn', 'saint_denis', 'rhodes', 'valentine', 'blackwater', 'strawberry', 'sunset'];
 const GRADES = [
   'directeur_agence',
   'directeur_adjoint',
